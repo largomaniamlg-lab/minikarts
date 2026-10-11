@@ -2,6 +2,7 @@
 import json
 import gzip
 import hashlib
+import shutil
 import re
 import sys
 from pathlib import Path
@@ -14,6 +15,11 @@ if match is None:
     raise RuntimeError('No se encontró la configuración del loader Godot')
 config = json.loads(match.group(1))
 config['args'] = ['--', '--force-touch']
+pack = page.parent / 'game.pck'
+pack_name = 'game-' + hashlib.sha256(pack.read_bytes()).hexdigest()[:16] + '.pck'
+shutil.copyfile(pack, page.parent / pack_name)
+config['mainPack'] = pack_name
+config['fileSizes'][pack_name] = pack.stat().st_size
 text = text[:match.start(1)] + json.dumps(config, separators=(',', ':')) + text[match.end(1):]
 # Reuse the existing browser decompression loader, preserving its supported route.
 existing = (Path(__file__).resolve().parents[1] / 'game.html').read_text()

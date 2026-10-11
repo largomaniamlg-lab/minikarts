@@ -103,3 +103,7 @@ El usuario aprobó publicar la versión con su foto. Exportación probada copiad
 ## Corrección de caché de datos del piloto — web5
 
 Captura Samsung mostraba controles táctiles pero kart sin piloto. El loader solicitaba game.pck sin versión, permitiendo reutilizar datos antiguos. Se añade al fetch del PCK un identificador derivado de SHA-256 del artefacto; futuras exportaciones regeneran ese identificador. Página marcada web5. No es necesario borrar los datos del navegador.
+
+## Diagnóstico de publicación — web6
+
+Web5 consta como desplegada con éxito en GitHub Actions (run 38104622317), pero el usuario continúa viendo el kart anterior. La causa en el móvil no está confirmada. Se publica una ruta nueva piloto-web6.html y un mainPack con nombre derivado del contenido: game-5f81e7e4c4333fc5.pck. Esto elimina reutilización del nombre anterior tanto para HTML como para PCK. El exportador genera paquetes con nombre por contenido para futuras versiones. Mantener enlaces antiguos compatibles.

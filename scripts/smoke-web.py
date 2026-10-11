@@ -27,7 +27,8 @@ try:
         assert frame.locator('#canvas').evaluate('(c) => c.width > 0 && c.height > 0')
         page.wait_for_timeout(1000)
         assert not errors, errors
-        for asset in ['game.js', 'game.pck', 'game.wasm.gz']:
+        pack_name = frame.locator('body').evaluate('() => GODOT_CONFIG.mainPack || "game.pck"')
+        for asset in ['game.js', pack_name, 'game.wasm.gz']:
             assert responses.get(asset) == 200, (asset, responses)
         assert frame.locator('body').evaluate('() => GODOT_CONFIG.args[0] === "--" && GODOT_CONFIG.args[1] === "--force-touch"')
         page.screenshot(path='/tmp/minikarts-touch-check.png')
