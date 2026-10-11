@@ -69,3 +69,7 @@ MK-02 y MK-03 implementadas y verificadas localmente: controles de escritorio y 
 ## Prioridad elegida: multijugador privado
 
 El usuario adelanta MK-13 para carreras con tres amigos, incluyendo trompos por disparos y protección. Primera implementación local verificada con servidor de autoridad y cuatro clientes web. Las mejoras artísticas quedan aplazadas. Hito siguiente: seleccionar y desplegar alojamiento WSS, configurar cliente automáticamente y probar una carrera desde cuatro móviles. Borrador gratuito en render.yaml; sin contratación ni publicación automática.
+
+## Ajuste de prioridad: elementos del grupo antes del servidor
+
+El usuario elige alojamiento gratuito y pide primero MK-14: tres pilotos adicionales, dormilón neutral móvil, árboles de piernas y proyectiles de foto. Implementación local y pruebas de reglas preparadas; revisar visualmente las caras y el dormilón ilustrado provisional antes de publicar. Después retomar alojamiento WSS gratuito y probar desde cuatro teléfonos. La foto original del dormilón no se pudo recortar con el generador; no presentar el sustituto como esa fotografía.

@@ -4,11 +4,13 @@ Prototipo de servidor autoritativo Godot 4.5.1 y clientes WebSocket para Web y G
 
 ## Flujo de juego
 
-Abrir Amigos, escribir nombre, crear sala o introducir código para unirse. Máximo cuatro pilotos por sala. Todos marcan Listo; el creador inicia una cuenta atrás de tres segundos. Se conserva aceleración automática, joystick, freno, reversa, salto, disparo y recuperación. Cada jugador tiene un kart de color diferente; los rivales muestran nombres. La primera versión usa la misma cara de foto para todos.
+Antes de abrir Amigos, tocar Piloto 1/4 para recorrer las cuatro caras disponibles. Abrir Amigos, escribir nombre, crear sala o introducir código para unirse. Máximo cuatro pilotos por sala. Todos marcan Listo; el creador inicia una cuenta atrás de tres segundos. Se conserva aceleración automática, joystick, freno, reversa, salto, disparo y recuperación. Cada jugador tiene un kart de color diferente; los rivales muestran nombres y la cara elegida. La elección queda fija durante la sala.
 
 Se completan tres vueltas con checkpoints ordenados. Clasificación por tiempo de llegada; los restantes tienen un minuto después del primer finisher para terminar. Límite global de carrera: diez minutos. El creador puede volver a la sala desde resultados. Si se desconecta, otro jugador pasa a ser creador. No hay reconexión a la misma identidad en esta versión; se puede salir y entrar en una sala nueva.
 
 Impacto: pierde el 75 % de velocidad, trompo de un segundo y tres segundos de protección total, incluido el trompo. Los tiros se consumen al impactar incluso si el receptor está protegido. Cajas, disparos, impactos, vueltas y posiciones se deciden en el servidor. Recuperar no cancela trompo ni protección.
+
+El dormilón neutral oscila lateralmente por la pista y aplica el mismo trompo/protección al tocar un kart. El servidor comparte su posición y decide sus impactos por sala; las piernas decorativas no tienen colisiones. Los proyectiles usan la nueva imagen sin cambiar alcance, cadencia ni raycast.
 
 ## Ejecutar y probar en Cloud
 
