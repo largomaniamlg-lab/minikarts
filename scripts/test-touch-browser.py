@@ -18,7 +18,7 @@ try:
         page.wait_for_function('window.minikartsTouchTest !== undefined')
         print('Initial touch diagnostics:', page.evaluate('minikartsTouchTest'), flush=True)
         cdp=page.context.new_cdp_session(page)
-        points={0:(180,585),1:(941,651),2:(1189,651),3:(1065,651),4:(1189,651)}
+        points={0:(185,580),1:(1056,628),2:(1165,463),3:(1188,628),4:(1165,463)}
         def dispatch(kind, contacts=None):
             cdp.send('Input.dispatchTouchEvent',{'type':kind,'touchPoints':[
                 {'id':i,'x':xy[0],'y':xy[1],'radiusX':2,'radiusY':2,'force':1} for i,xy in (points if contacts is None else contacts).items()]})
@@ -27,7 +27,7 @@ try:
         print('Pressed touch diagnostics:',page.evaluate('minikartsTouchTest'),flush=True)
         page.wait_for_function('minikartsTouchTest.contacts===5 && ["steer_right","brake","jump","shoot"].every(a=>minikartsTouchTest.actions[a]>0)')
         strength=page.evaluate('minikartsTouchTest.actions.steer_right')
-        points[0]=(180,425);points[2]=(640,300)
+        points[0]=(185,420);points[2]=(640,300)
         dispatch('touchMove')
         page.wait_for_timeout(350)
         assert abs(page.evaluate('minikartsTouchTest.actions.steer_right')-strength)<.001

@@ -556,7 +556,8 @@ func make_menu() -> void:
 	add_child(menu)
 	var toggle := Button.new()
 	toggle.text = "Amigos"
-	toggle.position = Vector2(500, 70)
+	toggle.position = Vector2(1050, 92)
+	toggle.custom_minimum_size = Vector2(150, 44)
 	toggle.pressed.connect(func():
 		menu.get_node("Panel").visible = not menu.get_node("Panel").visible
 		if not playing and is_instance_valid(get_tree().current_scene):
@@ -570,7 +571,7 @@ func make_menu() -> void:
 	if "--solo-preview" in OS.get_cmdline_user_args():
 		toggle.hide()
 	driver_button = Button.new()
-	driver_button.position = Vector2(500, 120)
+	driver_button.position = Vector2(1050, 148)
 	driver_button.text = "Menú · piloto"
 	driver_button.custom_minimum_size = Vector2(150, 44)
 	driver_button.add_theme_font_size_override("font_size", 22)

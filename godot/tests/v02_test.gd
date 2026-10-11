@@ -69,6 +69,18 @@ func run_checks() -> void:
 	if controls != null:
 		var buttons: Array = controls.get("_buttons")
 		var center: Vector2 = controls.get("_joystick_center")
+		var back_center: Vector2 = controls._button_center(3)
+		var brake_center: Vector2 = controls._button_center(0)
+		var jump_center: Vector2 = controls._button_center(1)
+		var shot_center: Vector2 = controls._button_center(2)
+		check(back_center.x < brake_center.x and brake_center.x < jump_center.x and is_equal_approx(back_center.y, jump_center.y), "Bottom row follows reverse brake jump order")
+		check(shot_center.y + buttons[2].texture_normal.get_height() / 2.0 < jump_center.y - buttons[1].texture_normal.get_height() / 2.0, "Large shoot button sits above bottom row without overlap")
+		check(buttons.all(func(b): return b.position.x > controls.size.x * 0.5), "Left side is reserved for joystick")
+		check(buttons[2].texture_normal.get_width() > buttons[0].texture_normal.get_width(), "Shoot target is larger than other actions")
+		touch(10, buttons[1].global_position + Vector2(2, 2), true)
+		check(not Input.is_action_pressed("jump"), "Transparent circular corner does not capture a false jump")
+		touch(10, buttons[1].global_position, false)
+
 		touch(0, center + Vector2(-45, 0), true)
 		var brake_position: Vector2 = buttons[0].global_position + buttons[0].texture_normal.get_size() / 2.0
 		var shoot_position: Vector2 = buttons[2].global_position + buttons[2].texture_normal.get_size() / 2.0

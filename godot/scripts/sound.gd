@@ -90,11 +90,11 @@ func build_controls() -> void:
 	add_child(layer)
 	var button := Button.new()
 	button.text = "SONIDO"
-	button.position = Vector2(24, 155)
+	button.position = Vector2(1050, 204)
 	button.size = Vector2(150, 48)
 	layer.add_child(button)
 	panel = VBoxContainer.new()
-	panel.position = Vector2(24, 208)
+	panel.position = Vector2(970, 257)
 	panel.custom_minimum_size = Vector2(210, 200)
 	layer.add_child(panel)
 	var background := StyleBoxFlat.new()

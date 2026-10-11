@@ -303,3 +303,11 @@ Pruebas nativas completas superadas; reglas finales 341 comprobaciones sin fallo
 Backend web20 Live: commit 7712221, deploy dep-db5rs52d0e5s738gdv7g. Prueba pública de 16 conexiones superada: capacidad, directorio, selección de 16 identidades, nueve vueltas, autoridad, carrera, movimiento y migración del creador.
 
 Web20 cliente publicado en 4c7ca8e. HTTP público confirma web20 desde portada y enlaces antiguos web12/web13; cargador y paquete 17.146.088 bytes responden 200. Servidor local de pruebas detenido. Sin pruebas con 16 teléfonos físicos.
+
+### Web21 — controles en círculo y presentación renovada
+
+Distribución elegida: izquierda solo joystick; derecha abajo ATRÁS, FRENO, SALTO y DISPARO más grande encima. Botones circulares con iconos vectoriales independientes de fuentes; captura circular tolerante y propiedad por dedo web19 conservadas. Utilidades a la derecha arriba, marcador compacto centrado y botón del cargador Volver a la derecha para no taparlo. Se conservan 16 personajes, Jordan, piernas, proyectiles, obstáculos, 65 km/h y vueltas 3/6/9.
+
+Carrocería ovalada con morro, franja, asiento, llantas y escapes; sombra de contacto mediante un plano transparente, sin mapas de sombra de luz. Árboles redondeados, colinas, nubes, arco de meta y cielo degradado; nuevas decoraciones sin colisión. Cartel orientado a cámara para que no se lea invertido desde atrás. Circuito, caja de colisión del kart y autoridad física sin cambios. Es una adaptación procedural del estilo de la imagen, no reproduce su nivel de detalle.
+
+Suite nativa completa sin fallos; cinco comprobaciones adicionales de distribución y captura circular pasan en ejecución focalizada. Chromium pasa selección/15 bots, contactos táctiles de cinco dedos, un navegador más quince conexiones muestra 16 coches en carrera sin errores. La exportación final pasa arranque, assets y retorno; captura real preview-web21.png inspeccionada. No hay pruebas en teléfonos físicos. Backend sigue web20 Live: cambios de presentación e interfaz no requieren desplegar otro servidor; protocolo y colisiones compatibles. Paquete final game-62fc3b21f4167b6b.pck, 17.164.248 bytes.

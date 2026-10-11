@@ -26,15 +26,22 @@ func _ready() -> void:
 	prev_z = kart.position.z
 	var sun := DirectionalLight3D.new()
 	sun.rotation_degrees = Vector3(-55, -25, 0)
-	sun.light_energy = 1.3
+	sun.light_energy = 1.15
 	add_child(sun)
 	var world := WorldEnvironment.new()
 	var environment := Environment.new()
-	environment.background_mode = Environment.BG_COLOR
-	environment.background_color = Color("90c8e8")
+	environment.background_mode = Environment.BG_SKY
+	var sky := Sky.new()
+	var sky_material := ProceduralSkyMaterial.new()
+	sky_material.sky_top_color = Color("398cdb")
+	sky_material.sky_horizon_color = Color("b5e6fa")
+	sky_material.ground_horizon_color = Color("b5e6fa")
+	sky_material.ground_bottom_color = Color("83ba65")
+	sky.sky_material = sky_material
+	environment.sky = sky
 	environment.ambient_light_source = Environment.AMBIENT_SOURCE_COLOR
 	environment.ambient_light_color = Color("d6e8f7")
-	environment.ambient_light_energy = 0.65
+	environment.ambient_light_energy = 0.75
 	world.environment = environment
 	add_child(world)
 	hud = preload("res://scripts/hud.gd").new()

@@ -6,6 +6,7 @@ var spawn_transform: Transform3D
 var _steering: float = 0.0
 var _camera: Camera3D
 var _body_visual: MeshInstance3D
+var _shadow_visual: MeshInstance3D
 const MAX_SPEED: float = 65.0 / 3.6
 const CameraFollow = preload("res://scripts/camera_follow.gd")
 const TouchControls = preload("res://scripts/touch_controls.gd")
@@ -46,21 +47,8 @@ func _ready() -> void:
 	shape.shape = box
 	shape.position.y = -0.085
 	add_child(shape)
-	_add_box(Vector3(1.25, 0.3, 1.8), Vector3(0, 0, 0), kart_color)
-	_add_box(Vector3(0.7, 0.35, 0.6), Vector3(0, 0.28, 0.35), Color(0.08, 0.10, 0.14))
-	_add_box(Vector3(1.1, 0.15, 0.45), Vector3(0, 0.18, -0.63), Color(1.0, 0.8, 0.12))
-	for x: float in [-0.7, 0.7]:
-		for z: float in [-0.58, 0.58]:
-			var wheel := MeshInstance3D.new()
-			var cylinder := CylinderMesh.new()
-			cylinder.top_radius = 0.27
-			cylinder.bottom_radius = 0.27
-			cylinder.height = 0.22
-			wheel.mesh = cylinder
-			wheel.rotation.z = PI / 2.0
-			wheel.position = Vector3(x, -0.14, z)
-			wheel.material_override = _material(Color(0.055, 0.06, 0.075))
-			add_child(wheel)
+	_build_body()
+
 	var driver = preload("res://scripts/driver.gd").new()
 	driver.name = "Driver"
 	driver.kart = self
@@ -161,7 +149,7 @@ func _notification(what: int) -> void:
 func _material(color: Color) -> StandardMaterial3D:
 	var material := StandardMaterial3D.new()
 	material.albedo_color = color
-	material.roughness = 0.75
+	material.roughness = 0.42
 	return material
 
 func _add_box(size: Vector3, offset: Vector3, color: Color) -> void:
@@ -172,3 +160,74 @@ func _add_box(size: Vector3, offset: Vector3, color: Color) -> void:
 	mesh_instance.position = offset
 	mesh_instance.material_override = _material(color)
 	add_child(mesh_instance)
+
+func _rounded_part(dimensions: Vector3, offset: Vector3, color: Color) -> MeshInstance3D:
+	var part := MeshInstance3D.new()
+	var mesh := SphereMesh.new()
+	mesh.radius = 0.5
+	mesh.height = 1.0
+	mesh.radial_segments = 20
+	mesh.rings = 10
+	part.mesh = mesh
+	part.scale = dimensions
+	part.position = offset
+	part.material_override = _material(color)
+	add_child(part)
+	return part
+
+func _build_body() -> void:
+	_build_shadow()
+	# Presentation geometry only: the original collision box and driving stay unchanged.
+	_rounded_part(Vector3(1.35, 0.42, 1.95), Vector3(0, 0, 0), kart_color)
+	_rounded_part(Vector3(1.05, 0.38, 0.75), Vector3(0, 0.15, -0.62), kart_color.lightened(0.10))
+	_rounded_part(Vector3(0.68, 0.55, 0.55), Vector3(0, 0.25, 0.35), Color("172638"))
+	_rounded_part(Vector3(0.20, 0.10, 0.8), Vector3(0, 0.32, -0.60), Color("fff5dd"))
+	_rounded_part(Vector3(1.30, 0.16, 0.25), Vector3(0, -0.10, -0.90), Color("f1c746"))
+	for x: float in [-0.71, 0.71]:
+		for z: float in [-0.58, 0.58]:
+			var wheel := MeshInstance3D.new()
+			var cylinder := CylinderMesh.new()
+			cylinder.top_radius = 0.29
+			cylinder.bottom_radius = 0.29
+			cylinder.height = 0.25
+			cylinder.radial_segments = 16
+			wheel.mesh = cylinder
+			wheel.rotation.z = PI / 2.0
+			wheel.position = Vector3(x, -0.14, z)
+			wheel.material_override = _material(Color("171e29"))
+			add_child(wheel)
+			_rounded_part(Vector3(0.07, 0.32, 0.32), Vector3(x + signf(x) * 0.135, -0.14, z), Color("bac7d6"))
+		_rounded_part(Vector3(0.19, 0.19, 0.23), Vector3(x * 0.62, 0.02, 0.96), Color("f05a3f"))
+		var exhaust := MeshInstance3D.new()
+		var pipe := CylinderMesh.new()
+		pipe.top_radius = 0.11
+		pipe.bottom_radius = 0.14
+		pipe.height = 0.28
+		pipe.radial_segments = 12
+		exhaust.mesh = pipe
+		exhaust.rotation.x = PI / 2.0
+		exhaust.position = Vector3(x * 0.50, -0.12, 0.92)
+		exhaust.material_override = _material(Color("abb6c6"))
+		add_child(exhaust)
+		_rounded_part(Vector3(0.16, 0.16, 0.025), Vector3(x * 0.50, -0.12, 1.07), Color("192633"))
+
+func _build_shadow() -> void:
+	_shadow_visual = MeshInstance3D.new()
+	var plane := PlaneMesh.new()
+	plane.size = Vector2(1.9, 2.5)
+	_shadow_visual.mesh = plane
+	var image := Image.create(32, 32, false, Image.FORMAT_RGBA8)
+	for y in range(32):
+		for x in range(32):
+			var radius := Vector2((x - 15.5) / 15.5, (y - 15.5) / 15.5).length()
+			image.set_pixel(x, y, Color(0.05, 0.09, 0.12, maxf(0.0, 1.0 - radius) * 0.36))
+	var surface := StandardMaterial3D.new()
+	surface.albedo_texture = ImageTexture.create_from_image(image)
+	surface.transparency = BaseMaterial3D.TRANSPARENCY_ALPHA
+	surface.shading_mode = BaseMaterial3D.SHADING_MODE_UNSHADED
+	_shadow_visual.material_override = surface
+	add_child(_shadow_visual)
+
+func _process(_delta: float) -> void:
+	if is_instance_valid(_shadow_visual):
+		_shadow_visual.position.y = 0.04 - global_position.y

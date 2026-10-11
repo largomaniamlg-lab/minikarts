@@ -18,12 +18,14 @@ func _ready() -> void:
 	root.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	add_child(root)
 	root.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
-	var timing := _panel(root, Vector2.ZERO, Rect2(24, 24, 400, 108))
+	var timing := _panel(root, Vector2(0.5, 0) if _touch_mode else Vector2.ZERO, Rect2(-200, 20, 400, 132) if _touch_mode else Rect2(24, 24, 400, 108))
 	var timing_column := VBoxContainer.new()
 	timing_column.add_theme_constant_override("separation", 4)
 	timing.add_child(timing_column)
-	timing_column.add_child(_label("MINIKARTS / CIRCUITO DE JUGUETE", 18, YELLOW))
+	if not _touch_mode:
+		timing_column.add_child(_label("MINIKARTS / CIRCUITO DE JUGUETE", 18, YELLOW))
 	stats = _label("VUELTA 1 / 3\nTIEMPO 0.00 s    MEJOR --", 18, WHITE)
+	stats.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER if _touch_mode else HORIZONTAL_ALIGNMENT_LEFT
 	timing_column.add_child(stats)
 	var controls := _panel(root, Vector2(0, 1), Rect2(24, -122, 510, 98))
 	controls.visible = not _touch_mode
@@ -33,26 +35,21 @@ func _ready() -> void:
 	help_column.add_child(_label("R RECUPERA  /  ESPACIO SALTA  /  F DISPARA", 15, YELLOW))
 	help_column.add_child(_label("W / ↑ ACELERA     A D / ← → GIRA", 18, WHITE))
 	help_column.add_child(_label("S / ↓ FRENA     B ATRÁS     SHIFT FRENO DE MANO", 15, WHITE))
-	var speed_panel := _panel(root, Vector2(1, 0) if _touch_mode else Vector2.ONE, Rect2(-234, 24, 210, 126) if _touch_mode else Rect2(-234, -150, 210, 126))
-	var speed_column := VBoxContainer.new()
-	speed_column.add_theme_constant_override("separation", 0)
-	speed_panel.add_child(speed_column)
-	var stripe := HBoxContainer.new()
-	stripe.add_theme_constant_override("separation", 0)
-	stripe.custom_minimum_size.y = 7
-	speed_column.add_child(stripe)
-	for index: int in range(8):
-		var segment := ColorRect.new()
-		segment.color = RED if index % 2 == 0 else WHITE
-		segment.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-		segment.mouse_filter = Control.MOUSE_FILTER_IGNORE
-		stripe.add_child(segment)
-	speed_number = _label("0", 52, WHITE)
-	speed_number.horizontal_alignment = HORIZONTAL_ALIGNMENT_RIGHT
+	var speed_column: VBoxContainer
+	if _touch_mode:
+		speed_column = timing_column
+	else:
+		var speed_panel := _panel(root, Vector2.ONE, Rect2(-234, -150, 210, 126))
+		speed_column = VBoxContainer.new()
+		speed_column.add_theme_constant_override("separation", 0)
+		speed_panel.add_child(speed_column)
+	speed_number = _label("0 km/h" if _touch_mode else "0", 38 if _touch_mode else 52, WHITE)
+	speed_number.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER if _touch_mode else HORIZONTAL_ALIGNMENT_RIGHT
 	speed_column.add_child(speed_number)
-	var unit := _label("km/h", 18, YELLOW)
-	unit.horizontal_alignment = HORIZONTAL_ALIGNMENT_RIGHT
-	speed_column.add_child(unit)
+	if not _touch_mode:
+		var unit := _label("km/h", 18, YELLOW)
+		unit.horizontal_alignment = HORIZONTAL_ALIGNMENT_RIGHT
+		speed_column.add_child(unit)
 	_message_panel = _panel(root, Vector2(0.5, 0.5), Rect2(-290, -154, 580, 74))
 	message = _label("Aceleración automática. Joystick para girar." if _touch_mode else "Pulsa W o ↑ para salir. Mantén el centro a tu derecha.", 20, YELLOW)
 	message.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
@@ -76,7 +73,9 @@ func _panel(root: Control, anchor: Vector2, bounds: Rect2) -> PanelContainer:
 	panel.offset_bottom = bounds.end.y
 	var style := StyleBoxFlat.new()
 	style.bg_color = Color(INK.r, INK.g, INK.b, 0.8)
-	style.set_corner_radius_all(10)
+	style.set_corner_radius_all(24)
+	style.border_color = Color(0.80, 0.90, 1.0, 0.45)
+	style.set_border_width_all(2)
 	style.content_margin_left = 16
 	style.content_margin_right = 16
 	style.content_margin_top = 10
@@ -97,7 +96,7 @@ func _label(text: String, font_size: int, color: Color) -> Label:
 func update_display(lap: int, elapsed: float, best: float, speed: float, finished: bool, started: bool, recovered: bool, lap_target: int = 3) -> void:
 	var best_text: String = "--" if best == INF else "%.2f s" % best
 	stats.text = "VUELTA %d / %d\nTIEMPO %.2f s    MEJOR %s" % [mini(lap, lap_target), lap_target, elapsed, best_text]
-	speed_number.text = "%d" % roundi(absf(speed))
+	speed_number.text = ("%d km/h" if _touch_mode else "%d") % roundi(absf(speed))
 	_message_panel.visible = finished or recovered or not started
 	if finished:
 		message.text = "¡META!\nToca NUEVA CARRERA." if _touch_mode else "¡META!\nPulsa Enter para otra carrera."

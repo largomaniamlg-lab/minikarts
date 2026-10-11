@@ -134,3 +134,5 @@ Web18 publicada y verificada en Render y GitHub Pages. Pendiente únicamente eva
 Web20: tres personajes nuevos y 16 plazas, IA hasta 15 rivales y reutilización segura de huecos de parrilla preparados y probados. Opciones de sorteo/parrilla inversa/clasificación quedan como propuestas para elegir con el usuario.
 
 Web20 publicada y verificada en servidor público con 16 conexiones y GitHub Pages. Propuestas de orden de salida siguen pendientes de elección; el orden actual se conserva.
+
+Web21: diseño solicitado de controles y presentación 3D más redondeada/colorida completados y probados. Queda evaluar comodidad y rendimiento en teléfonos físicos; sorteo/parrilla inversa siguen pendientes de elección.
