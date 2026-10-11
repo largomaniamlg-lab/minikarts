@@ -21,12 +21,14 @@ async def main():
         for index in range(4):
             ws = await websockets.connect(url)
             clients.append(ws)
-            await send(ws, type='create' if index == 0 else 'join', code='' if index == 0 else code, name=f'Amigo {index + 1}')
+            await send(ws, type='create' if index == 0 else 'join', code='' if index == 0 else code, name=f'Amigo {index + 1}', driver=index)
             welcome = await receive(ws, 'welcome')
             code = welcome['code']
         state = await receive(clients[0], 'state', lambda m: len(m['players']) == 4)
         assert len({p['id'] for p in state['players']}) == 4
         assert len(state['boxes']) == 8
+        assert {p['driver'] for p in state['players']} == {0, 1, 2, 3}
+        assert len(state['neutral']) == 3
         async with websockets.connect(url) as extra:
             await send(extra, type='join', code=code, name='Quinto')
             error = await receive(extra, 'error')

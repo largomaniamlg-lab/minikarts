@@ -27,6 +27,9 @@ try:
             page.goto(f'http://127.0.0.1:{server.server_port}/game.html?test=1')
             page.locator('#status').wait_for(state='detached', timeout=180000)
             page.wait_for_timeout(1200)
+            for _ in range(index):
+                click(page, 575, 140)  # Select a different photographic pilot.
+                page.wait_for_timeout(250)
             click(page, 530, 90)  # Amigos
             page.wait_for_timeout(600)
             click(page, 450, 202)  # Nombre
@@ -50,6 +53,7 @@ try:
             pages.append(page)
         for page in pages:
             page.wait_for_function('window.minikartsTest.rendered_karts === 4', timeout=20000)
+            assert {r['driver'] for r in page.evaluate('window.minikartsTest.state.players')} == {0, 1, 2, 3}
             click(page, 600, 452)  # Listo: four racers expand the lobby header
         pages[0].wait_for_function('window.minikartsTest.state.players.every(p => p.ready)', timeout=20000)
         pages[0].screenshot(path='/tmp/minikarts-four-player-lobby.png')

@@ -20,6 +20,8 @@ var input_clock := 0.0
 var pending_reset := false
 var displayed_phase := ""
 var browser_test := false
+var selected_driver := 0
+var driver_button: Button
 var remote_karts: Dictionary = {}
 var remote_shots: Array = []
 var menu: CanvasLayer
@@ -176,7 +178,10 @@ func server_message(id: int, message: Dictionary) -> void:
 		var name_text := str(message.get("name", "Piloto")).strip_edges().left(20)
 		if name_text == "":
 			name_text = "Piloto"
-		room.players[id] = {"kart": kart, "name": name_text, "ready": false, "lap": 0, "checkpoint": 0, "prev_z": -3.0, "input_time": clock, "finished": false, "spawn": kart.transform}
+		var requested_driver = message.get("driver", 0)
+		var driver_id := clampi(int(requested_driver), 0, 3) if (requested_driver is int or requested_driver is float) and is_finite(float(requested_driver)) else 0
+		kart.get_node("Driver").set_face(driver_id)
+		room.players[id] = {"kart": kart, "name": name_text, "driver": driver_id, "ready": false, "lap": 0, "checkpoint": 0, "prev_z": -3.0, "input_time": clock, "finished": false, "spawn": kart.transform}
 		connection.room = code
 		send(connection.socket, {"type": "welcome", "id": id, "code": code})
 		return
@@ -321,7 +326,7 @@ func room_state(room: Dictionary) -> Dictionary:
 	for id in room.players:
 		var player: Dictionary = room.players[id]
 		var kart = player.kart
-		racers.append({"id": id, "name": player.name, "ready": player.ready, "position": vector(kart.position), "rotation": vector(kart.rotation), "speed": kart.speed, "steering": kart._steering, "hit": kart.hit_time, "protection": kart.protection_time, "lap": player.lap, "finished": player.finished, "color": kart.kart_color.to_html()})
+		racers.append({"id": id, "name": player.name, "driver": player.driver, "ready": player.ready, "position": vector(kart.position), "rotation": vector(kart.rotation), "speed": kart.speed, "steering": kart._steering, "hit": kart.hit_time, "protection": kart.protection_time, "lap": player.lap, "finished": player.finished, "color": kart.kart_color.to_html()})
 	var shots := []
 	for child in room.stage.get_children():
 		if child.is_in_group("projectiles"):
@@ -330,7 +335,7 @@ func room_state(room: Dictionary) -> Dictionary:
 	for child in room.track.get_children():
 		if child.is_in_group("destructible"):
 			boxes.append(vector(child.position))
-	return {"type": "state", "code": room.code, "host": room.host, "phase": room.phase, "countdown": maxi(0, ceili(room.timer)), "elapsed": room.elapsed, "players": racers, "shots": shots, "boxes": boxes, "results": room.results}
+	return {"type": "state", "code": room.code, "host": room.host, "phase": room.phase, "countdown": maxi(0, ceili(room.timer)), "elapsed": room.elapsed, "players": racers, "shots": shots, "boxes": boxes, "neutral": vector(room.track.get_node("NeutralSleeper").position), "results": room.results}
 
 func as_vector(value: Array) -> Vector3:
 	return Vector3(value[0], value[1], value[2])
@@ -350,6 +355,8 @@ func update_game(game: Node3D, delta: float) -> void:
 	if snapshot.phase == "lobby" and displayed_phase == "results":
 		game.get_node("Track").reset_obstacles()
 	game.kart.set_physics_process(false)
+	if snapshot.has("neutral"):
+		game.get_node("Track/NeutralSleeper").position = as_vector(snapshot.neutral)
 	var active_ids := []
 	for racer in snapshot.players:
 		var id := int(racer.id)
@@ -372,6 +379,7 @@ func update_game(game: Node3D, delta: float) -> void:
 		var rotation := as_vector(racer.rotation)
 		kart.rotation.y = lerp_angle(kart.rotation.y, rotation.y, 1.0 - exp(-20 * delta))
 		kart._body_visual.material_override.albedo_color = Color(racer.color)
+		kart.get_node("Driver").set_face(int(racer.get("driver", 0)))
 		kart.speed = racer.speed
 		kart._steering = racer.steering
 		if id == player_id:
@@ -421,6 +429,19 @@ func make_menu() -> void:
 			get_tree().current_scene.kart.enabled = not menu.get_node("Panel").visible
 	)
 	menu.add_child(toggle)
+	driver_button = Button.new()
+	driver_button.position = Vector2(500, 120)
+	driver_button.text = "Piloto %d/4" % (selected_driver + 1)
+	driver_button.custom_minimum_size = Vector2(150, 44)
+	driver_button.add_theme_font_size_override("font_size", 22)
+	driver_button.pressed.connect(func():
+		if playing:
+			return
+		selected_driver = (selected_driver + 1) % 4
+		driver_button.text = "Piloto %d/4" % (selected_driver + 1)
+		get_tree().current_scene.kart.get_node("Driver").set_face(selected_driver)
+	)
+	menu.add_child(driver_button)
 	var panel := PanelContainer.new()
 	panel.name = "Panel"
 	panel.position = Vector2(320, 150)
@@ -483,7 +504,7 @@ func make_menu() -> void:
 
 func connect_room(create: bool) -> void:
 	if socket != null and socket.get_ready_state() == WebSocketPeer.STATE_OPEN and player_id == 0:
-		send(socket, {"type": "create" if create else "join", "code": code_input.text.to_upper(), "name": nickname.text})
+		send(socket, {"type": "create" if create else "join", "code": code_input.text.to_upper(), "name": nickname.text, "driver": selected_driver})
 		return
 	if socket != null:
 		info.text = "Sal de la sala antes de conectar a otra."
@@ -505,11 +526,12 @@ func connect_room(create: bool) -> void:
 	while socket != null and socket.get_ready_state() == WebSocketPeer.STATE_CONNECTING and clock < deadline:
 		await get_tree().process_frame
 	if socket != null and socket.get_ready_state() == WebSocketPeer.STATE_OPEN:
-		send(socket, {"type": "create" if create else "join", "code": code_input.text.to_upper(), "name": nickname.text})
+		send(socket, {"type": "create" if create else "join", "code": code_input.text.to_upper(), "name": nickname.text, "driver": selected_driver})
 	else:
 		info.text = "Servidor no disponible. Sal de la sala para reintentar."
 
 func update_menu() -> void:
+	driver_button.disabled = playing
 	var lines := ["Sala %s · %d/4" % [room_code, snapshot.players.size()]]
 	for racer in snapshot.players:
 		lines.append("%s · %s" % [racer.name, "Listo" if racer.ready else "Esperando"])
@@ -538,6 +560,7 @@ func leave_room() -> void:
 	displayed_phase = ""
 	room_code = ""
 	player_id = 0
+	driver_button.disabled = false
 	remote_karts.clear()
 	remote_shots.clear()
 	get_tree().reload_current_scene()

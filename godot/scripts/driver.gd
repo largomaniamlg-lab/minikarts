@@ -2,6 +2,18 @@ extends Node3D
 
 var kart: CharacterBody3D
 var body: Node3D
+var face: Sprite3D
+var face_id := -1
+const FACES := [preload("res://assets/drivers/friend_face.png"), preload("res://assets/drivers/makeup_face.png"), preload("res://assets/drivers/smile_face.png"), preload("res://assets/drivers/beard_face.png")]
+
+func set_face(index: int) -> void:
+	index = clampi(index, 0, FACES.size() - 1)
+	if face_id == index or face == null:
+		return
+	face_id = index
+	face.texture = FACES[index]
+	# Keep equal head size despite different PNG dimensions.
+	face.pixel_size = 0.00072 if index == 0 else 0.88 / float(maxi(face.texture.get_width(), face.texture.get_height()))
 
 func _ready() -> void:
 	body = Node3D.new()
@@ -13,7 +25,7 @@ func _ready() -> void:
 		part(Vector3(0.17, 0.17, 0.22), Vector3(side * 0.17, 0.10, -0.34), Color("33875a"))
 		part(Vector3(0.14, 0.16, 0.47), Vector3(side * 0.29, 0.51, -0.03), Color("e5b83b"))
 		part(Vector3(0.17, 0.17, 0.16), Vector3(side * 0.29, 0.50, -0.30), Color("33875a"))
-	var face := Sprite3D.new()
+	face = Sprite3D.new()
 	face.name = "PhotoFace"
 	face.texture = preload("res://assets/drivers/friend_face.png")
 	face.pixel_size = 0.00072
@@ -22,6 +34,7 @@ func _ready() -> void:
 	face.shaded = false
 	face.texture_filter = BaseMaterial3D.TEXTURE_FILTER_LINEAR_WITH_MIPMAPS
 	add_child(face)
+	set_face(Network.selected_driver)
 
 func part(dimensions: Vector3, offset: Vector3, color: Color) -> void:
 	var visual := MeshInstance3D.new()

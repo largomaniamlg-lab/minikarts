@@ -52,6 +52,17 @@ func _ready() -> void:
 		box("Grandstand", Vector3(13, 0.6, 1.5), Vector3(0, 0.3 + tier * 0.6, -48 - tier * 1.5), blue if tier % 2 == 0 else white)
 	box("InfieldAccent", Vector3(8, 0.15, 5), Vector3(0, 0.075, 0), blue)
 	_build_obstacles()
+	var sleeper := preload("res://scripts/neutral_sleeper.gd").new()
+	add_child(sleeper)
+	for i in range(12):
+		var decoration := Sprite3D.new()
+		decoration.texture = preload("res://assets/memes/legs.png")
+		decoration.pixel_size = 6.0 / float(decoration.texture.get_height())
+		decoration.position = track_point(TAU * float(i) / 12.0, 44.0, 3.0)
+		decoration.billboard = BaseMaterial3D.BILLBOARD_ENABLED
+		decoration.shaded = false
+		decoration.name = "LegTree%d" % i
+		add_child(decoration)
 
 func track_point(angle: float, base_radius: float = 30.0, height: float = 0.0) -> Vector3:
 	var radius: float = base_radius + 3.0 * sin(3.0 * angle)
@@ -74,6 +85,8 @@ func _build_obstacles() -> void:
 		add_child(crate)
 
 func reset_obstacles() -> void:
+	if has_node("NeutralSleeper"):
+		get_node("NeutralSleeper").reset_path()
 	for child in get_children():
 		if child.is_in_group("obstacles"):
 			remove_child(child)

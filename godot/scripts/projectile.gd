@@ -6,11 +6,19 @@ var life: float = 2.0
 
 func _ready() -> void:
 	add_to_group("projectiles")
+	var photo := Sprite3D.new()
+	photo.texture = preload("res://assets/memes/projectile.png")
+	photo.pixel_size = 0.8 / float(photo.texture.get_height())
+	photo.billboard = BaseMaterial3D.BILLBOARD_ENABLED
+	photo.shaded = false
+	photo.position.y = 0.2
+	add_child(photo)
 	var visual := MeshInstance3D.new()
 	var sphere := SphereMesh.new()
 	sphere.radius = 0.2
 	sphere.height = 0.4
 	visual.mesh = sphere
+	visual.visible = false
 	var material := StandardMaterial3D.new()
 	material.albedo_color = Color("ffd447")
 	material.shading_mode = BaseMaterial3D.SHADING_MODE_UNSHADED
