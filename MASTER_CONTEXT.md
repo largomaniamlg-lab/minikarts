@@ -81,3 +81,7 @@ B procesa reversa también en escritorio; Shift sustituye espacio para el freno 
 Preset Web sin hilos añadido. Plantillas oficiales 4.5.1 descargadas con verificación SHA-512; se instalan únicamente las Web. `install-web-templates.sh`, `export-web.sh`, `prepare-web.py` y `smoke-web.py` reproducen instalación, exportación y comprobación. Salida a directorio temporal, controles táctiles forzados, WASM gzip con mtime fijo y loader de descompresión existente. La web de la raíz y el ZIP histórico se conservan; estas mejoras aún no están publicadas. Android sigue pendiente.
 
 Multijugador para cuatro personas: objetivo consultado por el usuario, sin implementación. Véase MK-13; no asumir aprobación de alojamiento ni de cambios creativos.
+
+## Preparación de publicación web2
+
+El usuario autorizó publicar la nueva web. Exportación generada desde las fuentes del commit 790ef37, copiada a la raíz con loader/PCK/WASM coherentes. Marcador visible 0.2 web2 y URL del iframe versionada. Cambios: controles corregidos y modo táctil forzado en Web. No incluye multijugador. El envío a GitHub y despliegue Pages se comprueban aparte; preparar archivos no acredita publicación.
