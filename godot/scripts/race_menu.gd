@@ -1,7 +1,12 @@
 extends CanvasLayer
 
 const Driver = preload("res://scripts/driver.gd")
-const NAMES := ["Kikoso", "Largo", "Sipollo", "Antocino"]
+const Catalog = preload("res://scripts/driver_catalog.gd")
+const NAMES = Catalog.NAMES
+var page := 0
+var previous: Button
+var next: Button
+var page_label: Label
 var game: Node3D
 var root: Control
 var title: Label
@@ -20,23 +25,29 @@ func _ready() -> void:
 	shade.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
 	root.add_child(shade)
 	title = label("ELIGE TU PILOTO", Vector2(260, 60), Vector2(760, 50), 32)
-	for index in range(4):
-		var card := button(NAMES[index], Vector2(260 + index * 195, 125), Vector2(175, 205))
+	for index in range(NAMES.size()):
+		var card := button(NAMES[index], Vector2(260 + (index % 4) * 195, 125), Vector2(175, 205))
 		card.toggle_mode = true
 		card.alignment = HORIZONTAL_ALIGNMENT_CENTER
 		card.add_theme_constant_override("outline_size", 0)
+		card.add_theme_font_size_override("font_size", 16)
 		var portrait := TextureRect.new()
 		portrait.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
-		portrait.texture = Driver.FACES[index]
+		portrait.texture = Catalog.PORTRAITS[index]
 		portrait.position = Vector2(12, 10)
-		portrait.size = Vector2(151, 151)
+		portrait.size = Vector2(151, 140)
 		portrait.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_CENTERED
 		portrait.mouse_filter = Control.MOUSE_FILTER_IGNORE
 		card.text = "\n\n\n\n\n" + NAMES[index]
 		card.add_child(portrait)
-		portrait.size = Vector2(151, 151)
+		portrait.size = Vector2(151, 140)
 		card.pressed.connect(select.bind(index))
 		cards.append(card)
+	previous = button("<", Vector2(145, 195), Vector2(90, 60))
+	next = button(">", Vector2(1045, 195), Vector2(90, 60))
+	previous.pressed.connect(func(): change_page(-1))
+	next.pressed.connect(func(): change_page(1))
+	page_label = label("", Vector2(510, 95), Vector2(260, 25), 16)
 	button("CARRERA · 3 RIVALES IA", Vector2(260, 360), Vector2(760, 60)).pressed.connect(game.start_offline)
 	online = button("ONLINE · CON AMIGOS", Vector2(260, 435), Vector2(760, 60))
 	online.pressed.connect(func():
@@ -88,10 +99,10 @@ func open() -> void:
 		game.offline_race.pause_race(true)
 	title.text = "ELIGE TU PILOTO"
 	result_text.hide()
-	for card in cards:
-		card.show()
+	page = Network.selected_driver / 4
+	update_page()
 	online.disabled = Network.address.text.is_empty()
-	status.text = "Online pendiente de activar el servidor gratuito." if online.disabled else "Crea una sala y comparte su código con tus amigos."
+	status.text = "Online pendiente de activar el servidor gratuito." if online.disabled else "Crea una sala o elige una disponible · hasta 10 jugadores."
 
 func resume() -> void:
 	hide()
@@ -112,4 +123,21 @@ func show_results(results: Array) -> void:
 	for index in range(results.size()):
 		var racer: Dictionary = results[index]
 		result_text.text += "%d. %s — %s\n" % [index + 1, racer.name, "%.2f s" % racer.time if racer.time >= 0 else "Sin terminar"]
+	previous.hide()
+	next.hide()
+	page_label.hide()
 	result_text.show()
+
+func change_page(direction: int) -> void:
+	page = clampi(page + direction, 0, (NAMES.size() - 1) / 4)
+	update_page()
+
+func update_page() -> void:
+	for i in range(cards.size()):
+		cards[i].visible = i / 4 == page
+	previous.show()
+	next.show()
+	page_label.show()
+	previous.disabled = page == 0
+	next.disabled = page == (NAMES.size() - 1) / 4
+	page_label.text = "%d / %d" % [page + 1, ceili(NAMES.size() / 4.0)]

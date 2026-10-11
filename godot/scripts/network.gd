@@ -7,9 +7,10 @@ var ping_clock := -2.0
 var ping_pending := -1.0
 var ping_serial := 0
 
-const LIMIT := 4
+const Catalog = preload("res://scripts/driver_catalog.gd")
+const LIMIT := 10
 const CHECKPOINTS := [Vector3(0, 0, 30), Vector3(-30, 0, 0), Vector3(0, 0, -30), Vector3(30, 0, 0)]
-const COLORS := [Color("ee3814"), Color("397cdc"), Color("51ba66"), Color("b464d5")]
+const COLORS := [Color("ee3814"), Color("397cdc"), Color("51ba66"), Color("b464d5"), Color("f4cf39"), Color("39d5d2"), Color("ed6bb1"), Color("f49b38"), Color("dddddd"), Color("637049")]
 var server_mode := false
 var listener: TCPServer
 var peers: Dictionary = {}
@@ -155,7 +156,7 @@ func driving_inputs() -> Dictionary:
 func server_tick(delta: float) -> void:
 	while listener.is_connection_available():
 		var stream := listener.take_connection()
-		if peers.size() >= 16:
+		if peers.size() >= 48:
 			stream.disconnect_from_host()
 			continue
 		var peer := WebSocketPeer.new()
@@ -253,19 +254,19 @@ func server_message(id: int, message: Dictionary) -> void:
 			reject(id, "La carrera ya ha empezado. Espera a que el creador vuelva a la sala.")
 			return
 		if room.players.size() >= LIMIT:
-			reject(id, "Sala llena: ya hay cuatro jugadores.")
+			reject(id, "Sala llena: ya hay diez jugadores.")
 			return
 		var kart = preload("res://scenes/kart.tscn").instantiate()
 		kart.network_controlled = true
 		kart.kart_color = COLORS[room.players.size()]
-		kart.position = Vector3(25 + room.players.size() * 3, 0.7, -3)
+		kart.position = Vector3(27 + (room.players.size() % 2) * 6, 0.7, -3 - (room.players.size() / 2) * 4)
 		room.stage.add_child(kart)
 		kart.enabled = false
 		var name_text := str(message.get("name", "Piloto")).strip_edges().left(20)
 		if name_text == "":
 			name_text = "Piloto"
 		var requested_driver = message.get("driver", 0)
-		var driver_id := clampi(int(requested_driver), 0, 3) if (requested_driver is int or requested_driver is float) and is_finite(float(requested_driver)) else 0
+		var driver_id := clampi(int(requested_driver), 0, Catalog.NAMES.size() - 1) if (requested_driver is int or requested_driver is float) and is_finite(float(requested_driver)) else 0
 		kart.get_node("Driver").set_face(driver_id)
 		room.players[id] = {"kart": kart, "name": name_text, "driver": driver_id, "ready": false, "lap": 0, "checkpoint": 0, "prev_z": -3.0, "input_time": clock, "finished": false, "spawn": kart.transform}
 		connection.room = code
@@ -543,7 +544,7 @@ func make_menu() -> void:
 		if is_instance_valid(get_tree().current_scene) and get_tree().current_scene.get("race_menu") != null:
 			get_tree().current_scene.race_menu.open()
 			return
-		selected_driver = (selected_driver + 1) % 4
+		selected_driver = (selected_driver + 1) % Catalog.NAMES.size()
 		driver_button.text = "Menú · piloto"
 		if is_instance_valid(get_tree().current_scene):
 			get_tree().current_scene.kart.get_node("Driver").set_face(selected_driver)
@@ -563,7 +564,7 @@ func make_menu() -> void:
 	info.size = Vector2(680, 66)
 	info.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 	info.add_theme_font_size_override("font_size", 21)
-	info.text = "Salas online · hasta cuatro pilotos"
+	info.text = "Salas online · hasta diez pilotos"
 	panel.add_child(info)
 	address = LineEdit.new()
 	address.text = OS.get_environment("MULTIPLAYER_SERVER_URL")
@@ -763,9 +764,13 @@ func send_lobby_request(kind: String) -> void:
 
 func update_menu() -> void:
 	driver_button.disabled = playing
-	var lines := ["Sala %s · %d/4" % [room_code, snapshot.players.size()]]
-	for racer in snapshot.players:
-		lines.append("%s · %s" % [racer.name, "Listo" if racer.ready else "Esperando"])
+	var lines := ["Sala %s · %d/%d" % [room_code, snapshot.players.size(), LIMIT]]
+	for index in range(0, snapshot.players.size(), 2):
+		var row: Array[String] = []
+		for racer in snapshot.players.slice(index, index + 2):
+			row.append("%s · %s" % [racer.name, "Listo" if racer.ready else "Esperando"])
+		lines.append("    |    ".join(row))
+	info.add_theme_font_size_override("font_size", 16 if snapshot.phase == "results" else 19)
 	if snapshot.phase == "countdown":
 		lines.append("Salida en %d…" % snapshot.countdown)
 	elif snapshot.phase == "racing" and displayed_phase != "racing":
@@ -806,4 +811,4 @@ func leave_room() -> void:
 	remote_karts.clear()
 	remote_shots.clear()
 	get_tree().reload_current_scene()
-	info.text = "Carrera privada · hasta 4 pilotos"
+	info.text = "Carrera privada · hasta 10 pilotos"

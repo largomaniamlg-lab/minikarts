@@ -38,7 +38,7 @@ Teclado en el proyecto nativo: W/flechas aceleran, A/D giran, S frena y permite 
 
 ## Multijugador privado (prototipo local)
 
-Salas para hasta cuatro pilotos, salida compartida, tres vueltas, clasificación y trompos por disparos. Servidor requerido: `PORT=8080 bash scripts/server.sh`. Instrucciones, pruebas y publicación pendiente en [MULTIPLAYER.md](MULTIPLAYER.md). La versión pública existente sigue siendo individual hasta desplegar servidor y cliente.
+Salas para hasta diez pilotos (versión preparada, todavía sin publicar), salida compartida, tres vueltas, clasificación y trompos por disparos. Servidor requerido: `PORT=8080 bash scripts/server.sh`. Instrucciones, pruebas y publicación pendiente en [MULTIPLAYER.md](MULTIPLAYER.md). La versión pública existente sigue siendo individual hasta desplegar servidor y cliente.
 
 ### Selector y carreras offline (ciclo local)
 

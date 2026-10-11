@@ -125,5 +125,28 @@ func run_checks() -> void:
 	check(not network.rooms.has(room.code), "Empty room released")
 	check(not network.room_directory().any(func(r): return r.code == room.code), "Empty rooms disappear from directory")
 	network.remove_peer(103)
+	for id in range(200, 211):
+		fake_peer(id)
+	network.server_message(200, {"type": "create", "name": "Ten", "driver": 8})
+	var large_room: Dictionary = network.rooms[network.peers[200].room]
+	for id in range(201, 210):
+		network.server_message(id, {"type": "join", "code": large_room.code, "driver": (id - 200) % 9})
+	network.server_message(210, {"type": "join", "code": large_room.code})
+	check(large_room.players.size() == 10 and network.peers[210].room == "", "Ten players admitted; eleventh rejected")
+	check(large_room.players[200].driver == 8, "New character survives server selection")
+	check(not network.room_directory().any(func(r): return r.code == large_room.code), "Full ten-player room hidden")
+	var spawn_positions: Array[Vector3] = []
+	var safe := true
+	for player in large_room.players.values():
+		var position: Vector3 = player.kart.position
+		safe = safe and position.x > 21 and position.x < 39
+		for previous in spawn_positions:
+			safe = safe and previous.distance_to(position) >= 4.0
+		spawn_positions.append(position)
+	check(safe, "Ten starting positions fit the road without overlap")
+	var fastest = large_room.players[200].kart
+	check(is_equal_approx(fastest.MAX_SPEED * 3.6, 65.0), "Vehicle limit is 65 km/h")
+	for id in range(200, 211):
+		network.remove_peer(id)
 	print("MiniKarts multiplayer rules: %d checks, %d failures" % [checks, failures])
 	quit(0 if failures == 0 else 1)

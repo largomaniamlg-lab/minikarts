@@ -40,7 +40,7 @@ func project(racer: Dictionary, seconds: float, controls: Dictionary = {}) -> Di
 	elif not controls.is_empty():
 		var desired := float(controls.get("steer_right", 0)) - float(controls.get("steer_left", 0))
 		steering = move_toward(steering, desired, (12.0 if is_zero_approx(desired) else 3.0) * age)
-		var target := 22.0
+		var target := 65.0 / 3.6
 		var rate := 10.0
 		if float(controls.get("brake", 0)) > 0 or float(controls.get("handbrake", 0)) > 0:
 			target = 0.0

@@ -1,7 +1,8 @@
 extends Node
 
 const BotDriver = preload("res://scripts/bot_driver.gd")
-const NAMES := ["Kikoso", "Largo", "Sipollo", "Antocino"]
+const Catalog = preload("res://scripts/driver_catalog.gd")
+const NAMES = Catalog.NAMES
 var game: Node3D
 var racers: Array = []
 var bots: Array = []
@@ -20,7 +21,7 @@ func _ready() -> void:
 		kart.kart_color = [Color("397cdc"), Color("51ba66"), Color("b464d5")][index]
 		game.add_child(kart)
 		kart._camera.queue_free()
-		var driver_id: int = (Network.selected_driver + index + 1) % 4
+		var driver_id: int = (Network.selected_driver + index + 1) % NAMES.size()
 		kart.get_node("Driver").set_face(driver_id)
 		var label := Label3D.new()
 		label.name = "BotName"
@@ -63,7 +64,7 @@ func reset() -> void:
 		racer.prev_z = -3.0
 		racer.finished = false
 		if index > 0:
-			var driver_id: int = (Network.selected_driver + index) % 4
+			var driver_id: int = (Network.selected_driver + index) % NAMES.size()
 			racer.kart.get_node("Driver").set_face(driver_id)
 			racer.name = "IA · " + NAMES[driver_id]
 			racer.kart.get_node("BotName").text = racer.name

@@ -4,7 +4,7 @@ var kart: CharacterBody3D
 var body: Node3D
 var face: Sprite3D
 var face_id := -1
-const FACES := [preload("res://assets/drivers/friend_face.png"), preload("res://assets/drivers/makeup_face.png"), preload("res://assets/drivers/smile_face.png"), preload("res://assets/drivers/beard_face.png")]
+const FACES = preload("res://scripts/driver_catalog.gd").FACES
 
 func set_face(index: int) -> void:
 	index = clampi(index, 0, FACES.size() - 1)
@@ -35,6 +35,8 @@ func _ready() -> void:
 	face.texture_filter = BaseMaterial3D.TEXTURE_FILTER_LINEAR_WITH_MIPMAPS
 	add_child(face)
 	set_face(Network.selected_driver)
+	body.hide()
+	set_physics_process(false)
 
 func part(dimensions: Vector3, offset: Vector3, color: Color) -> void:
 	var visual := MeshInstance3D.new()

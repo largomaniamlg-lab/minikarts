@@ -1,4 +1,4 @@
-"""Exercise the real WebSocket server with four independent connections."""
+"""Exercise the real WebSocket server with ten independent connections."""
 import asyncio
 import json
 import sys
@@ -18,8 +18,8 @@ async def main():
     url = sys.argv[1] if len(sys.argv) > 1 else 'ws://127.0.0.1:8080'
     clients = []
     try:
-        for index in range(4):
-            ws = await websockets.connect(url)
+        for index in range(10):
+            ws = await websockets.connect(url, max_queue=None, close_timeout=1)
             clients.append(ws)
             await send(ws, type='ping', stamp=index + 0.25)
             assert (await receive(ws, 'pong'))['stamp'] == index + 0.25
@@ -29,21 +29,21 @@ async def main():
                 selected = next(r for r in directory['rooms'] if r['code'] == code)
                 assert selected['players'] == index and selected['host'] == 'Amigo 1'
                 code = selected['code']
-            await send(ws, type='create' if index == 0 else 'join', code='' if index == 0 else code, name=f'Amigo {index + 1}', driver=index)
+            await send(ws, type='create' if index == 0 else 'join', code='' if index == 0 else code, name=f'Amigo {index + 1}', driver=index % 9)
             welcome = await receive(ws, 'welcome')
             code = welcome['code']
-        state = await receive(clients[0], 'state', lambda m: len(m['players']) == 4)
-        assert len({p['id'] for p in state['players']}) == 4
+        state = await receive(clients[0], 'state', lambda m: len(m['players']) == 10)
+        assert len({p['id'] for p in state['players']}) == 10
         assert isinstance(state['time'], (int, float))
         assert all(len(p['velocity']) == 3 for p in state['players'])
         assert len(state['boxes']) == 8
-        assert {p['driver'] for p in state['players']} == {0, 1, 2, 3}
+        assert {p['driver'] for p in state['players']} == set(range(9))
         assert len(state['neutral']) == 3
-        async with websockets.connect(url) as extra:
+        async with websockets.connect(url, max_queue=None, close_timeout=1) as extra:
             await send(extra, type='list')
             directory = await receive(extra, 'rooms')
             assert not any(r['code'] == code for r in directory['rooms']), 'Full rooms hidden'
-            await send(extra, type='join', code=code, name='Quinto')
+            await send(extra, type='join', code=code, name='Undécimo')
             error = await receive(extra, 'error')
             assert 'llena' in error['message']
         await send(clients[1], type='start')
@@ -67,11 +67,12 @@ async def main():
         assert all(p['position'][0] < 100 for p in state['players']), 'Client cannot teleport'
         assert any(p['position'] != origins[p['id']] for p in state['players'])
         assert any(p['speed'] > 1 for p in state['players'])
+        assert all(abs(p['speed']) <= 65 / 3.6 + .01 for p in state['players']), 'Authoritative speed cap'
         host = state['host']
         await clients[0].close()
-        state = await receive(clients[1], 'state', lambda m: len(m['players']) == 3)
+        state = await receive(clients[1], 'state', lambda m: len(m['players']) == 9)
         assert state['host'] != host, 'Host migration after disconnect'
-        print('PASS: listado y entrada por selección, 4 clientes, capacidad, autoridad, listos, cuenta atrás, movimiento, disparos solicitados y desconexión')
+        print('PASS: listado y entrada por selección, 10 clientes, capacidad, autoridad, listos, cuenta atrás, movimiento, disparos solicitados y desconexión')
     finally:
         for ws in clients:
             await ws.close()

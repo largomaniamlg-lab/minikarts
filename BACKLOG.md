@@ -113,3 +113,8 @@ Siguiente prioridad después de esa prueba: reconexión con plaza reservada e id
 - Preparada: interpolación de rivales, anticipación visual local limitada y cámara por fotograma. Publicación y validación física pendientes.
 - Siguiente: medir RTT, edad de estados y rendimiento en dos teléfonos durante una carrera; comprobar giro, frenado, salto, impactos, recuperación y reconexión. Aceptación: conducción visual continua, ausencia de grandes correcciones y resultado idéntico entre pilotos.
 - Después: evaluar predicción física con entradas numeradas y reconciliación si el retraso de control sigue molestando; mantener colisiones y resultados autoritativos, y probar 150–300 ms de latencia y pausas de red.
+
+### Ampliación preparada, sin publicar
+
+- Salas de diez, límite 65 km/h y cinco nuevos personajes implementados y probados localmente.
+- Pendiente: foto completa original de Kikoso, revisión visual del usuario y autorización de publicación; luego pruebas con amigos y medición en móviles físicos.

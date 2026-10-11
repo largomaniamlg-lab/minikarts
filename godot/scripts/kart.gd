@@ -6,7 +6,7 @@ var spawn_transform: Transform3D
 var _steering: float = 0.0
 var _camera: Camera3D
 var _body_visual: MeshInstance3D
-const MAX_SPEED: float = 22.0
+const MAX_SPEED: float = 65.0 / 3.6
 const CameraFollow = preload("res://scripts/camera_follow.gd")
 const TouchControls = preload("res://scripts/touch_controls.gd")
 var _touch_driving: bool = false

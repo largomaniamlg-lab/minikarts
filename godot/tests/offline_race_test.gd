@@ -13,6 +13,11 @@ func run() -> void:
 	root.add_child(game)
 	await physics_frame
 	game.race_menu.open()
+	for driver in range(9):
+		game.race_menu.select(driver)
+		game.race_menu.open()
+		check(game.kart.get_node("Driver").face_id == driver, "Selection retains driver %d" % driver)
+		check(game.race_menu.cards[driver].visible, "Selected driver is on visible page %d" % driver)
 	game.race_menu.select(3)
 	check(game.kart.get_node("Driver").face_id == 3, "Visual character selection applies chosen face")
 	check(not game.kart.is_physics_processing(), "Menu pauses kart")
