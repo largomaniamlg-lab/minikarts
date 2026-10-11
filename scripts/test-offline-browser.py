@@ -22,7 +22,7 @@ try:
         page.wait_for_timeout(1500)
         page.screenshot(path='/tmp/minikarts-character-menu.png')
         page.mouse.click((345 + 3 * 195) / 2, 210 / 2)
-        page.mouse.click(640 / 2, 390 / 2)
+        page.mouse.click(640 / 2, 432 / 2)
         page.wait_for_function('window.minikartsOfflineTest && window.minikartsOfflineTest.phase === "racing"', timeout=30000)
         page.wait_for_function('window.minikartsOfflineTest.elapsed > 3', timeout=15000)
         assert len(page.evaluate('window.minikartsOfflineTest.racers')) == 4

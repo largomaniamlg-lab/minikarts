@@ -261,3 +261,11 @@ Validación: 382 comprobaciones nativas sin fallos, protocolo real de 13 cliente
 ### Backend actualizado — web17
 
 Render Live: despliegue `dep-db5qd3142hec739rvgv0`, commit `00b86d8`. Selección real de nueve vueltas y doce bots por el menú de Chromium superada, además de las pruebas anteriores. Web17 preparada con paquete `game-59c7e5a74e58634c.pck`; tanto la portada principal como el enlace estable de grupo apuntan a la versión nueva. Pendiente publicar este cliente y verificar GitHub Pages.
+
+### Publicación verificada de web17 — 11 de octubre de 2026
+
+Backend Live `dep-db5qd3142hec739rvgv0` (commit `00b86d8`); cliente publicado en `1b9d5d1`. La prueba WebSocket pública pasó con trece clientes: distancia de nueve vueltas, directorio, selección, capacidad, autoridad, salida, movimiento y migración del creador. GitHub Pages devuelve 200 para el cargador y el paquete `game-59c7e5a74e58634c.pck`; el enlace estable, incluso con `?v=web12` y `?v=web13`, apunta a web17. Portada principal actualizada también.
+
+Pruebas Chromium locales de selección (cuatro páginas), nueve vueltas/doce bots, modo por defecto de tres bots, arranque y trece coches online superadas. 382 comprobaciones nativas sin fallos. El intento adicional de navegación directa desde Chromium a la web pública se detuvo por `ERR_CERT_AUTHORITY_INVALID` del proxy de este entorno; no se desactivó TLS. Los recursos públicos y el WebSocket sí se verificaron con clientes que confían en la CA del entorno. No se ha validado esta versión con trece teléfonos físicos ni Safari/iPhone real.
+
+No quedan personajes pendientes de foto. Pruebas con amigos, medición de fluidez en teléfonos y futuras mejoras de reconexión siguen como validación/desarrollo posterior, no como cambios bloqueados de esta entrega. Para cargar la versión nueva, cerrar la partida abierta y recargar el enlace habitual; una pestaña ya abierta conserva su versión y puede intervenir la caché del navegador.

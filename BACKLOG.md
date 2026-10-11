@@ -122,3 +122,7 @@ Siguiente prioridad después de esa prueba: reconexión con plaza reservada e id
 ### Ampliación y vueltas completadas
 
 Trece personajes y plazas online; Kikoso completo; distancias 3/6/9; IA de hasta 12 rivales. Pruebas nativas y de red superadas. Se prepara publicación por solicitud de terminar pendientes. Validación futura: móviles físicos, rendimiento y latencia con el grupo.
+
+### Entrega completada: web17 publicada
+
+Trece personajes y plazas, selector de 3/6/9 vueltas y IA de 3/6/12 rivales publicados y verificados por protocolo público y HTTP. Mejoras de fluidez de web15 incluidas. Validación física y mejoras posteriores de reconexión continúan en backlog; ninguna foto pendiente.
