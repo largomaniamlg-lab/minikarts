@@ -80,6 +80,42 @@ func run_checks() -> void:
 		touch(1, brake_position, false)
 		touch(2, shoot_position, false)
 		check(not Input.is_action_pressed("steer_left") and not Input.is_action_pressed("shoot"), "Multitouch release clears actions")
+		# Five independent contacts; moving the joystick vertically cannot change steering.
+		touch(3, center + Vector2(45, 0), true)
+		var initial_strength := Input.get_action_strength("steer_right")
+		var drag := InputEventScreenDrag.new()
+		drag.index = 3
+		drag.position = center + Vector2(45, -160)
+		viewport.push_input(drag)
+		check(is_equal_approx(Input.get_action_strength("steer_right"), initial_strength), "Vertical thumb drift preserves steering")
+		touch(4, brake_position, true)
+		touch(5, shoot_position, true)
+		touch(6, controls._button_center(1), true)
+		touch(7, shoot_position, true)
+		check(Input.is_action_pressed("brake") and Input.is_action_pressed("shoot") and Input.is_action_pressed("jump") and Input.is_action_pressed("steer_right"), "Five contacts combine steering brake jump and shoot")
+		drag.index = 5
+		drag.position = Vector2(640, 300)
+		viewport.push_input(drag)
+		check(Input.is_action_pressed("shoot") and not Input.is_action_pressed("reverse"), "Button ownership survives drift without switching actions")
+		touch(5, drag.position, false)
+		check(Input.is_action_pressed("shoot"), "Second finger keeps shared button held")
+		var canceled := InputEventScreenTouch.new()
+		canceled.index = 7
+		canceled.pressed = true
+		canceled.canceled = true
+		viewport.push_input(canceled)
+		check(not Input.is_action_pressed("shoot") and Input.is_action_pressed("brake"), "Cancellation releases only its action")
+		touch(3, center, false)
+		touch(4, brake_position, false)
+		touch(6, controls._button_center(1), false)
+		touch(8, center + Vector2(6, 0), true)
+		check(not Input.is_action_pressed("steer_right"), "Center deadzone absorbs thumb jitter")
+		touch(8, center, false)
+		touch(9, center + Vector2(90, 0), true)
+		check(is_equal_approx(Input.get_action_strength("steer_right"), 1.0), "Full joystick travel reaches full steering")
+		controls._layout_buttons()
+		check(not Input.is_action_pressed("steer_right") and controls.get("_finger") == -1, "Relayout releases active touches")
+
 	Input.action_press("brake")
 	var obstacle = load("res://scripts/obstacle.gd").new()
 	game.add_child(obstacle)

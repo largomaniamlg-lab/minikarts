@@ -3,11 +3,17 @@ extends Control
 const ACTIONS: Array[StringName] = [&"accelerate", &"brake", &"reverse", &"jump", &"shoot", &"steer_left", &"steer_right", &"reset", &"restart_race"]
 var _buttons: Array[TouchScreenButton] = []
 const JOYSTICK_RADIUS: float = 90.0
-const DEADZONE: float = 0.15
+const DEADZONE: float = 0.08
+const RESPONSE_CURVE: float = 1.4
+var _button_fingers: Dictionary = {}
+var _normal_textures: Array[Texture2D] = []
+var _pressed_textures: Array[Texture2D] = []
 var _joystick_center := Vector2.ZERO
 var _joystick_offset := Vector2.ZERO
 var _finger: int = -1
 var _focused: bool = true
+var _test_clock := 0.0
+var _test_mode := false
 
 static func is_touch_mode() -> bool:
 	return OS.has_feature("mobile") or "--force-touch" in OS.get_cmdline_user_args()
@@ -18,6 +24,8 @@ func _ready() -> void:
 	visible = is_touch_mode()
 	if not visible:
 		return
+	if OS.has_feature("web"):
+		_test_mode = bool(JavaScriptBridge.eval("new URLSearchParams(location.search).has('test')"))
 	_add_button("brake", "FRENO", Vector2(110, 90), Color("e4483c"))
 	_add_button("jump", "SALTO", Vector2(110, 90), Color("5bbf6a"))
 	_add_button("shoot", "DISPARO", Vector2(110, 90), Color("d59732"))
@@ -29,16 +37,19 @@ func _ready() -> void:
 
 func _add_button(action_name: String, caption: String, dimensions: Vector2, color: Color) -> void:
 	var button := TouchScreenButton.new()
-	button.action = action_name
+	button.set_meta("action", action_name)
 	button.texture_normal = _texture(dimensions, Color(color.r, color.g, color.b, 0.85))
 	button.texture_pressed = _texture(dimensions, color.lightened(0.25))
 	var rectangle := RectangleShape2D.new()
-	rectangle.size = dimensions
+	rectangle.size = dimensions + Vector2(12, 12)
 	button.shape = rectangle
 	button.shape_centered = true
 	button.passby_press = false
 	add_child(button)
+	button.set_process_input(false)
 	_buttons.append(button)
+	_normal_textures.append(button.texture_normal)
+	_pressed_textures.append(button.texture_pressed)
 	var caption_label := Label.new()
 	caption_label.text = caption
 	caption_label.size = dimensions
@@ -59,6 +70,7 @@ func _texture(dimensions: Vector2, color: Color) -> ImageTexture:
 func _layout_buttons() -> void:
 	if _buttons.size() != 6:
 		return
+	release_actions()
 	_joystick_center = Vector2(135, size.y - 135)
 	_buttons[0].position = Vector2(size.x - 394, size.y - 114)
 	_buttons[1].position = Vector2(size.x - 270, size.y - 114)
@@ -81,23 +93,51 @@ func _input(event: InputEvent) -> void:
 		return
 	if event is InputEventScreenTouch:
 		var point: Vector2 = get_global_transform_with_canvas().affine_inverse() * event.position
-		if event.pressed and _finger == -1 and point.distance_to(_joystick_center) <= JOYSTICK_RADIUS + 20.0:
-			_finger = event.index
-			_move_joystick(point)
-		elif not event.pressed and event.index == _finger:
-			_clear_joystick()
+		if not event.pressed or event.canceled:
+			if event.index == _finger:
+				_clear_joystick()
+			if _button_fingers.has(event.index):
+				var button_index: int = _button_fingers[event.index]
+				_button_fingers.erase(event.index)
+				_update_button(button_index)
+		elif event.index != _finger and not _button_fingers.has(event.index):
+			for index in range(_buttons.size()):
+				var button := _buttons[index]
+				var dimensions := _normal_textures[index].get_size()
+				if button.visible and Rect2(button.position - Vector2(6, 6), dimensions + Vector2(12, 12)).has_point(point):
+					_button_fingers[event.index] = index
+					_update_button(index)
+					return
+			if _finger == -1 and point.distance_to(_joystick_center) <= JOYSTICK_RADIUS + 20.0:
+				_finger = event.index
+				_move_joystick(point)
 	elif event is InputEventScreenDrag and event.index == _finger:
 		var point: Vector2 = get_global_transform_with_canvas().affine_inverse() * event.position
 		_move_joystick(point)
 
+func _update_button(index: int) -> void:
+	var held := _button_fingers.values().has(index)
+	var button := _buttons[index]
+	var action: String = button.get_meta("action")
+	if held:
+		Input.action_press(action)
+	else:
+		Input.action_release(action)
+	button.texture_normal = _pressed_textures[index] if held else _normal_textures[index]
+
+func _button_center(index: int) -> Vector2:
+	return _buttons[index].global_position + _normal_textures[index].get_size() / 2.0
+
 func _move_joystick(point: Vector2) -> void:
 	_joystick_offset = (point - _joystick_center).limit_length(JOYSTICK_RADIUS)
-	var axis: float = clampf(_joystick_offset.x / JOYSTICK_RADIUS, -1.0, 1.0)
-	Input.action_release("steer_left")
-	Input.action_release("steer_right")
+	var axis: float = clampf((point.x - _joystick_center.x) / JOYSTICK_RADIUS, -1.0, 1.0)
 	if absf(axis) > DEADZONE:
-		var strength: float = (absf(axis) - DEADZONE) / (1.0 - DEADZONE)
+		var strength: float = pow((absf(axis) - DEADZONE) / (1.0 - DEADZONE), RESPONSE_CURVE)
+		Input.action_release("steer_right" if axis < 0 else "steer_left")
 		Input.action_press("steer_left" if axis < 0 else "steer_right", strength)
+	else:
+		Input.action_release("steer_left")
+		Input.action_release("steer_right")
 	queue_redraw()
 
 func _clear_joystick() -> void:
@@ -109,9 +149,26 @@ func _clear_joystick() -> void:
 
 func release_actions() -> void:
 	_clear_joystick()
+	_button_fingers.clear()
+	for index in range(_buttons.size()):
+		_update_button(index)
 	for action_name: StringName in ACTIONS:
 		if InputMap.has_action(action_name):
 			Input.action_release(action_name)
+
+# Browser-only evidence for actual multitouch delivery, disabled in normal play.
+func _process(delta: float) -> void:
+	if not _test_mode:
+		return
+	_test_clock += delta
+	if _test_clock < 0.1:
+		return
+	_test_clock = 0.0
+	var strengths := {}
+	for action_name in ACTIONS:
+		strengths[action_name] = Input.get_action_strength(action_name)
+	var contacts := _button_fingers.size() + (1 if _finger != -1 else 0)
+	JavaScriptBridge.eval("window.minikartsTouchTest = " + JSON.stringify({"contacts": contacts, "actions": strengths}) + ";")
 
 func _notification(what: int) -> void:
 	if what == NOTIFICATION_APPLICATION_FOCUS_OUT:

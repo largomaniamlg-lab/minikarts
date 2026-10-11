@@ -285,3 +285,9 @@ Prueba WebSocket pública web18 superada con trece clientes: listado, selección
 ### Publicación verificada de web18
 
 Cliente a35c550 publicado tras backend Live. HTTP público confirma que index y el enlace estable con parámetros antiguos web12/web13 cargan grupo-web18.html; cargador y paquete de 15.501.480 bytes responden 200 y apuntan al servidor Render correcto. No se ha hecho una navegación Chromium pública por la limitación de certificados ya documentada. Se ha validado Chromium local y WebSocket/HTTP públicos. Servidor local de pruebas detenido.
+
+### Web19 — controles multitáctiles
+
+Joystick horizontal independiente de desplazamiento vertical, zona muerta 8 % y curva 1,4 para ajuste fino cerca del centro manteniendo giro máximo. No libera/repite la misma dirección en cada arrastre. Captura explícita por índice de dedo para cada botón, con persistencia al deslizar fuera y conteo de contactos compartidos: levantar uno no libera la acción sostenida por otro. Área de captura ampliada 6 unidades por borde, sin solapamiento entre acciones. Cancelación, pérdida de foco y reajuste de pantalla limpian entradas. Diagnóstico táctil solo con ?test=1.
+
+Suite nativa completa sin fallos, con ocho comprobaciones nuevas de combinaciones, precisión, liberación, cancelación y reajuste. Chromium recibe cinco contactos reales por CDP y verifica joystick/freno/salto/disparo, arrastre vertical, propiedad del botón, dos dedos en disparo y touchCancel. El primer ensayo del navegador tenía mal definida la liberación CDP (envió contactos retenidos); corregido el controlador, prueba final superada sin relajar aserciones. Arranque web también superado. No equivale a prueba en iPhone/Android físicos. Paquete game-a69f3b392b97a22b.pck. Backend sin modificaciones: sigue web18 Live, compatible.
