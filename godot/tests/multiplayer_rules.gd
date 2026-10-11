@@ -106,6 +106,10 @@ func run_checks() -> void:
 	await frames(5)
 	check(victim.hit_time > 0.0 and victim.protection_time > 0.0, "Actual neutral overlap causes protected spin")
 	check(victim.speed < 5.0, "Neutral impact reduces speed")
+	# This point was outside the previous obstacle, but inside Jordan's larger body.
+	victim.reset_to(Transform3D(Basis.IDENTITY, neutral.position + Vector3.RIGHT * 2.6))
+	await frames(3)
+	check(victim.hit_time > 0.0, "Enlarged Jordan contact causes spin outside the old footprint")
 	room.track.reset_obstacles()
 	check(neutral.elapsed == 0.0 and neutral.position.is_equal_approx(initial_neutral), "Restart restores neutral path")
 	check(room.track.get_children().filter(func(n): return n.name.begins_with("LegTree")).size() == 12, "Restart preserves decorations without duplication")

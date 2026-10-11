@@ -1,7 +1,7 @@
 extends CanvasLayer
 
 const Driver = preload("res://scripts/driver.gd")
-const NAMES := ["Con gafas", "Maquillaje", "Sonrisa", "Barba"]
+const NAMES := ["Kikoso", "Largo", "Sipollo", "Antocino"]
 var game: Node3D
 var root: Control
 var title: Label

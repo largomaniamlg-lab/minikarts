@@ -1,7 +1,7 @@
 extends Node
 
 const BotDriver = preload("res://scripts/bot_driver.gd")
-const NAMES := ["Con gafas", "Maquillaje", "Sonrisa", "Barba"]
+const NAMES := ["Kikoso", "Largo", "Sipollo", "Antocino"]
 var game: Node3D
 var racers: Array = []
 var bots: Array = []

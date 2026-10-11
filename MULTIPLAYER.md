@@ -89,3 +89,7 @@ La imagen corregida arranca con PORT=10000 y pasa el test de protocolo de cuatro
 El titular confirmó mediante captura `Deploy succeeded | Live` para bd3bc4f. Endpoint del cliente: `wss://minikarts-multiplayer.onrender.com`. Web10 habilita el modo online sin direcciones técnicas para los jugadores; web9 sigue disponible como prueba offline. Para jugar: elegir piloto, Online, escribir nombre, Crear sala o Unirse con código, todos Listo, creador Iniciar carrera.
 
 La prueba automatizada desde Cloud al servidor público está bloqueada por el proxy (HTTP 403, antes del handshake con Render). No acredita ni rechaza el funcionamiento del servidor. Validar en Samsung dos clientes primero y luego los cuatro amigos, incluyendo conducción, disparos y carrera completa. El despertar de Free puede tardar 50 s o más, según el aviso real del panel; los 60 s del cliente no garantizan todos los arranques en frío.
+
+## Actualización coordinada de Jordan (web11 pendiente de publicación)
+
+El nuevo recorte de Jordan se muestra a ×1,875 y el área autoritativa de contacto aumenta en la misma proporción. Posición compartida y protocolo no cambian. Hasta actualizar Render, el servidor mantiene el tamaño de contacto anterior; no dar por verificado Jordan grande en partidas públicas. Publicar fuente y cliente autorizados, luego Manual Deploy → Deploy latest commit y esperar Live. Motes del selector/bots incluidos en el mismo ciclo.
