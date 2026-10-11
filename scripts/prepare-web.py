@@ -36,3 +36,8 @@ binary = wasm.read_bytes()
 (page.parent / 'game.wasm.gz').write_bytes(gzip.compress(binary, mtime=0))
 wasm.unlink()
 page.write_text(text)
+
+# The published landing page may refer to an older versioned HTML file.
+landing = page.parent / 'index.html'
+if landing.exists():
+    landing.write_text(re.sub(r"game.src='[^']+'", "game.src='game.html?v=" + token + "'", landing.read_text()))

@@ -107,3 +107,7 @@ Captura Samsung mostraba controles táctiles pero kart sin piloto. El loader sol
 ## Diagnóstico de publicación — web6
 
 Web5 consta como desplegada con éxito en GitHub Actions (run 38104622317), pero el usuario continúa viendo el kart anterior. La causa en el móvil no está confirmada. Se publica una ruta nueva piloto-web6.html y un mainPack con nombre derivado del contenido: game-5f81e7e4c4333fc5.pck. Esto elimina reutilización del nombre anterior tanto para HTML como para PCK. El exportador genera paquetes con nombre por contenido para futuras versiones. Mantener enlaces antiguos compatibles.
+
+## Ajuste solicitado de tamaño en pantalla
+
+Cámara de seguimiento pasa de 7 m/4,3 m (distancia/altura) a 5,8 m/3,6 m en seguimiento y recuperación. Cara pasa de pixel_size 0,00065 a 0,00072 y centro 1,16 m para mantenerla sobre el cuerpo. Aumenta el tamaño aparente sin cambiar colisiones, velocidad ni giro. Exportación local para revisión; no publicada aún. Se corrige además la página de entrada de exportaciones temporales para que no apunte a un HTML de una versión histórica.

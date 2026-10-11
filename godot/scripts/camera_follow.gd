@@ -2,6 +2,8 @@ extends Camera3D
 
 var target: CharacterBody3D
 var _initialized: bool = false
+const FOLLOW_DISTANCE: float = 5.8
+const FOLLOW_HEIGHT: float = 3.6
 
 func _ready() -> void:
 	top_level = true
@@ -14,7 +16,7 @@ func reset_follow() -> void:
 	_initialized = false
 	if not is_instance_valid(target):
 		return
-	global_position = target.global_position + target.global_basis.z * 7.0 + Vector3.UP * 4.3
+	global_position = target.global_position + target.global_basis.z * FOLLOW_DISTANCE + Vector3.UP * FOLLOW_HEIGHT
 	look_at(target.global_position + Vector3.UP * 0.6, Vector3.UP)
 	reset_physics_interpolation()
 
@@ -22,7 +24,7 @@ func _physics_process(delta: float) -> void:
 	if not is_instance_valid(target):
 		return
 	var focus: Vector3 = target.global_position + Vector3.UP * 0.6
-	var desired: Vector3 = target.global_position + target.global_basis.z * 7.0 + Vector3.UP * 4.3
+	var desired: Vector3 = target.global_position + target.global_basis.z * FOLLOW_DISTANCE + Vector3.UP * FOLLOW_HEIGHT
 	var candidate: Vector3 = desired
 	if _initialized and global_position.distance_to(desired) < 20.0:
 		candidate = global_position.lerp(desired, 1.0 - exp(-8.0 * delta))

@@ -16,8 +16,8 @@ func _ready() -> void:
 	var face := Sprite3D.new()
 	face.name = "PhotoFace"
 	face.texture = preload("res://assets/drivers/friend_face.png")
-	face.pixel_size = 0.00065
-	face.position = Vector3(0, 1.10, 0.20)
+	face.pixel_size = 0.00072
+	face.position = Vector3(0, 1.16, 0.20)
 	face.billboard = BaseMaterial3D.BILLBOARD_ENABLED
 	face.shaded = false
 	face.texture_filter = BaseMaterial3D.TEXTURE_FILTER_LINEAR_WITH_MIPMAPS
