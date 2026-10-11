@@ -89,3 +89,9 @@ El usuario autorizó publicar la nueva web. Exportación generada desde las fuen
 ## Corrección web3 — controles táctiles
 
 El usuario detectó interfaz de escritorio en el móvil. Se corrigió args del loader a ["--", "--force-touch"]: Godot requiere separador para OS.get_cmdline_user_args(). El exportador conserva la corrección en futuras versiones. Prueba Chromium pasada y captura inspeccionada: joystick izquierdo y botones ATRÁS, FRENO, SALTO, DISPARO, RECUPERAR y NUEVA CARRERA visibles. La comprobación anterior de args y arranque no acreditaba visibilidad real de controles; ahora la captura permite revisarla. Sin cambios de física ni APK.
+
+## Piloto de foto 2D y cuerpo 3D — prototipo local
+
+El usuario autorizó un piloto con la cara de la foto compartida como imagen fija y cuerpo 3D. `assets/drivers/friend_face.png` contiene un recorte fotográfico preparado con asistencia de edición de imagen y fondo transparente; no es un escaneo facial ni una cabeza 3D. `scripts/driver.gd` crea cuerpo de geometría original, inclinado con dirección y velocidad vertical. Sprite3D billboard muestra siempre la expresión fija hacia la cámara. Las colisiones y físicas del kart no se cambian. La cabeza acompaña la posición del kart pero no tiene animación facial.
+
+Primera versión a revisar visualmente. Las pruebas existentes pasan, pero no sustituyen evaluación física en Samsung. No publicar la foto ni esta versión del piloto hasta aprobación del usuario. La web anterior se conserva en la raíz; exportación del piloto solo local.

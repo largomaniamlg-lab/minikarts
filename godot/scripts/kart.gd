@@ -38,6 +38,10 @@ func _ready() -> void:
 			wheel.position = Vector3(x, -0.14, z)
 			wheel.material_override = _material(Color(0.055, 0.06, 0.075))
 			add_child(wheel)
+	var driver = preload("res://scripts/driver.gd").new()
+	driver.name = "Driver"
+	driver.kart = self
+	add_child(driver)
 	var camera := CameraFollow.new()
 	_camera = camera
 	camera.target = self
