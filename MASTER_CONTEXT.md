@@ -317,3 +317,5 @@ Web21 publicada en 422ccd4. HTTP público confirma portada y enlaces antiguos we
 ### Web22 — nueva distribución pedida
 
 Fila inferior derecha: ATRÁS, SALTO y DISPARO, alineados por centro. FRENO encima. Salto/disparo 132 unidades, atrás/freno 112 (aprox. 18 % mayores), con zonas táctiles circulares separadas. Se conserva joystick y propiedad multitáctil. Prueba nativa focalizada de conducción/controles sin fallos, con aserciones del nuevo orden, separación y tamaños. Chromium recibe cinco contactos simultáneos y verifica acciones independientes, arrastre vertical, doble contacto en disparo, liberación y cancelación sin errores. Paquete game-b5c6d85c80fb0e24.pck, 17.164.200 bytes. Cambios solo de controles; servidor sin cambios.
+
+Web22 publicada en 86284b8. HTTP confirma que portada y enlaces antiguos web12/web13 cargan grupo-web22.html; cargador y paquete responden 200 con tamaño correcto.
