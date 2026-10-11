@@ -107,3 +107,9 @@ Prioridad siguiente: (1) reproducir el fallo reportado en Android/iPhone y naveg
 Hecho: listado por creador y ocupación, entrada con un toque, refresco manual/automático, creación con entrada inmediata, separación búsqueda/espera, alternativa por código, filtros de salas llenas/en carrera y retirada de salas vacías. Pruebas reales de protocolo y cuatro navegadores superadas. Aceptación técnica alcanzada; pendiente publicar backend antes del cliente y probar con los amigos en móviles físicos.
 
 Siguiente prioridad después de esa prueba: reconexión con plaza reservada e identidad, y mejora de navegación móvil según feedback real. La lista no elimina por sí sola problemas de conexión al servidor.
+
+### Fluidez online
+
+- Preparada: interpolación de rivales, anticipación visual local limitada y cámara por fotograma. Publicación y validación física pendientes.
+- Siguiente: medir RTT, edad de estados y rendimiento en dos teléfonos durante una carrera; comprobar giro, frenado, salto, impactos, recuperación y reconexión. Aceptación: conducción visual continua, ausencia de grandes correcciones y resultado idéntico entre pilotos.
+- Después: evaluar predicción física con entradas numeradas y reconciliación si el retraso de control sigue molestando; mantener colisiones y resultados autoritativos, y probar 150–300 ms de latencia y pausas de red.

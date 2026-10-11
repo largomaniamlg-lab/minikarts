@@ -21,6 +21,8 @@ async def main():
         for index in range(4):
             ws = await websockets.connect(url)
             clients.append(ws)
+            await send(ws, type='ping', stamp=index + 0.25)
+            assert (await receive(ws, 'pong'))['stamp'] == index + 0.25
             await send(ws, type='list')
             directory = await receive(ws, 'rooms')
             if index:
@@ -32,6 +34,8 @@ async def main():
             code = welcome['code']
         state = await receive(clients[0], 'state', lambda m: len(m['players']) == 4)
         assert len({p['id'] for p in state['players']}) == 4
+        assert isinstance(state['time'], (int, float))
+        assert all(len(p['velocity']) == 3 for p in state['players'])
         assert len(state['boxes']) == 8
         assert {p['driver'] for p in state['players']} == {0, 1, 2, 3}
         assert len(state['neutral']) == 3

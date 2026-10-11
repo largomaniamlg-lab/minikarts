@@ -20,7 +20,15 @@ func reset_follow() -> void:
 	look_at(target.global_position + Vector3.UP * 0.6, Vector3.UP)
 	reset_physics_interpolation()
 
+func _process(delta: float) -> void:
+	if Network.playing:
+		follow(delta)
+
 func _physics_process(delta: float) -> void:
+	if not Network.playing:
+		follow(delta)
+
+func follow(delta: float) -> void:
 	if not is_instance_valid(target):
 		return
 	var focus: Vector3 = target.global_position + Vector3.UP * 0.6

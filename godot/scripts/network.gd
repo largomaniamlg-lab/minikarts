@@ -1,5 +1,12 @@
 extends Node
 
+const Motion = preload("res://scripts/network_motion.gd")
+var motion := Motion.new()
+var round_trip := 0.0
+var ping_clock := -2.0
+var ping_pending := -1.0
+var ping_serial := 0
+
 const LIMIT := 4
 const CHECKPOINTS := [Vector3(0, 0, 30), Vector3(-30, 0, 0), Vector3(0, 0, -30), Vector3(30, 0, 0)]
 const COLORS := [Color("ee3814"), Color("397cdc"), Color("51ba66"), Color("b464d5")]
@@ -97,8 +104,13 @@ func _process(delta: float) -> void:
 					info.text = "Elige una sala y pulsa Entrar, o crea la tuya."
 			elif message.get("type") == "state":
 				snapshot = message
+				motion.push(message, clock)
 				playing = true
 				show_lobby_mode(true)
+			elif message.get("type") == "pong" and ping_pending >= 0 and message.get("stamp") == ping_serial:
+				var sample := clampf(clock - ping_pending, 0.0, 2.0)
+				round_trip = sample if round_trip == 0 else lerpf(round_trip, sample, 0.25)
+				ping_pending = -1.0
 			elif message.get("type") == "error":
 				room_request_pending = false
 				status = str(message.message)
@@ -117,19 +129,28 @@ func _process(delta: float) -> void:
 			info.text = status
 			menu.get_node("Panel").show()
 		return
+	if socket.get_ready_state() == WebSocketPeer.STATE_OPEN and clock - ping_clock >= 2.0:
+		ping_clock = clock
+		ping_pending = clock
+		ping_serial += 1
+		send(socket, {"type": "ping", "stamp": ping_serial})
 	pending_reset = pending_reset or Input.is_action_just_pressed("reset")
 	input_clock += delta
 	if playing and input_clock >= 0.05:
 		input_clock = 0.0
-		var inputs := {}
-		for action in ["brake", "reverse", "jump", "shoot", "steer_left", "steer_right", "handbrake"]:
-			inputs[action] = Input.get_action_strength(action)
-		inputs["accelerate"] = 1.0 if get_tree().current_scene.kart._focused else 0.0
-		if not get_tree().current_scene.kart._focused:
-			inputs["brake"] = 1.0
+		var inputs := driving_inputs()
 		inputs["reset"] = pending_reset
 		pending_reset = false
 		send(socket, {"type": "input", "controls": inputs})
+
+func driving_inputs() -> Dictionary:
+	var inputs := {}
+	for action in ["brake", "reverse", "jump", "shoot", "steer_left", "steer_right", "handbrake"]:
+		inputs[action] = Input.get_action_strength(action)
+	inputs["accelerate"] = 1.0 if get_tree().current_scene.kart._focused else 0.0
+	if not get_tree().current_scene.kart._focused:
+		inputs["brake"] = 1.0
+	return inputs
 
 func server_tick(delta: float) -> void:
 	while listener.is_connection_available():
@@ -172,6 +193,10 @@ func server_tick(delta: float) -> void:
 	if send_clock >= 0.05:
 		send_clock = 0.0
 		for room in rooms.values():
+			var interval := 0.20 if room.phase == "lobby" or room.phase == "results" else 0.05
+			if clock - float(room.get("last_broadcast", -1.0)) < interval:
+				continue
+			room.last_broadcast = clock
 			var state := room_state(room)
 			for id in room.players:
 				if peers.has(id):
@@ -193,6 +218,9 @@ func room_directory() -> Array:
 func server_message(id: int, message: Dictionary) -> void:
 	var connection: Dictionary = peers[id]
 	var kind := str(message.get("type", ""))
+	if kind == "ping":
+		send(connection.socket, {"type": "pong", "stamp": message.get("stamp", 0)})
+		return
 	if kind == "list" and connection.room == "":
 		connection.since = clock
 		send(connection.socket, {"type": "rooms", "rooms": room_directory()})
@@ -384,7 +412,7 @@ func room_state(room: Dictionary) -> Dictionary:
 	for id in room.players:
 		var player: Dictionary = room.players[id]
 		var kart = player.kart
-		racers.append({"id": id, "name": player.name, "driver": player.driver, "ready": player.ready, "position": vector(kart.position), "rotation": vector(kart.rotation), "speed": kart.speed, "steering": kart._steering, "hit": kart.hit_time, "protection": kart.protection_time, "lap": player.lap, "finished": player.finished, "color": kart.kart_color.to_html()})
+		racers.append({"id": id, "name": player.name, "driver": player.driver, "ready": player.ready, "position": vector(kart.position), "velocity": vector(kart.velocity), "rotation": vector(kart.rotation), "speed": kart.speed, "steering": kart._steering, "hit": kart.hit_time, "protection": kart.protection_time, "lap": player.lap, "finished": player.finished, "color": kart.kart_color.to_html()})
 	var shots := []
 	for child in room.stage.get_children():
 		if child.is_in_group("projectiles"):
@@ -393,7 +421,7 @@ func room_state(room: Dictionary) -> Dictionary:
 	for child in room.track.get_children():
 		if child.is_in_group("destructible"):
 			boxes.append(vector(child.position))
-	return {"type": "state", "code": room.code, "host": room.host, "phase": room.phase, "countdown": maxi(0, ceili(room.timer)), "elapsed": room.elapsed, "players": racers, "shots": shots, "boxes": boxes, "neutral": vector(room.track.get_node("NeutralSleeper").position), "results": room.results}
+	return {"type": "state", "time": clock, "code": room.code, "host": room.host, "phase": room.phase, "countdown": maxi(0, ceili(room.timer)), "elapsed": room.elapsed, "players": racers, "shots": shots, "boxes": boxes, "neutral": vector(room.track.get_node("NeutralSleeper").position), "results": room.results}
 
 func as_vector(value: Array) -> Vector3:
 	return Vector3(value[0], value[1], value[2])
@@ -432,14 +460,25 @@ func update_game(game: Node3D, delta: float) -> void:
 			tag.position.y = 1.85
 			tag.billboard = BaseMaterial3D.BILLBOARD_ENABLED
 			kart.add_child(tag)
-		var position := as_vector(racer.position)
+		var visual: Dictionary = racer
+		if snapshot.phase == "racing" and not racer.finished:
+			if id == player_id:
+				var age := clock - motion.received_at
+				# Freeze anticipation on a stalled connection; never extrapolate indefinitely.
+				var horizon := minf(age + round_trip * 0.5, Motion.MAX_PREDICTION)
+				visual = motion.project(racer, horizon, driving_inputs() if age < Motion.MAX_PREDICTION else {})
+			else:
+				var buffered := motion.remote(id, clock)
+				if not buffered.is_empty():
+					visual = buffered
+		var position := as_vector(visual.position)
 		kart.position = position if kart.position.distance_to(position) > 6 else kart.position.lerp(position, 1.0 - exp(-20 * delta))
-		var rotation := as_vector(racer.rotation)
+		var rotation := as_vector(visual.rotation)
 		kart.rotation.y = lerp_angle(kart.rotation.y, rotation.y, 1.0 - exp(-20 * delta))
 		kart._body_visual.material_override.albedo_color = Color(racer.color)
 		kart.get_node("Driver").set_face(int(racer.get("driver", 0)))
-		kart.speed = racer.speed
-		kart._steering = racer.steering
+		kart.speed = visual.speed
+		kart._steering = visual.steering
 		if id == player_id:
 			game.hud.update_display(mini(int(racer.lap) + 1, 3), snapshot.elapsed, INF, absf(racer.speed) * 3.6, racer.finished, snapshot.phase == "racing", false)
 			if racer.hit > 0:
@@ -470,7 +509,7 @@ func update_game(game: Node3D, delta: float) -> void:
 				child.hit()
 	update_menu()
 	if browser_test:
-		JavaScriptBridge.eval("window.minikartsTest = " + JSON.stringify({"state": snapshot, "rendered_karts": 1 + remote_karts.size()}) + ";")
+		JavaScriptBridge.eval("window.minikartsTest = " + JSON.stringify({"state": snapshot, "rendered_karts": 1 + remote_karts.size(), "rtt_ms": round_trip * 1000, "snapshot_age_ms": (clock - motion.received_at) * 1000}) + ";")
 
 func make_menu() -> void:
 	if OS.has_feature("web"):
@@ -684,6 +723,10 @@ func request_connection(kind: String) -> void:
 		if job != connection_job:
 			return
 		var peer := WebSocketPeer.new()
+		# Bound queued snapshots while allowing brief slow frames on mobile.
+		peer.inbound_buffer_size = 524288
+		peer.outbound_buffer_size = 65536
+		peer.max_queued_packets = 128
 		socket = peer
 		var error := peer.connect_to_url(url)
 		var deadline := Time.get_ticks_msec() + 40000
@@ -751,6 +794,10 @@ func leave_room() -> void:
 	socket = null
 	playing = false
 	snapshot.clear()
+	motion.clear()
+	round_trip = 0.0
+	ping_pending = -1.0
+	ping_clock = -2.0
 	displayed_phase = ""
 	room_code = ""
 	player_id = 0

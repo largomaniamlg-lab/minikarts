@@ -97,3 +97,11 @@ El nuevo recorte de Jordan se muestra a ×1,875 y el área autoritativa de conta
 ## Listado de salas (web14 preparada)
 
 ONLINE abre un navegador de salas por nombre del creador y número de jugadores. Crear sala entra automáticamente; los demás tocan Entrar en esa sala. El servidor responde a `list` con `rooms` (code, host, players, capacity). Solo ofrece salas esperando y con huecos, y la UI consulta cada tres segundos. El código sigue como alternativa. Todos los visitantes del mismo servidor pueden descubrir estas salas; no se anuncian como secretas. La publicación debe desplegar el servidor con soporte de listado antes de publicar los artefactos web14.
+
+### Presentación de movimiento (pendiente de publicación)
+
+Los mensajes `state` incluyen `time` (segundos del servidor) y `players[].velocity`. `ping`/`pong` devuelven `stamp` para estimar RTT, sin modificar la partida. Las posiciones visuales no se envían al servidor. Un búfer de 100 ms interpola rivales; la extrapolación visual se limita a 150 ms y se descarta al cambiar de fase. La recuperación superior a seis metros se trata como teletransporte. La historia conserva como máximo 32 estados.
+
+Prueba de red: `python3 scripts/test-network-delay.py /tmp/minikarts-web.EXPORT` lanza un servidor local y un proxy WebSocket ordenado con 60–120 ms de retraso por sentido, ejecuta pruebas de protocolo y cuatro clientes Chromium, y restaura el cargador temporal al terminar. Usa los puertos locales 18087 y 18088. No prueba un teléfono físico ni reproduce todas las condiciones de Internet.
+
+La recepción del cliente se limita a 512 KiB y 128 paquetes; se envían estados de sala y resultados a 5 Hz para reducir carga durante la espera, conservando 20 Hz en carrera/cuenta atrás. El identificador `stamp` del cliente es un contador entero, no un reloj decimal. Para reducir la carga gráfica del test de cuatro clientes por software sin quitar aserciones: `MINIKARTS_TEST_WIDTH=320 python3 scripts/test-network-delay.py /tmp/minikarts-web.EXPORT` (por defecto 640×360).
