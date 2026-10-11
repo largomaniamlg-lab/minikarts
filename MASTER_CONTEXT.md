@@ -281,3 +281,7 @@ Estados serializados una vez por sala, precisión de un centímetro en posicione
 Backend web18 Live: despliegue dep-db5r5b942hec739u8g20, commit 3a944a2. Cliente preparado con enlace estable sin cambios de URL.
 
 Prueba WebSocket pública web18 superada con trece clientes: listado, selección, capacidad, autoridad, listos, cuenta atrás, movimiento, solicitudes de disparo y migración del creador.
+
+### Publicación verificada de web18
+
+Cliente a35c550 publicado tras backend Live. HTTP público confirma que index y el enlace estable con parámetros antiguos web12/web13 cargan grupo-web18.html; cargador y paquete de 15.501.480 bytes responden 200 y apuntan al servidor Render correcto. No se ha hecho una navegación Chromium pública por la limitación de certificados ya documentada. Se ha validado Chromium local y WebSocket/HTTP públicos. Servidor local de pruebas detenido.
