@@ -73,3 +73,9 @@ El usuario adelanta MK-13 para carreras con tres amigos, incluyendo trompos por 
 ## Ajuste de prioridad: elementos del grupo antes del servidor
 
 El usuario elige alojamiento gratuito y pide primero MK-14: tres pilotos adicionales, dormilón neutral móvil, árboles de piernas y proyectiles de foto. Implementación local y pruebas de reglas preparadas; revisar visualmente las caras y el dormilón ilustrado provisional antes de publicar. Después retomar alojamiento WSS gratuito y probar desde cuatro teléfonos. La foto original del dormilón no se pudo recortar con el generador; no presentar el sustituto como esa fotografía.
+
+## Prioridad actual: modos elegibles y carreras con el grupo
+
+Selector visual de cuatro caras y proyectiles a 1,875 veces: implementados localmente. Carrera offline contra tres bots, salida, tres vueltas, clasificación y revancha: implementación local en verificación. Entrenamiento individual conservado. Antes de publicar, revisar pruebas y exportación del ciclo.
+
+Siguiente dependencia: cuenta Render desde el Samsung para desplegar el servidor gratuito preparado. Obtener URL WSS, exportar cliente configurado y probar carrera real con cuatro teléfonos. Después ajustar conducción/latencia online y dificultad de IA según partidas reales; no añadir contenido antes de estabilizar estas carreras.

@@ -73,3 +73,19 @@ Estado MK-13: implementación y reglas locales preparadas; cuenta atrás, posici
 ## MK-14 — Pilotos y elementos del grupo (preparación local)
 
 Cuatro pilotos elegibles antes de entrar a sala, cara 2D fija y cuerpo 3D; neutral móvil con trompo/protección y sincronización autoritativa; doce piernas decorativas fuera de pista y nueva imagen de proyectil. Criterios comprobados: selección conservada por jugador, contacto real genera impacto, neutral se mueve y reinicia, decoraciones no se duplican, controles y carreras existentes pasan sus pruebas. Pendiente: revisión visual en Samsung, aceptar o sustituir el dormilón ilustrado provisional (el generador rechazó recortar la foto original) y autorizar publicación. Alojamiento gratuito elegido; configurar después de esta revisión.
+
+## MK-16 — Selector visual y modos (implementación local)
+
+Aceptación: cuatro retratos pulsables con selección visible; la cara elegida se usa en el kart y la sala; opciones carrera con tres IA, entrenamiento y online; menú pausa la carrera offline; online desactivado con explicación si no hay URL configurada. Sin modificar el enlace habitual hasta autorización.
+
+## MK-17 — Carrera completa contra tres bots (implementación local)
+
+Aceptación: tres rivales con física real, navegación, disparo/salto y recuperación desde checkpoint; cuenta atrás; tres vueltas ordenadas para cada participante; posición y resultados; revancha restaura obstáculos/progreso y cambiar a entrenamiento no deja bots residuales. Prueba automatizada física de los cuatro corredores; revisión de diversión/dificultad en Samsung pendiente.
+
+## MK-18 — Proyectiles mayores (implementación local)
+
+Aceptación: imagen de proyectil con altura 1,5 m, frente a 0,8 m; conservar cadencia, velocidad, raycast e impactos; arranque web sin errores. El cambio solicitado es visual, no amplía el área física de impacto.
+
+## MK-19 — Activar servidor gratuito desde móvil (P1; dependencia externa)
+
+Usuario sin cuenta Render. Crear cuenta/conectar GitHub desde móvil, desplegar blueprint preparado con plan free y una instancia; confirmar condiciones actuales, obtener URL WSS y exportar/publicar cliente autorizado. No solicitar contraseñas ni claves en chat. Aceptación: cuatro teléfonos en una sala, carrera completa, disparos, desconexión/reentrada y comportamiento tras suspensión documentados. No dar online por terminado con pruebas locales.

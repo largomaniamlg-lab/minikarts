@@ -39,3 +39,11 @@ Teclado en el proyecto nativo: W/flechas aceleran, A/D giran, S frena y permite 
 ## Multijugador privado (prototipo local)
 
 Salas para hasta cuatro pilotos, salida compartida, tres vueltas, clasificación y trompos por disparos. Servidor requerido: `PORT=8080 bash scripts/server.sh`. Instrucciones, pruebas y publicación pendiente en [MULTIPLAYER.md](MULTIPLAYER.md). La versión pública existente sigue siendo individual hasta desplegar servidor y cliente.
+
+### Selector y carreras offline (ciclo local)
+
+Al arrancar se abre un menú con las cuatro caras. Pulsar una y elegir **Carrera · 3 rivales IA** para correr tres vueltas contra bots, o **Entrenar a solas**. **Menú · piloto** permite pausar y volver a elegir. La carrera contra bots tiene cuenta atrás, clasificación y revancha. **Online · con amigos** solo se habilita si la exportación incluye una URL de servidor; el alojamiento público está pendiente de alta en Render desde el móvil.
+
+Validación offline adicional: `bash scripts/test.sh` y `python3 scripts/test-offline-browser.py DIRECTORIO_EXPORTADO`. Las pruebas físicas usan conducción automática, no una partida manual en un teléfono. Estas mejoras permanecen locales; el enlace de prueba web8 publicado todavía conserva la versión anterior.
+
+Actualización web9: el usuario autorizó publicar estas mejoras en `prueba-grupo.html`; el juego habitual se conserva. Esta prueba incluye selección visual y carrera contra tres bots; online sigue pendiente del despliegue Render y la URL WSS.

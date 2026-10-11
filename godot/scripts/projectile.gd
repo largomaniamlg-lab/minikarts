@@ -3,27 +3,18 @@ extends Node3D
 var direction: Vector3 = Vector3.FORWARD
 var shooter: RID
 var life: float = 2.0
+const DISPLAY_HEIGHT := 1.5
 
 func _ready() -> void:
 	add_to_group("projectiles")
 	var photo := Sprite3D.new()
+	photo.name = "PhotoProjectile"
 	photo.texture = preload("res://assets/memes/projectile.png")
-	photo.pixel_size = 0.8 / float(photo.texture.get_height())
+	photo.pixel_size = DISPLAY_HEIGHT / float(photo.texture.get_height())
 	photo.billboard = BaseMaterial3D.BILLBOARD_ENABLED
 	photo.shaded = false
-	photo.position.y = 0.2
+	photo.position.y = 0.55
 	add_child(photo)
-	var visual := MeshInstance3D.new()
-	var sphere := SphereMesh.new()
-	sphere.radius = 0.2
-	sphere.height = 0.4
-	visual.mesh = sphere
-	visual.visible = false
-	var material := StandardMaterial3D.new()
-	material.albedo_color = Color("ffd447")
-	material.shading_mode = BaseMaterial3D.SHADING_MODE_UNSHADED
-	visual.material_override = material
-	add_child(visual)
 
 func _physics_process(delta: float) -> void:
 	var next: Vector3 = global_position + direction * 55.0 * delta

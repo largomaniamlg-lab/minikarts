@@ -27,10 +27,8 @@ try:
             page.goto(f'http://127.0.0.1:{server.server_port}/game.html?test=1')
             page.locator('#status').wait_for(state='detached', timeout=180000)
             page.wait_for_timeout(1200)
-            for _ in range(index):
-                click(page, 575, 140)  # Select a different photographic pilot.
-                page.wait_for_timeout(250)
-            click(page, 530, 90)  # Amigos
+            click(page, 345 + index * 195, 210)  # Visual portrait selection.
+            click(page, 640, 465)  # Online mode.
             page.wait_for_timeout(600)
             click(page, 450, 202)  # Nombre
             page.wait_for_timeout(500)

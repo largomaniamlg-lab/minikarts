@@ -426,22 +426,30 @@ func make_menu() -> void:
 	toggle.pressed.connect(func():
 		menu.get_node("Panel").visible = not menu.get_node("Panel").visible
 		if not playing and is_instance_valid(get_tree().current_scene):
-			get_tree().current_scene.kart.enabled = not menu.get_node("Panel").visible
+			var game = get_tree().current_scene
+			if menu.get_node("Panel").visible and game.has_method("prepare_online"):
+				game.prepare_online()
+			else:
+				game.kart.enabled = not menu.get_node("Panel").visible
 	)
 	menu.add_child(toggle)
 	if "--solo-preview" in OS.get_cmdline_user_args():
 		toggle.hide()
 	driver_button = Button.new()
 	driver_button.position = Vector2(500, 120)
-	driver_button.text = "Piloto %d/4" % (selected_driver + 1)
+	driver_button.text = "Menú · piloto"
 	driver_button.custom_minimum_size = Vector2(150, 44)
 	driver_button.add_theme_font_size_override("font_size", 22)
 	driver_button.pressed.connect(func():
 		if playing:
 			return
+		if is_instance_valid(get_tree().current_scene) and get_tree().current_scene.get("race_menu") != null:
+			get_tree().current_scene.race_menu.open()
+			return
 		selected_driver = (selected_driver + 1) % 4
-		driver_button.text = "Piloto %d/4" % (selected_driver + 1)
-		get_tree().current_scene.kart.get_node("Driver").set_face(selected_driver)
+		driver_button.text = "Menú · piloto"
+		if is_instance_valid(get_tree().current_scene):
+			get_tree().current_scene.kart.get_node("Driver").set_face(selected_driver)
 	)
 	menu.add_child(driver_button)
 	var panel := PanelContainer.new()
@@ -523,8 +531,8 @@ func connect_room(create: bool) -> void:
 		info.text = "No se pudo conectar."
 		socket = null
 		return
-	info.text = "Conectando…"
-	var deadline := clock + 10.0
+	info.text = "Conectando… El servidor gratuito puede tardar en despertar."
+	var deadline := clock + 60.0
 	while socket != null and socket.get_ready_state() == WebSocketPeer.STATE_CONNECTING and clock < deadline:
 		await get_tree().process_frame
 	if socket != null and socket.get_ready_state() == WebSocketPeer.STATE_OPEN:
@@ -563,6 +571,7 @@ func leave_room() -> void:
 	room_code = ""
 	player_id = 0
 	driver_button.disabled = false
+	menu.get_node("Panel").hide()
 	remote_karts.clear()
 	remote_shots.clear()
 	get_tree().reload_current_scene()

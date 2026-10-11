@@ -13,6 +13,8 @@ var checkpoints: Array[Vector3] = [Vector3(0, 0, 30), Vector3(-30, 0, 0), Vector
 var initial_transform: Transform3D
 var hud: CanvasLayer
 var prev_z: float = -3.0
+var race_menu: CanvasLayer
+var offline_race: Node
 
 func _ready() -> void:
 	if Network.server_mode:
@@ -35,8 +37,47 @@ func _ready() -> void:
 	add_child(world)
 	hud = preload("res://scripts/hud.gd").new()
 	add_child(hud)
+	race_menu = preload("res://scripts/race_menu.gd").new()
+	race_menu.game = self
+	add_child(race_menu)
+	call_deferred("startup_menu")
+
+func startup_menu() -> void:
+	if get_tree().current_scene == self or OS.has_feature("web") or "--race-menu" in OS.get_cmdline_user_args():
+		race_menu.open()
+
+func start_offline() -> void:
+	if not is_instance_valid(offline_race):
+		offline_race = preload("res://scripts/offline_race.gd").new()
+		offline_race.game = self
+		add_child(offline_race)
+	else:
+		offline_race.reset()
+	race_menu.resume()
+
+func clear_offline() -> void:
+	if is_instance_valid(offline_race):
+		offline_race.dispose()
+		offline_race = null
+
+func start_solo() -> void:
+	clear_offline()
+	reset_race()
+	race_menu.resume()
+
+func prepare_online() -> void:
+	clear_offline()
+	reset_race()
+	race_menu.hide()
+	hud.show()
+	kart.enabled = false
+	kart.set_physics_process(true)
+	$Track/NeutralSleeper.set_physics_process(true)
 
 func reset_race() -> void:
+	if is_instance_valid(offline_race):
+		offline_race.reset()
+		return
 	for projectile in get_tree().get_nodes_in_group("projectiles"):
 		projectile.queue_free()
 	$Track.call("reset_obstacles")
@@ -63,6 +104,11 @@ func recover() -> void:
 func _process(delta: float) -> void:
 	if Network.playing:
 		Network.update_game(self, delta)
+		return
+	if race_menu.visible:
+		return
+	if is_instance_valid(offline_race):
+		offline_race.update(delta)
 		return
 	if Input.is_action_just_pressed("restart_race"):
 		reset_race()

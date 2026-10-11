@@ -56,3 +56,24 @@ El 11 de octubre de 2026, Godot 4.5.1 pasó las 21 comprobaciones táctiles, las
 Cuatro clientes Chromium con entrada táctil habilitada crearon y compartieron la sala usando su interfaz, introdujeron nombres/código, mostraron los cuatro karts, marcaron Listo y arrancaron la carrera sincronizada sin errores de JavaScript o GDScript. Capturas locales: `/tmp/minikarts-four-player-lobby.png` y `/tmp/minikarts-four-player-race.png`. La prueba usa un viewport reducido para limitar el coste de renderizado por software del Cloud; no mide FPS ni latencia de un móvil. Tras revisar la captura se añadió un fondo oscuro al panel de sala para separar su texto del HUD del circuito.
 
 Las pruebas automatizadas de vueltas usan posiciones controladas desde el servidor. No se ha jugado una carrera completa manualmente ni validado el rendimiento en cuatro teléfonos. El contenedor, las pruebas y las exportaciones temporales se prepararon localmente; esta implementación no se ha enviado a GitHub ni publicado en Pages.
+
+## Alta en Render desde Samsung
+
+1. Abrir https://dashboard.render.com/ y crear cuenta, preferiblemente entrando con GitHub.
+2. Cuando el código esté autorizado y publicado, crear un Blueprint desde `largomaniamlg-lab/minikarts`, permitiendo a Render leer ese repositorio. Se incluye `render.yaml`: servicio Docker, plan `free`, una instancia, PORT=10000, despliegue automático desactivado. Revisar que la interfaz mantiene el plan gratuito y sus condiciones antes de aplicar; no elegir un plan de pago.
+3. Esperar a que el servicio arranque; copiar solo su URL pública (no claves ni contraseñas). Su equivalente WebSocket es `wss://DOMINIO-ASIGNADO`.
+4. Exportar el cliente con `MULTIPLAYER_SERVER_URL` establecido a esa URL y probarlo antes de publicar. El Samsung no debería introducir direcciones técnicas: solo nombre/código y botones de sala.
+
+La cuenta no se ha creado ni conectado desde Cloud; no hay credenciales de alojamiento disponibles. Solo el usuario puede completar el inicio de sesión y conceder el acceso de su cuenta. El servicio gratuito puede suspenderse: comprobar sus límites actuales. Los 60 s de espera del cliente son un margen inicial, no una garantía de arranque en frío.
+
+## Pruebas del modo offline
+
+`bash scripts/test.sh` incluye `tests/offline_race_test.gd`, usando paso físico fijo 1/60 s. Se simulan realmente los cuatro karts y el controlador automático del jugador existe solo en la prueba: no se teletransportan al siguiente checkpoint para acreditar las vueltas. `python3 scripts/test-offline-browser.py DIRECTORIO_EXPORTADO` verifica el menú visual y arranque contra tres bots en Chromium con entrada táctil. Revisar también la captura: la ausencia de errores por sí sola no acredita legibilidad de los retratos.
+
+Resultado del ciclo selector/IA, 11-10-2026: 72 comprobaciones Godot, 0 fallos; cuatro clientes de protocolo y cuatro clientes Chromium superan conexión/sala/selección/salida sincronizada. La carrera offline física completa se supera para los cuatro karts (3 vueltas cada uno), seguida de revancha, actualización de caras y eliminación de bots en entrenamiento. La exportación final corregida supera el test táctil de selector/carrera offline; retratos revisados en captura. No se ha desplegado Render, publicado este ciclo, jugado manualmente ni probado cuatro teléfonos. La exportación temporal de prueba usa un servidor de loopback: no distribuirla ni publicarla; generar otra sin URL para offline o con el WSS público cuando exista.
+
+### Enlace de despliegue preparado
+
+Con la cuenta Render creada, abrir https://render.com/deploy?repo=https://github.com/largomaniamlg-lab/minikarts e iniciar sesión. Autorizar acceso al repositorio si Render lo pide; revisar que el blueprint ofrece `minikarts-multiplayer` con plan gratuito, y desplegarlo. Si el enlace no abre el asistente, usar Dashboard → New → Blueprint → repositorio. La cuenta del usuario no está conectada a Cloud: este paso de autorización debe realizarlo el titular. Después compartir únicamente la URL pública del servicio; no secretos.
+
+La prueba web9 se publica como offline (URL de servidor vacía), conservando los accesos anteriores. No sirve para carreras por Internet hasta que se prepare otra exportación con el WSS real.
