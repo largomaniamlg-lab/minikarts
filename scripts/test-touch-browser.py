@@ -18,7 +18,7 @@ try:
         page.wait_for_function('window.minikartsTouchTest !== undefined')
         print('Initial touch diagnostics:', page.evaluate('minikartsTouchTest'), flush=True)
         cdp=page.context.new_cdp_session(page)
-        points={0:(185,580),1:(1056,628),2:(1165,463),3:(1188,628),4:(1165,463)}
+        points={0:(185,580),1:(1102,464),2:(1178,618),3:(1026,618),4:(1178,618)}
         def dispatch(kind, contacts=None):
             cdp.send('Input.dispatchTouchEvent',{'type':kind,'touchPoints':[
                 {'id':i,'x':xy[0],'y':xy[1],'radiusX':2,'radiusY':2,'force':1} for i,xy in (points if contacts is None else contacts).items()]})
