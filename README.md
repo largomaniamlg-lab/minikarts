@@ -47,3 +47,5 @@ Al arrancar se abre un menú con las cuatro caras. Pulsar una y elegir **Carrera
 Validación offline adicional: `bash scripts/test.sh` y `python3 scripts/test-offline-browser.py DIRECTORIO_EXPORTADO`. Las pruebas físicas usan conducción automática, no una partida manual en un teléfono. Estas mejoras permanecen locales; el enlace de prueba web8 publicado todavía conserva la versión anterior.
 
 Actualización web9: el usuario autorizó publicar estas mejoras en `prueba-grupo.html`; el juego habitual se conserva. Esta prueba incluye selección visual y carrera contra tres bots; online sigue pendiente del despliegue Render y la URL WSS.
+
+Web10 conecta la prueba del grupo al servidor Render con WSS público y habilita Online. El usuario confirmó Live mediante captura; las partidas públicas quedan pendientes de validación en móvil porque el proxy Cloud bloquea la conexión al dominio con HTTP 403. La carrera offline con tres bots se conserva.

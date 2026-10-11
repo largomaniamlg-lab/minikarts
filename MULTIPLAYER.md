@@ -83,3 +83,9 @@ La prueba web9 se publica como offline (URL de servidor vacía), conservando los
 El primer despliegue superó los 512 MiB al ejecutar `--editor --import` durante el arranque. Se reprodujo con un contenedor limitado a `--memory=512m --memory-swap=512m` (exit 137). La importación pasa a la construcción de la imagen (`RUN bash scripts/server.sh --import-only`); su CMD usa `--preimported`, valida la caché y no inicia el editor. La construcción necesita más memoria que el servidor: no confundir el proceso de build con la instancia Free.
 
 La imagen corregida arranca con PORT=10000 y pasa el test de protocolo de cuatro clientes dentro del límite. Prueba adicional: cuatro salas y dieciséis jugadores alcanzan racing sin OOM, pico local 101,24 MiB. No garantiza todavía el despliegue real: en el servicio Render existente abrir Manual Deploy → Deploy latest commit. El plan y autoDeploy=false se conservan. Esperar Live; después validar WSS y actualizar la web online. El enlace offline web9 continúa funcionando sin cambios.
+
+## Servidor activo y cliente web10
+
+El titular confirmó mediante captura `Deploy succeeded | Live` para bd3bc4f. Endpoint del cliente: `wss://minikarts-multiplayer.onrender.com`. Web10 habilita el modo online sin direcciones técnicas para los jugadores; web9 sigue disponible como prueba offline. Para jugar: elegir piloto, Online, escribir nombre, Crear sala o Unirse con código, todos Listo, creador Iniciar carrera.
+
+La prueba automatizada desde Cloud al servidor público está bloqueada por el proxy (HTTP 403, antes del handshake con Render). No acredita ni rechaza el funcionamiento del servidor. Validar en Samsung dos clientes primero y luego los cuatro amigos, incluyendo conducción, disparos y carrera completa. El despertar de Free puede tardar 50 s o más, según el aviso real del panel; los 60 s del cliente no garantizan todos los arranques en frío.
