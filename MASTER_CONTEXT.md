@@ -111,3 +111,7 @@ Web5 consta como desplegada con éxito en GitHub Actions (run 38104622317), pero
 ## Ajuste solicitado de tamaño en pantalla
 
 Cámara de seguimiento pasa de 7 m/4,3 m (distancia/altura) a 5,8 m/3,6 m en seguimiento y recuperación. Cara pasa de pixel_size 0,00065 a 0,00072 y centro 1,16 m para mantenerla sobre el cuerpo. Aumenta el tamaño aparente sin cambiar colisiones, velocidad ni giro. Exportación local para revisión; no publicada aún. Se corrige además la página de entrada de exportaciones temporales para que no apunte a un HTML de una versión histórica.
+
+## Publicación autorizada — web7
+
+El usuario autorizó publicar el ajuste de cámara y tamaño de cara. Exportación local verificada copiada a la raíz; acceso directo piloto-web7.html y mainPack game-1e5fd3e454290320.pck. Cámara 5,8 m/3,6 m, cara pixel_size 0,00072. Sin cambios de conducción. Se conservan los accesos antiguos; para este ajuste usar web7.
