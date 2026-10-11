@@ -1,0 +1,11 @@
+# Borrador de despliegue: aplicar solo tras revisar y autorizar el alojamiento.
+services:
+  - type: web
+    name: minikarts-multiplayer
+    runtime: docker
+    plan: free
+    dockerfilePath: ./Dockerfile.multiplayer
+    autoDeploy: false
+    envVars:
+      - key: PORT
+        value: "10000"

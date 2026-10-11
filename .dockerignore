@@ -1,0 +1,8 @@
+.git
+godot/.godot
+godot/export_templates
+godot/build
+*.pck
+*.gz
+*.zip
+generated_images
