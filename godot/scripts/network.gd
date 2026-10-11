@@ -425,6 +425,10 @@ func make_menu() -> void:
 	panel.name = "Panel"
 	panel.position = Vector2(320, 150)
 	panel.custom_minimum_size = Vector2(640, 380)
+	var background := StyleBoxFlat.new()
+	background.bg_color = Color(0.08, 0.12, 0.16, 0.97)
+	background.set_corner_radius_all(10)
+	panel.add_theme_stylebox_override("panel", background)
 	menu.add_child(panel)
 	var column := VBoxContainer.new()
 	column.add_theme_constant_override("separation", 8)
