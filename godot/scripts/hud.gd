@@ -94,9 +94,9 @@ func _label(text: String, font_size: int, color: Color) -> Label:
 	label.add_theme_constant_override("outline_size", 2)
 	return label
 
-func update_display(lap: int, elapsed: float, best: float, speed: float, finished: bool, started: bool, recovered: bool) -> void:
+func update_display(lap: int, elapsed: float, best: float, speed: float, finished: bool, started: bool, recovered: bool, lap_target: int = 3) -> void:
 	var best_text: String = "--" if best == INF else "%.2f s" % best
-	stats.text = "VUELTA %d / 3\nTIEMPO %.2f s    MEJOR %s" % [mini(lap, 3), elapsed, best_text]
+	stats.text = "VUELTA %d / %d\nTIEMPO %.2f s    MEJOR %s" % [mini(lap, lap_target), lap_target, elapsed, best_text]
 	speed_number.text = "%d" % roundi(absf(speed))
 	_message_panel.visible = finished or recovered or not started
 	if finished:

@@ -33,7 +33,7 @@ try:
             page.locator('#status').wait_for(state='detached', timeout=180000)
             page.wait_for_timeout(1200)
             click(page, 345 + index * 195, 210)  # Visual portrait selection.
-            click(page, 640, 465)  # Online mode.
+            click(page, 640, 505)  # Online mode.
             try:
                 wait_connected(page)
             except Exception:

@@ -125,28 +125,47 @@ func run_checks() -> void:
 	check(not network.rooms.has(room.code), "Empty room released")
 	check(not network.room_directory().any(func(r): return r.code == room.code), "Empty rooms disappear from directory")
 	network.remove_peer(103)
-	for id in range(200, 211):
+	for id in range(200, 214):
 		fake_peer(id)
 	network.server_message(200, {"type": "create", "name": "Ten", "driver": 8})
 	var large_room: Dictionary = network.rooms[network.peers[200].room]
-	for id in range(201, 210):
-		network.server_message(id, {"type": "join", "code": large_room.code, "driver": (id - 200) % 9})
-	network.server_message(210, {"type": "join", "code": large_room.code})
-	check(large_room.players.size() == 10 and network.peers[210].room == "", "Ten players admitted; eleventh rejected")
+	for id in range(201, 213):
+		network.server_message(id, {"type": "join", "code": large_room.code, "driver": (id - 200) % 13})
+	network.server_message(213, {"type": "join", "code": large_room.code})
+	check(large_room.players.size() == 13 and network.peers[213].room == "", "Thirteen players admitted; fourteenth rejected")
 	check(large_room.players[200].driver == 8, "New character survives server selection")
-	check(not network.room_directory().any(func(r): return r.code == large_room.code), "Full ten-player room hidden")
+	check(not network.room_directory().any(func(r): return r.code == large_room.code), "Full thirteen-player room hidden")
 	var spawn_positions: Array[Vector3] = []
 	var safe := true
 	for player in large_room.players.values():
 		var position: Vector3 = player.kart.position
-		safe = safe and position.x > 21 and position.x < 39
+		safe = safe and Vector2(position.x, position.z).length() > 24 and Vector2(position.x, position.z).length() < 36
 		for previous in spawn_positions:
 			safe = safe and previous.distance_to(position) >= 4.0
 		spawn_positions.append(position)
-	check(safe, "Ten starting positions fit the road without overlap")
+	check(safe, "Thirteen starting positions fit the road without overlap")
 	var fastest = large_room.players[200].kart
 	check(is_equal_approx(fastest.MAX_SPEED * 3.6, 65.0), "Vehicle limit is 65 km/h")
-	for id in range(200, 211):
+	for target in [3, 6, 9]:
+		network.reset_room(large_room)
+		large_room.laps = target
+		large_room.phase = "racing"
+		for player in large_room.players.values():
+			player.kart.set_physics_process(false)
+			for lap_index in range(target):
+				for point in network.CHECKPOINTS.slice(0, 3):
+					player.kart.position = point + Vector3.UP * 0.7
+					network.tick_room(large_room, 0.01)
+				player.kart.position = Vector3(30, 0.7, -1)
+				network.tick_room(large_room, 0.01)
+				player.kart.position.z = 1
+				network.tick_room(large_room, 0.01)
+				check(player.finished == (lap_index + 1 == target), "Online finish occurs at selected lap %d" % target)
+		network.tick_room(large_room, 0.01)
+		check(network.room_state(large_room).laps == target, "Selected laps reach all clients")
+		check(large_room.phase == "results" and large_room.results.size() == 13, "Thirteen racers finish selected distance")
+	check(network.Settings.valid_laps(4) == 3 and network.Settings.valid_laps("9") == 3 and network.Settings.valid_laps(9.5) == 3 and network.Settings.valid_laps(9.0) == 9, "Invalid lap input defaults safely")
+	for id in range(200, 214):
 		network.remove_peer(id)
 	print("MiniKarts multiplayer rules: %d checks, %d failures" % [checks, failures])
 	quit(0 if failures == 0 else 1)

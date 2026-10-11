@@ -118,3 +118,7 @@ Siguiente prioridad después de esa prueba: reconexión con plaza reservada e id
 
 - Salas de diez, límite 65 km/h y cinco nuevos personajes implementados y probados localmente.
 - Pendiente: foto completa original de Kikoso, revisión visual del usuario y autorización de publicación; luego pruebas con amigos y medición en móviles físicos.
+
+### Ampliación y vueltas completadas
+
+Trece personajes y plazas online; Kikoso completo; distancias 3/6/9; IA de hasta 12 rivales. Pruebas nativas y de red superadas. Se prepara publicación por solicitud de terminar pendientes. Validación futura: móviles físicos, rendimiento y latencia con el grupo.

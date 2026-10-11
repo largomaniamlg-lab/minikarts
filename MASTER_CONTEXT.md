@@ -249,3 +249,11 @@ Nombres en orden: Kikoso, Largo, Sipollo, Antocino, Fubux, Orehas, Young Ex, Sup
 Salas de diez, diez colores, parrilla de dos columnas por cinco filas y servidor limitado a 48 conexiones. Velocidad máxima 65 km/h; anticipación visual ajustada al mismo límite. Se conserva la mejora de fluidez de web15. Nueve personajes pueden repetirse entre diez jugadores.
 
 Validación local: 115 comprobaciones Godot, cero fallos; protocolo con diez conexiones, rechazo del undécimo, elección de nueve identidades y carrera; Chromium muestra las tres páginas y otro ensayo con un navegador más nueve conexiones muestra los diez coches y arranca la carrera sin errores. Exportación y prueba de arranque web superadas. No se ha probado con diez teléfonos físicos ni esta versión en Render Free. No se publica todavía por instrucción del usuario; servidor y web públicos siguen en web14. Paquete preparado: game-9bba19d3ffe01419.pck; cargador grupo-web16.html.
+
+### Personajes y distancias completados — preparación web17
+
+Trece personajes: Kikoso, Largo, Sipollo, Antocino, Fubux, Orehas, Young Ex, Super Mar-IA, Ketamine Yamal, Tushkroisant, Yisus Samuel, Noga y Enriquesido. Kikoso ya usa su cuerpo de la foto reenviada. Retratos derivados mediante edición generativa, caras en carrera y cuerpos en cuatro páginas de selección.
+
+Carreras online de hasta 13 pilotos, parrilla curva con dos carriles y colores diferentes. Opciones 3/6/9 vueltas antes de crear sala; autoridad del creador, valor incluido en lista/estados y compartido con todos. Valores JSON decimales enteros aceptados; entradas no válidas vuelven a tres. Contra IA: 3/6/12 rivales y las mismas distancias. Entrenamiento también respeta vueltas. Velocidad 65 km/h y mejora visual de red conservadas.
+
+Validación: 382 comprobaciones nativas sin fallos, protocolo real de 13 clientes con nueve vueltas y rechazo del decimocuarto, Chromium con un navegador y doce clientes de protocolo muestra 13 coches en carrera de seis vueltas; arranque web correcto. No equivale a trece teléfonos físicos. El usuario solicita terminar las tareas pendientes; se procederá a actualizar backend primero y después el enlace estable.

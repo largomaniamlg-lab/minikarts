@@ -13,7 +13,7 @@ func run() -> void:
 	root.add_child(game)
 	await physics_frame
 	game.race_menu.open()
-	for driver in range(9):
+	for driver in range(13):
 		game.race_menu.select(driver)
 		game.race_menu.open()
 		check(game.kart.get_node("Driver").face_id == driver, "Selection retains driver %d" % driver)
@@ -49,6 +49,27 @@ func run() -> void:
 	check(race.racers[1].kart.get_node("Driver").face_id == 2, "Rematch updates rival faces after new player selection")
 	check(race.phase == "countdown" and race.results.is_empty(), "Rematch resets clock and results")
 	check(game.get_node("Track").get_children().filter(func(n): return n.is_in_group("obstacles")).size() == 14, "Rematch restores obstacles")
+	for target in [6, 9]:
+		root.get_node("Network").selected_laps = target
+		race.reset()
+		var racer: Dictionary = race.racers[0]
+		for lap_index in range(target):
+			for point in game.checkpoints.slice(0, 3):
+				racer.kart.position = point + Vector3.UP * 0.7
+				race.advance_racer(racer)
+			racer.kart.position = Vector3(30, 0.7, -1)
+			race.advance_racer(racer)
+			racer.kart.position.z = 1
+			race.advance_racer(racer)
+			check(racer.finished == (lap_index + 1 == target), "Offline finish respects %d laps" % target)
+		game.hud.update_display(target, 1.0, INF, 0, true, true, false, target)
+		check(game.hud.stats.text.contains("/ %d" % target), "HUD shows selected lap total")
+	root.get_node("Network").selected_bots = 12
+	game.start_offline()
+	await physics_frame
+	check(game.offline_race.racers.size() == 13, "Offline supports thirteen racers")
+	root.get_node("Network").selected_laps = 3
+	root.get_node("Network").selected_bots = 3
 	game.start_solo()
 	await physics_frame
 	await physics_frame

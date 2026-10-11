@@ -12,12 +12,12 @@ func _physics_process(delta: float) -> void:
 		return
 	jump_cooldown = maxf(0.0, jump_cooldown - delta)
 	var angle := atan2(kart.position.z, kart.position.x)
-	var lane := float(slot) * 1.0
+	var lane := float(slot % 4) * 1.0
 	var target: Vector3 = track.track_point(angle + 0.25, 30.0 + lane, kart.position.y)
 	var desired := (target - kart.position).normalized()
 	var forward := -kart.global_basis.z
 	var error := atan2(forward.cross(desired).y, forward.dot(desired))
-	var limit := 12.0 + float(slot) * 0.6
+	var limit := 12.0 + float(slot % 4) * 0.6
 	var input := {"accelerate": 1.0 if kart.speed < limit else 0.0, "brake": 1.0 if kart.speed > limit + 0.5 else 0.0,
 		"steer_right": maxf(0.0, -error * 3.5), "steer_left": maxf(0.0, error * 3.5), "jump": 0.0, "shoot": 0.0}
 	input.steer_right = minf(input.steer_right, 1.0)

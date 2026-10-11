@@ -13,6 +13,7 @@ var checkpoints: Array[Vector3] = [Vector3(0, 0, 30), Vector3(-30, 0, 0), Vector
 var initial_transform: Transform3D
 var hud: CanvasLayer
 var prev_z: float = -3.0
+var lap_target := 3
 var race_menu: CanvasLayer
 var offline_race: Node
 
@@ -48,6 +49,9 @@ func startup_menu() -> void:
 		race_menu.open()
 
 func start_offline() -> void:
+	lap_target = Network.selected_laps
+	if is_instance_valid(offline_race) and offline_race.bots.size() != Network.selected_bots:
+		clear_offline()
 	if not is_instance_valid(offline_race):
 		offline_race = preload("res://scripts/offline_race.gd").new()
 		offline_race.game = self
@@ -62,6 +66,7 @@ func clear_offline() -> void:
 		offline_race = null
 
 func start_solo() -> void:
+	lap_target = Network.selected_laps
 	clear_offline()
 	reset_race()
 	race_menu.resume()
@@ -135,9 +140,9 @@ func _process(delta: float) -> void:
 				lap += 1
 				best_lap = minf(best_lap, elapsed - lap_start)
 				lap_start = elapsed
-				if lap == 3:
+				if lap == lap_target:
 					finished = true
 					kart.set("enabled", false)
 	notice_time = maxf(0.0, notice_time - delta)
 	prev_z = kart.position.z
-	hud.call("update_display", mini(lap + 1, 3), elapsed, best_lap, absf(float(kart.get("speed"))) * 3.6, finished, started, notice_time > 0.0)
+	hud.call("update_display", mini(lap + 1, lap_target), elapsed, best_lap, absf(float(kart.get("speed"))) * 3.6, finished, started, notice_time > 0.0, lap_target)

@@ -3,6 +3,8 @@ extends CanvasLayer
 const Driver = preload("res://scripts/driver.gd")
 const Catalog = preload("res://scripts/driver_catalog.gd")
 const NAMES = Catalog.NAMES
+var lap_choice: OptionButton
+var bot_choice: OptionButton
 var page := 0
 var previous: Button
 var next: Button
@@ -48,16 +50,32 @@ func _ready() -> void:
 	previous.pressed.connect(func(): change_page(-1))
 	next.pressed.connect(func(): change_page(1))
 	page_label = label("", Vector2(510, 95), Vector2(260, 25), 16)
-	button("CARRERA · 3 RIVALES IA", Vector2(260, 360), Vector2(760, 60)).pressed.connect(game.start_offline)
-	online = button("ONLINE · CON AMIGOS", Vector2(260, 435), Vector2(760, 60))
+	lap_choice = OptionButton.new()
+	lap_choice.position = Vector2(260, 350)
+	lap_choice.size = Vector2(370, 40)
+	lap_choice.add_theme_font_size_override("font_size", 22)
+	for laps in Network.Settings.LAP_OPTIONS:
+		lap_choice.add_item("%d vueltas" % laps, laps)
+	lap_choice.item_selected.connect(func(index): Network.selected_laps = lap_choice.get_item_id(index))
+	root.add_child(lap_choice)
+	bot_choice = OptionButton.new()
+	bot_choice.position = Vector2(650, 350)
+	bot_choice.size = Vector2(370, 40)
+	bot_choice.add_theme_font_size_override("font_size", 22)
+	for count in Network.Settings.BOT_OPTIONS:
+		bot_choice.add_item("IA · %d rivales" % count, count)
+	bot_choice.item_selected.connect(func(index): Network.selected_bots = bot_choice.get_item_id(index))
+	root.add_child(bot_choice)
+	button("CARRERA CONTRA LA IA", Vector2(260, 405), Vector2(760, 55)).pressed.connect(game.start_offline)
+	online = button("ONLINE · CON AMIGOS", Vector2(260, 475), Vector2(760, 60))
 	online.pressed.connect(func():
 		game.prepare_online()
 		Network.menu.get_node("Panel").show()
 	)
-	button("ENTRENAR A SOLAS", Vector2(260, 510), Vector2(370, 55)).pressed.connect(game.start_solo)
-	button("VOLVER A LA CARRERA", Vector2(650, 510), Vector2(370, 55)).pressed.connect(resume)
-	status = label("", Vector2(260, 580), Vector2(760, 65), 21)
-	result_text = label("", Vector2(260, 110), Vector2(760, 240), 26)
+	button("ENTRENAR A SOLAS", Vector2(260, 545), Vector2(370, 55)).pressed.connect(game.start_solo)
+	button("VOLVER A LA CARRERA", Vector2(650, 545), Vector2(370, 55)).pressed.connect(resume)
+	status = label("", Vector2(260, 610), Vector2(760, 65), 21)
+	result_text = label("", Vector2(260, 110), Vector2(760, 285), 18)
 	result_text.hide()
 	select(Network.selected_driver)
 	hide()
@@ -99,10 +117,12 @@ func open() -> void:
 		game.offline_race.pause_race(true)
 	title.text = "ELIGE TU PILOTO"
 	result_text.hide()
+	lap_choice.show()
+	bot_choice.show()
 	page = Network.selected_driver / 4
 	update_page()
 	online.disabled = Network.address.text.is_empty()
-	status.text = "Online pendiente de activar el servidor gratuito." if online.disabled else "Crea una sala o elige una disponible · hasta 10 jugadores."
+	status.text = "Online pendiente de activar el servidor gratuito." if online.disabled else "Crea una sala o elige una disponible · hasta 13 jugadores."
 
 func resume() -> void:
 	hide()
@@ -116,7 +136,7 @@ func resume() -> void:
 
 func show_results(results: Array) -> void:
 	open()
-	title.text = "RESULTADOS · TRES VUELTAS"
+	title.text = "RESULTADOS · %d VUELTAS" % game.offline_race.lap_target
 	for card in cards:
 		card.hide()
 	result_text.text = ""
@@ -126,6 +146,8 @@ func show_results(results: Array) -> void:
 	previous.hide()
 	next.hide()
 	page_label.hide()
+	lap_choice.hide()
+	bot_choice.hide()
 	result_text.show()
 
 func change_page(direction: int) -> void:

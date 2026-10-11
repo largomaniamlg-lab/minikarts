@@ -12,13 +12,14 @@ var elapsed := 0.0
 var first_finish := -1.0
 var results: Array = []
 var paused := false
+var lap_target := 3
 
 func _ready() -> void:
 	racers.append({"kart": game.kart, "name": "Tú", "lap": 0, "checkpoint": 0, "prev_z": -3.0, "finished": false})
-	for index in range(3):
+	for index in range(Network.selected_bots):
 		var kart = preload("res://scenes/kart.tscn").instantiate()
 		kart.network_controlled = true
-		kart.kart_color = [Color("397cdc"), Color("51ba66"), Color("b464d5")][index]
+		kart.kart_color = Network.COLORS[index + 1]
 		game.add_child(kart)
 		kart._camera.queue_free()
 		var driver_id: int = (Network.selected_driver + index + 1) % NAMES.size()
@@ -40,6 +41,7 @@ func _ready() -> void:
 	reset()
 
 func reset() -> void:
+	lap_target = Network.selected_laps
 	phase = "countdown"
 	timer = 3.0
 	elapsed = 0.0
@@ -53,7 +55,7 @@ func reset() -> void:
 			child.queue_free()
 	for index in range(racers.size()):
 		var racer: Dictionary = racers[index]
-		var spawn := Transform3D(Basis(Vector3.UP, PI), Vector3(25 + 3 * index, 0.7, -3))
+		var spawn := Network.Settings.grid_transform(index)
 		racer.kart.reset_to(spawn)
 		racer.kart.spawn_transform = spawn
 		racer.kart.enabled = false
@@ -119,12 +121,12 @@ func update(delta: float) -> void:
 					results.append({"name": racer.name, "time": -1.0})
 			game.race_menu.show_results(results)
 	var player: Dictionary = racers[0]
-	game.hud.update_display(mini(player.lap + 1, 3), elapsed, INF, absf(game.kart.speed) * 3.6, player.finished, phase == "racing", false)
+	game.hud.update_display(mini(player.lap + 1, lap_target), elapsed, INF, absf(game.kart.speed) * 3.6, player.finished, phase == "racing", false, lap_target)
 	if phase == "countdown":
 		game.hud._message_panel.show()
 		game.hud.message.text = "Salida en %d…" % maxi(1, ceili(timer))
 	elif phase == "racing":
-		game.hud.stats.text += "\nPOSICIÓN %d / 4" % position_of_player()
+		game.hud.stats.text += "\nPOSICIÓN %d / %d" % [position_of_player(), racers.size()]
 		if game.kart.hit_time > 0:
 			game.hud._message_panel.show()
 			game.hud.message.text = "¡Trompo! Protección temporal."
@@ -132,7 +134,7 @@ func update(delta: float) -> void:
 		var summary := []
 		for racer in racers:
 			summary.append({"name": racer.name, "lap": racer.lap, "finished": racer.finished})
-		JavaScriptBridge.eval("window.minikartsOfflineTest=" + JSON.stringify({"phase": phase, "racers": summary, "elapsed": elapsed}) + ";")
+		JavaScriptBridge.eval("window.minikartsOfflineTest=" + JSON.stringify({"phase": phase, "laps": lap_target, "racers": summary, "elapsed": elapsed}) + ";")
 
 func advance_racer(racer: Dictionary) -> void:
 	var kart = racer.kart
@@ -147,7 +149,7 @@ func advance_racer(racer: Dictionary) -> void:
 		if racer.checkpoint == 4:
 			racer.checkpoint = 0
 			racer.lap += 1
-			if racer.lap == 3:
+			if racer.lap == lap_target:
 				racer.finished = true
 				kart.enabled = false
 				results.append({"name": racer.name, "time": elapsed})

@@ -8,9 +8,12 @@ var ping_pending := -1.0
 var ping_serial := 0
 
 const Catalog = preload("res://scripts/driver_catalog.gd")
-const LIMIT := 10
+const Settings = preload("res://scripts/race_settings.gd")
+const LIMIT = Settings.CAPACITY
+var selected_laps := 3
+var selected_bots := 3
 const CHECKPOINTS := [Vector3(0, 0, 30), Vector3(-30, 0, 0), Vector3(0, 0, -30), Vector3(30, 0, 0)]
-const COLORS := [Color("ee3814"), Color("397cdc"), Color("51ba66"), Color("b464d5"), Color("f4cf39"), Color("39d5d2"), Color("ed6bb1"), Color("f49b38"), Color("dddddd"), Color("637049")]
+const COLORS = Settings.COLORS
 var server_mode := false
 var listener: TCPServer
 var peers: Dictionary = {}
@@ -156,7 +159,7 @@ func driving_inputs() -> Dictionary:
 func server_tick(delta: float) -> void:
 	while listener.is_connection_available():
 		var stream := listener.take_connection()
-		if peers.size() >= 48:
+		if peers.size() >= 60:
 			stream.disconnect_from_host()
 			continue
 		var peer := WebSocketPeer.new()
@@ -212,7 +215,7 @@ func room_directory() -> Array:
 		if room.phase != "lobby" or room.players.size() >= LIMIT or room.players.is_empty():
 			continue
 		var host: Dictionary = room.players[room.host]
-		directory.append({"code": room.code, "host": str(host.name).replace("\n", " ").replace("\r", " "), "players": room.players.size(), "capacity": LIMIT})
+		directory.append({"code": room.code, "host": str(host.name).replace("\n", " ").replace("\r", " "), "players": room.players.size(), "capacity": LIMIT, "laps": room.laps})
 	directory.sort_custom(func(a: Dictionary, b: Dictionary): return str(a.code) < str(b.code))
 	return directory
 
@@ -245,7 +248,7 @@ func server_message(id: int, message: Dictionary) -> void:
 			world.add_child(stage)
 			var track = preload("res://scenes/track.tscn").instantiate()
 			stage.add_child(track)
-			rooms[code] = {"code": code, "host": id, "world": world, "stage": stage, "track": track, "players": {}, "phase": "lobby", "timer": 0.0, "elapsed": 0.0, "results": [], "first_finish": -1.0}
+			rooms[code] = {"code": code, "host": id, "world": world, "stage": stage, "track": track, "players": {}, "phase": "lobby", "timer": 0.0, "elapsed": 0.0, "results": [], "first_finish": -1.0, "laps": Settings.valid_laps(message.get("laps", 3))}
 		if not rooms.has(code):
 			reject(id, "No existe esa sala. Comprueba el código; el creador debe mantener el juego abierto.")
 			return
@@ -254,12 +257,12 @@ func server_message(id: int, message: Dictionary) -> void:
 			reject(id, "La carrera ya ha empezado. Espera a que el creador vuelva a la sala.")
 			return
 		if room.players.size() >= LIMIT:
-			reject(id, "Sala llena: ya hay diez jugadores.")
+			reject(id, "Sala llena: ya hay trece jugadores.")
 			return
 		var kart = preload("res://scenes/kart.tscn").instantiate()
 		kart.network_controlled = true
 		kart.kart_color = COLORS[room.players.size()]
-		kart.position = Vector3(27 + (room.players.size() % 2) * 6, 0.7, -3 - (room.players.size() / 2) * 4)
+		kart.transform = Settings.grid_transform(room.players.size())
 		room.stage.add_child(kart)
 		kart.enabled = false
 		var name_text := str(message.get("name", "Piloto")).strip_edges().left(20)
@@ -389,7 +392,7 @@ func tick_room(room: Dictionary, delta: float) -> void:
 			if player.checkpoint == 4:
 				player.checkpoint = 0
 				player.lap += 1
-				if player.lap == 3:
+				if player.lap == room.laps:
 					player.finished = true
 					kart.enabled = false
 					room.results.append({"id": id, "name": player.name, "time": room.elapsed})
@@ -422,7 +425,7 @@ func room_state(room: Dictionary) -> Dictionary:
 	for child in room.track.get_children():
 		if child.is_in_group("destructible"):
 			boxes.append(vector(child.position))
-	return {"type": "state", "time": clock, "code": room.code, "host": room.host, "phase": room.phase, "countdown": maxi(0, ceili(room.timer)), "elapsed": room.elapsed, "players": racers, "shots": shots, "boxes": boxes, "neutral": vector(room.track.get_node("NeutralSleeper").position), "results": room.results}
+	return {"type": "state", "time": clock, "code": room.code, "host": room.host, "phase": room.phase, "laps": room.laps, "countdown": maxi(0, ceili(room.timer)), "elapsed": room.elapsed, "players": racers, "shots": shots, "boxes": boxes, "neutral": vector(room.track.get_node("NeutralSleeper").position), "results": room.results}
 
 func as_vector(value: Array) -> Vector3:
 	return Vector3(value[0], value[1], value[2])
@@ -481,7 +484,7 @@ func update_game(game: Node3D, delta: float) -> void:
 		kart.speed = visual.speed
 		kart._steering = visual.steering
 		if id == player_id:
-			game.hud.update_display(mini(int(racer.lap) + 1, 3), snapshot.elapsed, INF, absf(racer.speed) * 3.6, racer.finished, snapshot.phase == "racing", false)
+			game.hud.update_display(mini(int(racer.lap) + 1, int(snapshot.get("laps", 3))), snapshot.elapsed, INF, absf(racer.speed) * 3.6, racer.finished, snapshot.phase == "racing", false, int(snapshot.get("laps", 3)))
 			if racer.hit > 0:
 				game.hud._message_panel.show()
 				game.hud.message.text = "¡Trompo! Protección temporal."
@@ -564,7 +567,7 @@ func make_menu() -> void:
 	info.size = Vector2(680, 66)
 	info.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 	info.add_theme_font_size_override("font_size", 21)
-	info.text = "Salas online · hasta diez pilotos"
+	info.text = "Salas online · hasta trece pilotos"
 	panel.add_child(info)
 	address = LineEdit.new()
 	address.text = OS.get_environment("MULTIPLAYER_SERVER_URL")
@@ -671,7 +674,7 @@ func render_room_directory() -> void:
 		room_list.add_child(label)
 	for room in available_rooms:
 		var button := Button.new()
-		button.text = "Entrar · Sala de %s · %d/%d" % [room.host, room.players, room.capacity]
+		button.text = "Entrar · %s · %d/%d · %d vueltas" % [room.host, room.players, room.capacity, room.get("laps", 3)]
 		button.custom_minimum_size = Vector2(650, 52)
 		button.add_theme_font_size_override("font_size", 22)
 		room_list.add_child(button)
@@ -760,17 +763,17 @@ func send_lobby_request(kind: String) -> void:
 	if kind != "list":
 		room_request_pending = true
 		room_request_deadline = clock + 10.0
-	send(socket, {"type": kind, "code": normalize_room_code(code_input.text), "name": nickname.text, "driver": selected_driver})
+	send(socket, {"type": kind, "code": normalize_room_code(code_input.text), "name": nickname.text, "driver": selected_driver, "laps": selected_laps})
 
 func update_menu() -> void:
 	driver_button.disabled = playing
-	var lines := ["Sala %s · %d/%d" % [room_code, snapshot.players.size(), LIMIT]]
+	var lines := ["Sala %s · %d/%d · %d vueltas" % [room_code, snapshot.players.size(), LIMIT, snapshot.get("laps", 3)]]
 	for index in range(0, snapshot.players.size(), 2):
 		var row: Array[String] = []
 		for racer in snapshot.players.slice(index, index + 2):
 			row.append("%s · %s" % [racer.name, "Listo" if racer.ready else "Esperando"])
 		lines.append("    |    ".join(row))
-	info.add_theme_font_size_override("font_size", 16 if snapshot.phase == "results" else 19)
+	info.add_theme_font_size_override("font_size", 16 if snapshot.phase == "results" else 17)
 	if snapshot.phase == "countdown":
 		lines.append("Salida en %d…" % snapshot.countdown)
 	elif snapshot.phase == "racing" and displayed_phase != "racing":
@@ -811,4 +814,4 @@ func leave_room() -> void:
 	remote_karts.clear()
 	remote_shots.clear()
 	get_tree().reload_current_scene()
-	info.text = "Carrera privada · hasta 10 pilotos"
+	info.text = "Carrera privada · hasta 13 pilotos"

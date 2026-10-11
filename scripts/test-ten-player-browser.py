@@ -1,4 +1,4 @@
-"""Render ten racers in Chromium: one browser and nine independent WebSocket peers."""
+"""Render thirteen racers in Chromium: one browser and twelve WebSocket peers."""
 import asyncio,functools,http.server,threading,json,websockets,sys
 from pathlib import Path
 from playwright.async_api import async_playwright
@@ -19,9 +19,9 @@ async def main():
  server=http.server.ThreadingHTTPServer(('127.0.0.1',0),functools.partial(http.server.SimpleHTTPRequestHandler,directory=str(directory)))
  threading.Thread(target=server.serve_forever,daemon=True).start();clients=[];errors=[]
  try:
-  for i in range(9):
+  for i in range(12):
    ws=await websockets.connect('ws://127.0.0.1:8080',max_queue=None,close_timeout=1);clients.append(ws)
-   await send(ws,type='create' if i==0 else 'join',code='' if i==0 else code,name=f'Prueba {i+1}',driver=i)
+   await send(ws,type='create' if i==0 else 'join',code='' if i==0 else code,name=f'Prueba {i+1}',driver=i, laps=6)
    code=(await receive(ws,'welcome'))['code']
   async with async_playwright() as p:
    browser=await p.chromium.launch(executable_path='/usr/bin/chromium',headless=True,args=['--no-sandbox','--use-angle=swiftshader','--enable-unsafe-swiftshader'])
@@ -31,9 +31,9 @@ async def main():
    await page.goto(f'http://127.0.0.1:{server.server_port}/game-ten-test.html?test=1')
    await page.locator('#status').wait_for(state='detached',timeout=120000)
    await page.mouse.click(545,112);await page.wait_for_timeout(200);await page.mouse.click(545,112);await page.wait_for_timeout(200)
-   await page.mouse.click(172,105);await page.mouse.click(320,232)
+   await page.mouse.click(172,105);await page.mouse.click(320,252)
    await tap(page,'room_'+code)
-   await page.wait_for_function('window.minikartsTest?.rendered_karts===10',timeout=30000)
+   await page.wait_for_function('window.minikartsTest?.rendered_karts===13',timeout=30000)
    await page.screenshot(path='/tmp/minikarts-ten-lobby.png')
    await tap(page,'ready')
    for ws in clients:await send(ws,type='ready',ready=True)
@@ -44,9 +44,10 @@ async def main():
     await asyncio.sleep(.05)
    await page.screenshot(path='/tmp/minikarts-ten-race.png')
    state=await page.evaluate('window.minikartsTest')
-   assert state['rendered_karts']==10 and len(state['state']['players'])==10
+   assert state['rendered_karts']==13 and len(state['state']['players'])==13
+   assert state['state']['laps']==6
    assert not errors,errors
-   await browser.close();print('PASS: browser joins nine WebSocket peers via room list, renders ten karts and runs race without script errors')
+   await browser.close();print('PASS: browser joins twelve WebSocket peers via room list, renders thirteen karts and runs race without script errors')
  finally:
   for ws in clients:await ws.close()
   server.shutdown();server.server_close();test_page.unlink(missing_ok=True)
