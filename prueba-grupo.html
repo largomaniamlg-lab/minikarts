@@ -11,6 +11,6 @@
 <div class="rotate"><strong>Gira el teléfono ↻</strong><p>MiniKarts se juega en horizontal.</p></div>
 <script>
 const game=document.getElementById('game');
-document.getElementById('play').addEventListener('click',async()=>{document.body.classList.add('playing');game.src='grupo-web23.html?v=42f1963ad475553b';try{await document.documentElement.requestFullscreen();await screen.orientation?.lock('landscape')}catch{} });
+document.getElementById('play').addEventListener('click',async()=>{document.body.classList.add('playing');game.src='grupo-web23.html?v=a9fedda31e8465f4';try{await document.documentElement.requestFullscreen();await screen.orientation?.lock('landscape')}catch{} });
 document.getElementById('back').addEventListener('click',()=>{game.removeAttribute('src');document.body.classList.remove('playing');if(document.fullscreenElement)document.exitFullscreen().catch(()=>{})});
 </script></body></html>

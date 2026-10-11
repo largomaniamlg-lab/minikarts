@@ -34,6 +34,15 @@ try:
    page.screenshot(path=f'/tmp/minikarts23-menu-{width}x{height}.png')
    click(options['x']+options['width']/2, options['y']+32)
    page.wait_for_function('!window.minikartsHudTest.rects.options.visible')
+   # Sound settings must not cover the next menu's pilot/lap option.
+   click(menu['x']+menu['width']/2, menu['y']+menu['height']/2)
+   page.wait_for_function('window.minikartsHudTest.rects.options.visible')
+   click(options['x']+options['width']/2, options['y']+240)
+   page.wait_for_function('!window.minikartsHudTest.rects.options.visible')
+   click(menu['x']+menu['width']/2, menu['y']+menu['height']/2)
+   page.wait_for_function('window.minikartsHudTest.rects.options.visible')
+   click(options['x']+options['width']/2, options['y']+188)
+   page.wait_for_function('!window.minikartsHudTest.rects.timing.visible')
    assert not errors, errors
    print(f'PASS {width}x{height}: compact racing HUD, separate menu and working recovery')
    page.close()

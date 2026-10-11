@@ -166,6 +166,8 @@ func _build_options(root: Control) -> void:
 	options_button.pressed.connect(func():
 		options.visible = not options.visible
 		touch_controls.release_actions()
+		if is_instance_valid(Sound.panel):
+			Sound.panel.hide()
 		column.get_child(1).disabled = Network.playing
 		column.get_child(3).disabled = Network.playing
 	)
