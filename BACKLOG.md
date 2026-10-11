@@ -132,3 +132,5 @@ Web18 mejora la respuesta visual local, adapta el suavizado de rivales a la vari
 Web18 publicada y verificada en Render y GitHub Pages. Pendiente únicamente evaluación de fluidez con los amigos en dispositivos físicos y futuras mejoras de reconexión. No se ha contratado alojamiento ni cambiado de servidor.
 
 Web20: tres personajes nuevos y 16 plazas, IA hasta 15 rivales y reutilización segura de huecos de parrilla preparados y probados. Opciones de sorteo/parrilla inversa/clasificación quedan como propuestas para elegir con el usuario.
+
+Web20 publicada y verificada en servidor público con 16 conexiones y GitHub Pages. Propuestas de orden de salida siguen pendientes de elección; el orden actual se conserva.

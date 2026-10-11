@@ -301,3 +301,5 @@ Tres personajes añadidos en el orden de las fotos, cuerpos humorísticos deriva
 Pruebas nativas completas superadas; reglas finales 341 comprobaciones sin fallos ni errores de script, prueba de hueco libre incluida. Chromium selecciona las cuatro páginas y mAIk, nueve vueltas/15 bots. Un Chromium con quince conexiones de protocolo muestra 16 karts y arranca carrera sin errores. Transparencia y retratos de cuarta página revisados visualmente. Backend primero, cliente después; sin prueba con 16 móviles físicos.
 
 Backend web20 Live: commit 7712221, deploy dep-db5rs52d0e5s738gdv7g. Prueba pública de 16 conexiones superada: capacidad, directorio, selección de 16 identidades, nueve vueltas, autoridad, carrera, movimiento y migración del creador.
+
+Web20 cliente publicado en 4c7ca8e. HTTP público confirma web20 desde portada y enlaces antiguos web12/web13; cargador y paquete 17.146.088 bytes responden 200. Servidor local de pruebas detenido. Sin pruebas con 16 teléfonos físicos.
