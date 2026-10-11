@@ -126,7 +126,7 @@ func update(delta: float) -> void:
 		game.hud._message_panel.show()
 		game.hud.message.text = "Salida en %d…" % maxi(1, ceili(timer))
 	elif phase == "racing":
-		game.hud.stats.text += "\nPOSICIÓN %d / %d" % [position_of_player(), racers.size()]
+		game.hud.set_position(position_of_player(), racers.size())
 		if game.kart.hit_time > 0:
 			game.hud._message_panel.show()
 			game.hud.message.text = "¡Trompo! Protección temporal."

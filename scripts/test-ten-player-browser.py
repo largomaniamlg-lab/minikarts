@@ -27,7 +27,7 @@ async def main():
    browser=await p.chromium.launch(executable_path='/usr/bin/chromium',headless=True,args=['--no-sandbox','--use-angle=swiftshader','--enable-unsafe-swiftshader'])
    page=await browser.new_page(viewport={'width':640,'height':360})
    page.on('pageerror',lambda e:errors.append(str(e)))
-   page.on('console',lambda m:errors.append(m.text) if 'SCRIPT ERROR' in m.text else None)
+   page.on('console',lambda m:errors.append(m.text) if 'SCRIPT ERROR' in m.text or (m.type=='error' and '404' not in m.text) else None)
    await page.goto(f'http://127.0.0.1:{server.server_port}/game-ten-test.html?test=1')
    await page.locator('#status').wait_for(state='detached',timeout=120000)
    await page.mouse.click(545,112);await page.wait_for_timeout(200);await page.mouse.click(545,112);await page.wait_for_timeout(200)
@@ -42,6 +42,7 @@ async def main():
    for _ in range(25):
     for ws in clients:await send(ws,type='input',controls={'accelerate':1})
     await asyncio.sleep(.05)
+   await page.wait_for_function('window.minikartsHudTest?.rects.timing.visible && window.minikartsHudTest.rects.timing.height<=66')
    await page.screenshot(path='/tmp/minikarts-ten-race.png')
    state=await page.evaluate('window.minikartsTest')
    assert state['rendered_karts']==16 and len(state['state']['players'])==16

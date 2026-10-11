@@ -18,6 +18,7 @@ var ping_serial := 0
 const Catalog = preload("res://scripts/driver_catalog.gd")
 const Settings = preload("res://scripts/race_settings.gd")
 const LIMIT = Settings.CAPACITY
+var friends_button: Button
 var selected_laps := 3
 var selected_bots := 3
 const CHECKPOINTS := [Vector3(0, 0, 30), Vector3(-30, 0, 0), Vector3(0, 0, -30), Vector3(30, 0, 0)]
@@ -555,6 +556,7 @@ func make_menu() -> void:
 	menu.layer = 10
 	add_child(menu)
 	var toggle := Button.new()
+	friends_button = toggle
 	toggle.text = "Amigos"
 	toggle.position = Vector2(1050, 92)
 	toggle.custom_minimum_size = Vector2(150, 44)
@@ -587,6 +589,9 @@ func make_menu() -> void:
 			get_tree().current_scene.kart.get_node("Driver").set_face(selected_driver)
 	)
 	menu.add_child(driver_button)
+	if preload("res://scripts/touch_controls.gd").is_touch_mode():
+		toggle.hide()
+		driver_button.hide()
 	var panel := Panel.new()
 	panel.name = "Panel"
 	panel.position = Vector2(280, 135)

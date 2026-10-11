@@ -15,6 +15,7 @@ var previous_finished := false
 var online_hit := false
 var online_height := 0.7
 var brake_clock := 0.0
+var sound_button: Button
 var panel: VBoxContainer
 var mute_button: CheckButton
 var events: Dictionary = {}
@@ -89,10 +90,13 @@ func build_controls() -> void:
 	layer.layer = 30
 	add_child(layer)
 	var button := Button.new()
+	sound_button = button
 	button.text = "SONIDO"
 	button.position = Vector2(1050, 204)
 	button.size = Vector2(150, 48)
 	layer.add_child(button)
+	if preload("res://scripts/touch_controls.gd").is_touch_mode():
+		button.hide()
 	panel = VBoxContainer.new()
 	panel.position = Vector2(970, 257)
 	panel.custom_minimum_size = Vector2(210, 200)

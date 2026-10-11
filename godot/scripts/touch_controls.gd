@@ -102,6 +102,8 @@ func _layout_buttons() -> void:
 	_buttons[3].position = Vector2(size.x - 452, size.y - 158)
 	_buttons[4].position = Vector2(size.x * 0.5 + 218, 120)
 	_buttons[5].position = Vector2(size.x * 0.5 + 208, 50)
+	_buttons[4].hide()
+	_buttons[5].hide()
 	queue_redraw()
 
 func _draw() -> void:
@@ -203,8 +205,8 @@ func _notification(what: int) -> void:
 			button.hide()
 	elif what == NOTIFICATION_APPLICATION_FOCUS_IN:
 		_focused = true
-		for button: TouchScreenButton in _buttons:
-			button.show()
+		for index in range(_buttons.size()):
+			_buttons[index].visible = index < 4
 
 func _exit_tree() -> void:
 	if is_touch_mode():

@@ -178,7 +178,7 @@ func _rounded_part(dimensions: Vector3, offset: Vector3, color: Color) -> MeshIn
 func _build_body() -> void:
 	_build_shadow()
 	# Presentation geometry only: the original collision box and driving stay unchanged.
-	_rounded_part(Vector3(1.35, 0.42, 1.95), Vector3(0, 0, 0), kart_color)
+	_body_visual = _rounded_part(Vector3(1.35, 0.42, 1.95), Vector3(0, 0, 0), kart_color)
 	_rounded_part(Vector3(1.05, 0.38, 0.75), Vector3(0, 0.15, -0.62), kart_color.lightened(0.10))
 	_rounded_part(Vector3(0.68, 0.55, 0.55), Vector3(0, 0.25, 0.35), Color("172638"))
 	_rounded_part(Vector3(0.20, 0.10, 0.8), Vector3(0, 0.32, -0.60), Color("fff5dd"))
