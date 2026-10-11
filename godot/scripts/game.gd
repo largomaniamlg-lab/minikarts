@@ -1,0 +1,90 @@
+extends Node3D
+
+@onready var kart: CharacterBody3D = $Kart
+var elapsed: float = 0.0
+var lap: int = 0
+var checkpoint: int = 0
+var finished: bool = false
+var started: bool = false
+var lap_start: float = 0.0
+var best_lap: float = INF
+var notice_time: float = 0.0
+var checkpoints: Array[Vector3] = [Vector3(0, 0, 30), Vector3(-30, 0, 0), Vector3(0, 0, -30), Vector3(30, 0, 0)]
+var initial_transform: Transform3D
+var hud: CanvasLayer
+var prev_z: float = -3.0
+
+func _ready() -> void:
+	initial_transform = kart.transform
+	prev_z = kart.position.z
+	var sun := DirectionalLight3D.new()
+	sun.rotation_degrees = Vector3(-55, -25, 0)
+	sun.light_energy = 1.3
+	add_child(sun)
+	var world := WorldEnvironment.new()
+	var environment := Environment.new()
+	environment.background_mode = Environment.BG_COLOR
+	environment.background_color = Color("90c8e8")
+	environment.ambient_light_source = Environment.AMBIENT_SOURCE_COLOR
+	environment.ambient_light_color = Color("d6e8f7")
+	environment.ambient_light_energy = 0.65
+	world.environment = environment
+	add_child(world)
+	hud = preload("res://scripts/hud.gd").new()
+	add_child(hud)
+
+func reset_race() -> void:
+	for projectile in get_tree().get_nodes_in_group("projectiles"):
+		projectile.queue_free()
+	$Track.call("reset_obstacles")
+	elapsed = 0.0
+	lap = 0
+	checkpoint = 0
+	finished = false
+	started = false
+	lap_start = 0.0
+	best_lap = INF
+	notice_time = 0.0
+	kart.set("spawn_transform", initial_transform)
+	kart.call("reset_to", initial_transform)
+	prev_z = kart.position.z
+
+func recover() -> void:
+	if finished:
+		reset_race()
+		return
+	kart.call("reset_to", kart.get("spawn_transform"))
+	prev_z = kart.position.z
+	notice_time = 2.0
+
+func _process(delta: float) -> void:
+	if Input.is_action_just_pressed("restart_race"):
+		reset_race()
+	elif Input.is_action_just_pressed("reset"):
+		recover()
+	if kart.position.y < -4.0:
+		recover()
+	if absf(float(kart.get("speed"))) > 0.5:
+		started = true
+	if started and not finished:
+		elapsed += delta
+		var flat := Vector3(kart.position.x, 0, kart.position.z)
+		var crossed := prev_z < 0.0 and kart.position.z >= 0.0 and kart.position.x > 21.0 and kart.position.x < 39.0
+		var reached := flat.distance_to(checkpoints[checkpoint]) < 11.0 if checkpoint < 3 else crossed
+		if reached:
+			var point: Vector3 = checkpoints[checkpoint]
+			var tangent := Vector3(-point.z, 0, point.x).normalized()
+			var respawn := Transform3D(Basis.looking_at(tangent), point + Vector3.UP * 0.7)
+			kart.set("spawn_transform", respawn)
+			checkpoint += 1
+			if checkpoint == 4:
+				checkpoint = 0
+				lap += 1
+				best_lap = minf(best_lap, elapsed - lap_start)
+				lap_start = elapsed
+				if lap == 3:
+					finished = true
+					kart.set("enabled", false)
+	notice_time = maxf(0.0, notice_time - delta)
+	prev_z = kart.position.z
+	hud.call("update_display", mini(lap + 1, 3), elapsed, best_lap, absf(float(kart.get("speed"))) * 3.6, finished, started, notice_time > 0.0)

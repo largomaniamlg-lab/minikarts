@@ -1,0 +1,6 @@
+godot/.godot/
+godot/*.import
+godot/export_templates/
+godot/build/
+*.apk
+*.aab

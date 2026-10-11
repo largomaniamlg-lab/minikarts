@@ -1,0 +1,6 @@
+[gd_scene load_steps=2 format=3]
+[ext_resource type="Script" path="res://scripts/kart.gd" id="1"]
+[node name="Kart" type="CharacterBody3D"]
+position = Vector3(30, 0.7, -3)
+rotation = Vector3(0, 3.14159265, 0)
+script = ExtResource("1")
