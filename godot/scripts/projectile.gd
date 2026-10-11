@@ -7,6 +7,8 @@ const DISPLAY_HEIGHT := 1.5
 
 func _ready() -> void:
 	add_to_group("projectiles")
+	# Deferred: the shooter/network renderer assigns position after add_child.
+	call_deferred("sound_shot")
 	var photo := Sprite3D.new()
 	photo.name = "PhotoProjectile"
 	photo.texture = preload("res://assets/memes/projectile.png")
@@ -23,6 +25,7 @@ func _physics_process(delta: float) -> void:
 	query.hit_from_inside = true
 	var result := get_world_3d().direct_space_state.intersect_ray(query)
 	if not result.is_empty():
+		Sound.play_effect("impact", global_position)
 		var target: Object = result.collider
 		if target.is_in_group("destructible") and target.has_method("hit"):
 			target.call("hit")
@@ -34,3 +37,6 @@ func _physics_process(delta: float) -> void:
 	life -= delta
 	if life <= 0.0:
 		queue_free()
+
+func sound_shot() -> void:
+	Sound.play_effect("shoot", global_position)

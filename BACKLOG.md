@@ -89,3 +89,9 @@ Aceptación: imagen de proyectil con altura 1,5 m, frente a 0,8 m; conservar cad
 ## MK-19 — Activar servidor gratuito desde móvil (P1; dependencia externa)
 
 Usuario sin cuenta Render. Crear cuenta/conectar GitHub desde móvil, desplegar blueprint preparado con plan free y una instancia; confirmar condiciones actuales, obtener URL WSS y exportar/publicar cliente autorizado. No solicitar contraseñas ni claves en chat. Aceptación: cuatro teléfonos en una sala, carrera completa, disparos, desconexión/reentrada y comportamiento tras suspensión documentados. No dar online por terminado con pruebas locales.
+
+## Audio — implementación preparada y escucha móvil pendiente
+
+Hecho: música original en bucle, fanfarria CC0 y efectos sintetizados con procedencia/licencia; motor vinculado a velocidad, efectos de acciones, cuenta atrás/meta, mezclador persistente, silencio y pausa al perder foco. Suite y prueba WebAudio táctil superadas.
+
+Siguiente aceptación: publicar web12 con autorización; abrir desde Android y Safari/iPhone, comprobar que el gesto desbloquea sonido y que el motor no tapa disparos ni cuenta atrás; probar música y efectos a cero/medio/máximo, silencio, preferencias tras recargar, cambio de aplicación y vuelta; repetir sala online con cuatro teléfonos. No presentar estas pruebas físicas como realizadas.

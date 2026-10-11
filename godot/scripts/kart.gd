@@ -18,6 +18,7 @@ var kart_color: Color = Color(0.95, 0.22, 0.08)
 var hit_time: float = 0.0
 var protection_time: float = 0.0
 var _jump_held: bool = false
+var _impact_cooldown := 0.0
 
 func strength(action: String) -> float:
 	return float(controls.get(action, 0.0)) if network_controlled else Input.get_action_strength(action)
@@ -28,6 +29,7 @@ func pressed(action: String) -> bool:
 func receive_hit() -> bool:
 	if not enabled or protection_time > 0.0:
 		return false
+	Sound.play_effect("spin", global_position)
 	speed *= 0.25
 	hit_time = 1.0
 	protection_time = 3.0
@@ -70,6 +72,7 @@ func _ready() -> void:
 	camera.current = true
 
 func _physics_process(delta: float) -> void:
+	_impact_cooldown = maxf(0, _impact_cooldown - delta)
 	protection_time = maxf(0.0, protection_time - delta)
 	if hit_time > 0.0:
 		rotate_y(TAU * minf(delta, hit_time))
@@ -106,12 +109,16 @@ func _physics_process(delta: float) -> void:
 	velocity.x = forward.x * speed
 	velocity.z = forward.z * speed
 	if is_on_floor() and active and jump_now:
+		Sound.play_effect("jump", global_position)
 		velocity.y = 8.5
 	elif is_on_floor():
 		velocity.y = -0.5
 	else:
 		velocity.y = maxf(velocity.y - 24.0 * delta, -40.0)
+	var airborne := not is_on_floor()
 	move_and_slide()
+	if airborne and is_on_floor():
+		Sound.play_effect("land", global_position)
 	_shot_cooldown = maxf(0.0, _shot_cooldown - delta)
 	if active and pressed("shoot") and _shot_cooldown <= 0.0:
 		var projectile = preload("res://scripts/projectile.gd").new()
@@ -124,6 +131,9 @@ func _physics_process(delta: float) -> void:
 		var collision: KinematicCollision3D = get_slide_collision(index)
 		var normal: Vector3 = collision.get_normal()
 		if absf(normal.y) < 0.5 and movement_direction.dot(normal) < -0.15:
+			if absf(speed) > 4 and _impact_cooldown == 0:
+				Sound.play_effect("impact", global_position)
+				_impact_cooldown = 0.4
 			speed = signf(speed) * minf(absf(speed), Vector2(velocity.x, velocity.z).length())
 	if global_position.y < -10.0:
 		reset_to(spawn_transform)

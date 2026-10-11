@@ -20,6 +20,7 @@ func _ready() -> void:
 	if Network.server_mode:
 		queue_free()
 		return
+	Sound.game = self
 	initial_transform = kart.transform
 	prev_z = kart.position.z
 	var sun := DirectionalLight3D.new()

@@ -79,3 +79,7 @@ El usuario elige alojamiento gratuito y pide primero MK-14: tres pilotos adicion
 Selector visual de cuatro caras y proyectiles a 1,875 veces: implementados localmente. Carrera offline contra tres bots, salida, tres vueltas, clasificación y revancha: implementación local en verificación. Entrenamiento individual conservado. Antes de publicar, revisar pruebas y exportación del ciclo.
 
 Siguiente dependencia: cuenta Render desde el Samsung para desplegar el servidor gratuito preparado. Obtener URL WSS, exportar cliente configurado y probar carrera real con cuatro teléfonos. Después ajustar conducción/latencia online y dificultad de IA según partidas reales; no añadir contenido antes de estabilizar estas carreras.
+
+### Actualización de fase 5 — audio preparado (11/10/2026)
+
+Implementados música original, fanfarria CC0, motor, freno, salto/aterrizaje, disparo/impacto, caja, trompo y cuenta atrás/meta; controles de volumen separados y silencio. Validación técnica Godot/WebAudio completada. Pendientes publicación autorizada y evaluación de mezcla/rendimiento en Android e iPhone reales. No se han añadido nuevas físicas de derrape.

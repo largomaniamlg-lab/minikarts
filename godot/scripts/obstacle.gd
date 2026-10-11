@@ -32,6 +32,7 @@ func _ready() -> void:
 func hit() -> void:
 	if destroyed:
 		return
+	Sound.play_effect("box", global_position)
 	destroyed = true
 	remove_from_group("destructible")
 	remove_from_group("obstacles")
