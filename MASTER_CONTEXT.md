@@ -99,3 +99,7 @@ Primera versión a revisar visualmente. Las pruebas existentes pasan, pero no su
 ## Publicación autorizada del piloto — web4
 
 El usuario aprobó publicar la versión con su foto. Exportación probada copiada a la raíz, con marcador 0.2 web4 · Piloto de foto. Incluye cuerpo 3D y cara 2D billboard; conserva controles táctiles. La autorización de publicación reemplaza la espera indicada en la entrada previa. APK y multijugador no incluidos.
+
+## Corrección de caché de datos del piloto — web5
+
+Captura Samsung mostraba controles táctiles pero kart sin piloto. El loader solicitaba game.pck sin versión, permitiendo reutilizar datos antiguos. Se añade al fetch del PCK un identificador derivado de SHA-256 del artefacto; futuras exportaciones regeneran ese identificador. Página marcada web5. No es necesario borrar los datos del navegador.

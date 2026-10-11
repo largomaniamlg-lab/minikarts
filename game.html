@@ -112,6 +112,9 @@ body {
 		<script>
 const originalFetch = window.fetch.bind(window);
 window.fetch = async function(resource, options) {
+ if (typeof resource === 'string' && /game\.pck(?:\?|$)/.test(resource)) {
+  resource += (resource.includes('?') ? '&' : '?') + 'v=5f81e7e4c4333fc5';
+ }
  const url = typeof resource === 'string' ? resource : resource.url;
  if (url && /game\.wasm(?:\?|$)/.test(url)) {
   const response = await originalFetch(url.replace('game.wasm','game.wasm.gz'),options);

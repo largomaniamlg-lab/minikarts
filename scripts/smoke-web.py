@@ -18,7 +18,7 @@ try:
         errors = []
         responses = {}
         page.on('pageerror', lambda error: errors.append(str(error)))
-        page.on('response', lambda response: responses.update({response.url.split('/')[-1]: response.status}))
+        page.on('response', lambda response: responses.update({response.url.split('/')[-1].split('?')[0]: response.status}))
         page.goto(f'http://127.0.0.1:{server.server_port}/')
         page.click('#play')
         frame = page.frame_locator('#game')

@@ -1,6 +1,7 @@
 """Enable mobile controls in the freshly generated, unthreaded Web export."""
 import json
 import gzip
+import hashlib
 import re
 import sys
 from pathlib import Path
@@ -19,7 +20,9 @@ existing = (Path(__file__).resolve().parents[1] / 'game.html').read_text()
 shim = re.search(r'<script>\s*const originalFetch.*?</script>', existing, re.S)
 if shim is None:
     raise RuntimeError('No se encontró el cargador gzip existente')
-text = text.replace('<script src="game.js"></script>', shim.group(0) + '\n<script src="game.js"></script>')
+token = hashlib.sha256((page.parent / 'game.pck').read_bytes()).hexdigest()[:16]
+shim_text = re.sub(r"v=[0-9a-f]{16}", 'v=' + token, shim.group(0))
+text = text.replace('<script src="game.js"></script>', shim_text + '\n<script src="game.js"></script>')
 if 'const originalFetch' not in text:
     raise RuntimeError('No se pudo insertar el cargador gzip')
 wasm = page.parent / 'game.wasm'
