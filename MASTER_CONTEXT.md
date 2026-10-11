@@ -85,3 +85,7 @@ Multijugador para cuatro personas: objetivo consultado por el usuario, sin imple
 ## Preparación de publicación web2
 
 El usuario autorizó publicar la nueva web. Exportación generada desde las fuentes del commit 790ef37, copiada a la raíz con loader/PCK/WASM coherentes. Marcador visible 0.2 web2 y URL del iframe versionada. Cambios: controles corregidos y modo táctil forzado en Web. No incluye multijugador. El envío a GitHub y despliegue Pages se comprueban aparte; preparar archivos no acredita publicación.
+
+## Corrección web3 — controles táctiles
+
+El usuario detectó interfaz de escritorio en el móvil. Se corrigió args del loader a ["--", "--force-touch"]: Godot requiere separador para OS.get_cmdline_user_args(). El exportador conserva la corrección en futuras versiones. Prueba Chromium pasada y captura inspeccionada: joystick izquierdo y botones ATRÁS, FRENO, SALTO, DISPARO, RECUPERAR y NUEVA CARRERA visibles. La comprobación anterior de args y arranque no acreditaba visibilidad real de controles; ahora la captura permite revisarla. Sin cambios de física ni APK.

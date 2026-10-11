@@ -12,7 +12,7 @@ match = re.search(pattern, text)
 if match is None:
     raise RuntimeError('No se encontró la configuración del loader Godot')
 config = json.loads(match.group(1))
-config['args'] = ['--force-touch']
+config['args'] = ['--', '--force-touch']
 text = text[:match.start(1)] + json.dumps(config, separators=(',', ':')) + text[match.end(1):]
 # Reuse the existing browser decompression loader, preserving its supported route.
 existing = (Path(__file__).resolve().parents[1] / 'game.html').read_text()

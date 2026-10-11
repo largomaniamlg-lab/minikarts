@@ -29,7 +29,8 @@ try:
         assert not errors, errors
         for asset in ['game.js', 'game.pck', 'game.wasm.gz']:
             assert responses.get(asset) == 200, (asset, responses)
-        assert frame.locator('body').evaluate('() => GODOT_CONFIG.args.includes("--force-touch")')
+        assert frame.locator('body').evaluate('() => GODOT_CONFIG.args[0] === "--" && GODOT_CONFIG.args[1] === "--force-touch"')
+        page.screenshot(path='/tmp/minikarts-touch-check.png')
         page.click('#back')
         assert not page.locator('body').evaluate('(b) => b.classList.contains("playing")')
         browser.close()
