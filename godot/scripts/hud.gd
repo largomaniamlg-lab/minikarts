@@ -32,7 +32,7 @@ func _ready() -> void:
 	controls.add_child(help_column)
 	help_column.add_child(_label("R RECUPERA  /  ESPACIO SALTA  /  F DISPARA", 15, YELLOW))
 	help_column.add_child(_label("W / ↑ ACELERA     A D / ← → GIRA", 18, WHITE))
-	help_column.add_child(_label("S / ↓ FRENA     B MARCHA ATRÁS", 15, WHITE))
+	help_column.add_child(_label("S / ↓ FRENA     B ATRÁS     SHIFT FRENO DE MANO", 15, WHITE))
 	var speed_panel := _panel(root, Vector2(1, 0) if _touch_mode else Vector2.ONE, Rect2(-234, 24, 210, 126) if _touch_mode else Rect2(-234, -150, 210, 126))
 	var speed_column := VBoxContainer.new()
 	speed_column.add_theme_constant_override("separation", 0)

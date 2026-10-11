@@ -61,3 +61,7 @@ Salida: versión Android instalable y estable, con evidencia por dispositivo y a
 5. MK-05: evaluación en Samsung y carrera completa.
 
 MK-01 autorizada e implementada. Siguiente tarea recomendada: MK-02; no publicar sin autorización.
+
+## Actualización del siguiente ciclo
+
+MK-02 y MK-03 implementadas y verificadas localmente: controles de escritorio y exportación web reproducible. No publicadas. Siguiente prioridad: decidir si publicar esta web para evaluación en Samsung o preparar Android. Multijugador privado para cuatro jugadores requiere una fase propia de red, servidor/salas, sincronización y pruebas de latencia (MK-13), todavía por acordar.

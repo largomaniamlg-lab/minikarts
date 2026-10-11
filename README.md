@@ -25,3 +25,13 @@ La versión web exportada está en la raíz de este repositorio. GitHub Pages pu
 Godot WebGL 2, sin hilos. El motor oficial se sirve comprimido como `game.wasm.gz` y el cargador lo descomprime en el navegador. Requiere un navegador moderno con WebAssembly, WebGL 2 y DecompressionStream, por ejemplo Chrome reciente en Android. No necesita cabeceras COOP/COEP ni SharedArrayBuffer.
 
 No se publican claves de firma ni credenciales. El motor y sus componentes tienen sus avisos de licencia en `GODOT_LICENSE.txt` y `GODOT_COPYRIGHT.txt`.
+
+## Exportar y comprobar la web en Cloud
+
+1. `bash scripts/install-web-templates.sh`: instala solo plantillas Web sin hilos, verificando SHA-512 oficial (la descarga completa es de unos 1,3 GB y se reutiliza).
+2. `bash scripts/export-web.sh`: exporta desde `godot/` a un directorio temporal nuevo, indicado al terminar. No sobrescribe la web publicada. Usa Godot 4.5.1; admite GODOT_BIN y rutas XDG.
+3. `python3 scripts/smoke-web.py /tmp/minikarts-web.XXXXXX`: comprueba el directorio obtenido con Chromium y Python Playwright disponibles en Cloud.
+
+El exportador genera loader, PCK y WASM juntos, comprime WASM con gzip y reutiliza el cargador de descompresión existente. Activa controles táctiles y aceleración automática en la web, incluida la prueba desde escritorio. La publicación requiere autorización aparte.
+
+Teclado en el proyecto nativo: W/flechas aceleran, A/D giran, S frena y permite reversa desde parado, B activa marcha atrás, espacio salta y Shift aplica freno de mano. El freno mantiene prioridad.

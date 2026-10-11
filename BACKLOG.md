@@ -1,6 +1,6 @@
 # MiniKarts — backlog
 
-Base: auditoría del 11 de octubre de 2026. MK-01 completada el 11 de octubre de 2026; las demás tareas siguen pendientes. No hay autorización para publicación.
+Base: auditoría del 11 de octubre de 2026. MK-01, MK-02 y MK-03 completadas el 11 de octubre de 2026; las demás tareas siguen pendientes. No hay autorización para publicación.
 
 ## MK-01 — Versionar fuentes y reproducir las pruebas (completada, fase 1)
 
@@ -8,13 +8,13 @@ Fuentes incorporadas en `godot/`, equivalentes al ZIP salvo el archivo generado 
 
 Aceptación: escenas, scripts, configuración y pruebas visibles en Git; contenido inicial equivalente al ZIP; importación y suite con 0 fallos desde una copia limpia; ningún cambio de mecánicas; documentar qué fuentes son la referencia y cómo preservar modificaciones de la copia externa.
 
-## MK-02 — Alinear controles de escritorio y HUD (P1, fases 1–2)
+## MK-02 — Alinear controles de escritorio y HUD (completada, fases 1–2)
 
 Resolver B anunciado como marcha atrás pero ignorado en escritorio y la asignación compartida de espacio a salto/freno de mano. Preservar prioridad del freno y controles táctiles; acordar el mapeo final si cambia la experiencia.
 
 Aceptación: B/HUD coherentes, pruebas de teclado para avance, frenado, reversa y salto; espacio no produce frenado involuntario; suite táctil sigue pasando. No incorporar doble salto sin decisión creativa.
 
-## MK-03 — Exportación web reproducible (P1, fase 1)
+## MK-03 — Exportación web reproducible (completada localmente, fase 1)
 
 Instalar plantillas oficiales verificadas 4.5.1, añadir preset Web sin hilos y documentar exportación, compresión y actualización conjunta de loader/PCK/WASM. Mantener inicialmente los artefactos actuales.
 
@@ -61,3 +61,9 @@ Aceptación: CI fija Godot, verifica importación y suite real, conserva código
 ## MK-12 — Arte, audio, IA y progresión (P3, fases 4–7)
 
 Dividir en tareas pequeñas tras aprobar dirección creativa y estabilidad. Aceptación: recursos originales/licenciados, coste móvil medido; IA completa vueltas y se recupera; selección y progreso tienen persistencia comprobada. No mezclar estas ampliaciones con correcciones básicas.
+
+## MK-13 — Carreras privadas para cuatro amigos (pendiente de alcance)
+
+El usuario pregunta cómo correr con tres amigos. Hoy no existe multijugador. Propuesta a aprobar: sala privada por código, cuatro karts, servidor de autoridad compatible con Web y Android mediante WebSocket, salida compartida, vueltas/resultados y desconexiones. Diseñar frecuencia de sincronización, interpolación/predicción y latencia antes de integrar disparos.
+
+Aceptación inicial propuesta: cuatro clientes completan una carrera de tres vueltas con posiciones y resultados coherentes; código de sala y plazas funcionan; desconexión no bloquea la carrera. Probar latencia y reconexión, luego sincronizar cajas/disparos. Alojamiento, coste y despliegue requieren decisión del usuario; no se ha implementado ni contratado ningún servicio.

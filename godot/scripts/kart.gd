@@ -53,13 +53,13 @@ func _physics_process(delta: float) -> void:
 			speed = move_toward(speed, 0.0, 24.0 * delta)
 		elif not _touch_driving:
 			speed = move_toward(speed, -6.0, 6.0 * delta)
-	elif _touch_driving and active and Input.is_action_pressed("reverse"):
+	elif active and Input.is_action_pressed("reverse"):
 		speed = move_toward(speed, -6.0, 12.0 * delta)
 	elif throttle > 0.0:
 		speed = move_toward(speed, MAX_SPEED, 10.0 * delta)
 	else:
 		speed = move_toward(speed, 0.0, 4.0 * delta)
-	if Input.is_action_pressed("handbrake"):
+	if active and Input.is_action_pressed("handbrake"):
 		speed = move_toward(speed, 0.0, 32.0 * delta)
 	var steer_input: float = Input.get_axis("steer_left", "steer_right") if active else 0.0
 	if _touch_driving:

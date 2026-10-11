@@ -73,3 +73,11 @@ Primero versionar fuentes y preparar comprobaciones reproducibles sin cambiar co
 El usuario autorizó MK-01 tras la auditoría. La fuente de referencia pasa a ser `godot/project.godot` y los scripts, escenas y pruebas bajo `godot/`. Se conserva el ZIP histórico y la exportación web existente sin cambios. Se excluyó de la extracción únicamente `icon.svg.import`, generado por Godot. La copia externa se comprobó contra el ZIP y se conserva, pero las nuevas ediciones deben hacerse dentro del checkout.
 
 Ejecutar `bash scripts/test.sh` desde el repositorio (o mediante ruta absoluta desde otro directorio). Usa el Godot 4.5.1 instalado en Cloud; admite GODOT_BIN y rechaza otras versiones. Aísla datos/ajustes temporales, importa y ejecuta la suite original, preservando los códigos de salida. La caché del proyecto está ignorada. Las mecánicas no se han cambiado. MK-02 continúa pendiente.
+
+## Actualización — controles y exportación web
+
+B procesa reversa también en escritorio; Shift sustituye espacio para el freno de mano, que solo actúa con conducción activa. La suite táctil original se conserva; `desktop_test.gd` añade ocho comprobaciones de teclado, prioridades y salto sin frenado involuntario.
+
+Preset Web sin hilos añadido. Plantillas oficiales 4.5.1 descargadas con verificación SHA-512; se instalan únicamente las Web. `install-web-templates.sh`, `export-web.sh`, `prepare-web.py` y `smoke-web.py` reproducen instalación, exportación y comprobación. Salida a directorio temporal, controles táctiles forzados, WASM gzip con mtime fijo y loader de descompresión existente. La web de la raíz y el ZIP histórico se conservan; estas mejoras aún no están publicadas. Android sigue pendiente.
+
+Multijugador para cuatro personas: objetivo consultado por el usuario, sin implementación. Véase MK-13; no asumir aprobación de alojamiento ni de cambios creativos.
