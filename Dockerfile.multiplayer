@@ -15,5 +15,7 @@ WORKDIR /app
 COPY --chown=minikarts:minikarts godot/ godot/
 COPY --chown=minikarts:minikarts scripts/server.sh scripts/server.sh
 USER minikarts
+# Import once during the build; the 512 MB service must not launch the editor.
+RUN bash scripts/server.sh --import-only
 EXPOSE 8080
-CMD ["bash", "scripts/server.sh"]
+CMD ["bash", "scripts/server.sh", "--preimported"]

@@ -77,3 +77,9 @@ Resultado del ciclo selector/IA, 11-10-2026: 72 comprobaciones Godot, 0 fallos; 
 Con la cuenta Render creada, abrir https://render.com/deploy?repo=https://github.com/largomaniamlg-lab/minikarts e iniciar sesión. Autorizar acceso al repositorio si Render lo pide; revisar que el blueprint ofrece `minikarts-multiplayer` con plan gratuito, y desplegarlo. Si el enlace no abre el asistente, usar Dashboard → New → Blueprint → repositorio. La cuenta del usuario no está conectada a Cloud: este paso de autorización debe realizarlo el titular. Después compartir únicamente la URL pública del servicio; no secretos.
 
 La prueba web9 se publica como offline (URL de servidor vacía), conservando los accesos anteriores. No sirve para carreras por Internet hasta que se prepare otra exportación con el WSS real.
+
+## Evitar OOM en Render Free
+
+El primer despliegue superó los 512 MiB al ejecutar `--editor --import` durante el arranque. Se reprodujo con un contenedor limitado a `--memory=512m --memory-swap=512m` (exit 137). La importación pasa a la construcción de la imagen (`RUN bash scripts/server.sh --import-only`); su CMD usa `--preimported`, valida la caché y no inicia el editor. La construcción necesita más memoria que el servidor: no confundir el proceso de build con la instancia Free.
+
+La imagen corregida arranca con PORT=10000 y pasa el test de protocolo de cuatro clientes dentro del límite. Prueba adicional: cuatro salas y dieciséis jugadores alcanzan racing sin OOM, pico local 101,24 MiB. No garantiza todavía el despliegue real: en el servicio Render existente abrir Manual Deploy → Deploy latest commit. El plan y autoDeploy=false se conservan. Esperar Live; después validar WSS y actualizar la web online. El enlace offline web9 continúa funcionando sin cambios.
