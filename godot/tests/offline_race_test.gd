@@ -13,7 +13,7 @@ func run() -> void:
 	root.add_child(game)
 	await physics_frame
 	game.race_menu.open()
-	for driver in range(13):
+	for driver in range(16):
 		game.race_menu.select(driver)
 		game.race_menu.open()
 		check(game.kart.get_node("Driver").face_id == driver, "Selection retains driver %d" % driver)
@@ -64,10 +64,10 @@ func run() -> void:
 			check(racer.finished == (lap_index + 1 == target), "Offline finish respects %d laps" % target)
 		game.hud.update_display(target, 1.0, INF, 0, true, true, false, target)
 		check(game.hud.stats.text.contains("/ %d" % target), "HUD shows selected lap total")
-	root.get_node("Network").selected_bots = 12
+	root.get_node("Network").selected_bots = 15
 	game.start_offline()
 	await physics_frame
-	check(game.offline_race.racers.size() == 13, "Offline supports thirteen racers")
+	check(game.offline_race.racers.size() == 16, "Offline supports sixteen racers")
 	root.get_node("Network").selected_laps = 3
 	root.get_node("Network").selected_bots = 3
 	game.start_solo()

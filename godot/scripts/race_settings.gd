@@ -1,8 +1,8 @@
 extends RefCounted
 const LAP_OPTIONS := [3, 6, 9]
-const BOT_OPTIONS := [3, 6, 12]
-const CAPACITY := 13
-const COLORS := [Color("ee3814"), Color("397cdc"), Color("51ba66"), Color("b464d5"), Color("f4cf39"), Color("39d5d2"), Color("ed6bb1"), Color("f49b38"), Color("dddddd"), Color("637049"), Color("864629"), Color("5675ab"), Color("bdcf87")]
+const BOT_OPTIONS := [3, 6, 15]
+const CAPACITY := 16
+const COLORS := [Color("ee3814"), Color("397cdc"), Color("51ba66"), Color("b464d5"), Color("f4cf39"), Color("39d5d2"), Color("ed6bb1"), Color("f49b38"), Color("dddddd"), Color("637049"), Color("864629"), Color("5675ab"), Color("bdcf87"), Color("23a18e"), Color("e6a2e5"), Color("a7bbed")]
 static func valid_laps(value: Variant) -> int:
 	if value is int or value is float:
 		if is_finite(float(value)) and float(value) == floor(float(value)) and int(value) in LAP_OPTIONS:

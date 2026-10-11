@@ -122,7 +122,7 @@ func open() -> void:
 	page = Network.selected_driver / 4
 	update_page()
 	online.disabled = Network.address.text.is_empty()
-	status.text = "Online pendiente de activar el servidor gratuito." if online.disabled else "Crea una sala o elige una disponible · hasta 13 jugadores."
+	status.text = "Online pendiente de activar el servidor gratuito." if online.disabled else "Crea una sala o elige una disponible · hasta 16 jugadores."
 
 func resume() -> void:
 	hide()

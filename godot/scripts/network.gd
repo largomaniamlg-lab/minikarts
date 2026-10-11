@@ -286,12 +286,16 @@ func server_message(id: int, message: Dictionary) -> void:
 			reject(id, "La carrera ya ha empezado. Espera a que el creador vuelva a la sala.")
 			return
 		if room.players.size() >= LIMIT:
-			reject(id, "Sala llena: ya hay trece jugadores.")
+			reject(id, "Sala llena: ya hay dieciséis jugadores.")
 			return
 		var kart = preload("res://scenes/kart.tscn").instantiate()
 		kart.network_controlled = true
-		kart.kart_color = COLORS[room.players.size()]
-		kart.transform = Settings.grid_transform(room.players.size())
+		var grid_slot := 0
+		var occupied: Array = room.players.values().map(func(p): return p.grid_slot)
+		while grid_slot in occupied:
+			grid_slot += 1
+		kart.kart_color = COLORS[grid_slot]
+		kart.transform = Settings.grid_transform(grid_slot)
 		room.stage.add_child(kart)
 		kart.enabled = false
 		var name_text := str(message.get("name", "Piloto")).strip_edges().left(20)
@@ -300,7 +304,7 @@ func server_message(id: int, message: Dictionary) -> void:
 		var requested_driver = message.get("driver", 0)
 		var driver_id := clampi(int(requested_driver), 0, Catalog.NAMES.size() - 1) if (requested_driver is int or requested_driver is float) and is_finite(float(requested_driver)) else 0
 		kart.get_node("Driver").set_face(driver_id)
-		room.players[id] = {"kart": kart, "name": name_text, "driver": driver_id, "ready": false, "lap": 0, "checkpoint": 0, "prev_z": -3.0, "input_time": clock, "finished": false, "spawn": kart.transform}
+		room.players[id] = {"grid_slot": grid_slot, "kart": kart, "name": name_text, "driver": driver_id, "ready": false, "lap": 0, "checkpoint": 0, "prev_z": -3.0, "input_time": clock, "finished": false, "spawn": kart.transform}
 		connection.room = code
 		send(connection.socket, {"type": "welcome", "id": id, "code": code})
 		return
@@ -596,7 +600,7 @@ func make_menu() -> void:
 	info.size = Vector2(680, 66)
 	info.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 	info.add_theme_font_size_override("font_size", 21)
-	info.text = "Salas online · hasta trece pilotos"
+	info.text = "Salas online · hasta dieciséis pilotos"
 	panel.add_child(info)
 	address = LineEdit.new()
 	address.text = OS.get_environment("MULTIPLAYER_SERVER_URL")
@@ -845,4 +849,4 @@ func leave_room() -> void:
 	remote_karts.clear()
 	remote_shots.clear()
 	get_tree().reload_current_scene()
-	info.text = "Carrera privada · hasta 13 pilotos"
+	info.text = "Carrera privada · hasta 16 pilotos"

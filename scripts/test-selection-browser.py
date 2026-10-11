@@ -1,4 +1,4 @@
-"""Exercise four portrait pages and choose nine laps with twelve bots through the UI."""
+"""Exercise four portrait pages and choose nine laps with fifteen bots through the UI."""
 import functools,http.server,threading,sys
 from playwright.sync_api import sync_playwright
 server=http.server.ThreadingHTTPServer(('127.0.0.1',0),functools.partial(http.server.SimpleHTTPRequestHandler,directory=sys.argv[1]))
@@ -15,17 +15,17 @@ try:
   for i in range(4):
    page.screenshot(path=f'/tmp/minikarts17-selection-{i+1}.png')
    if i<3:page.mouse.click(545,112);page.wait_for_timeout(250)
-  page.mouse.click(172,105)
+  page.mouse.click(465,105)
   for x in [220,417]:
    page.mouse.click(x,185);page.wait_for_timeout(350);page.mouse.click(x,230);page.wait_for_timeout(350)
   page.screenshot(path="/tmp/minikarts17-options.png")
   page.mouse.click(320,216)
   page.wait_for_timeout(2000)
   page.screenshot(path="/tmp/minikarts17-start.png")
-  page.wait_for_function('window.minikartsOfflineTest?.laps===9 && window.minikartsOfflineTest.racers.length===13',timeout=30000)
+  page.wait_for_function('window.minikartsOfflineTest?.laps===9 && window.minikartsOfflineTest.racers.length===16',timeout=30000)
   page.wait_for_function('window.minikartsOfflineTest.phase==="racing"',timeout=30000)
   page.screenshot(path='/tmp/minikarts17-offline13.png')
   assert not errors,errors
-  print('PASS: four character pages, final character, lap selector 9 and 12 bots through real menu controls')
+  print('PASS: four character pages, final character, lap selector 9 and 15 bots through real menu controls')
   b.close()
 finally:server.shutdown();server.server_close()

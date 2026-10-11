@@ -1,4 +1,4 @@
-"""Exercise the real WebSocket server with thirteen independent connections."""
+"""Exercise the real WebSocket server with sixteen independent connections."""
 import asyncio
 import json
 import sys
@@ -18,7 +18,7 @@ async def main():
     url = sys.argv[1] if len(sys.argv) > 1 else 'ws://127.0.0.1:8080'
     clients = []
     try:
-        for index in range(13):
+        for index in range(16):
             ws = await websockets.connect(url, max_queue=None, close_timeout=1)
             clients.append(ws)
             await send(ws, type='ping', stamp=index + 0.25)
@@ -29,22 +29,22 @@ async def main():
                 selected = next(r for r in directory['rooms'] if r['code'] == code)
                 assert selected['players'] == index and selected['host'] == 'Amigo 1'
                 code = selected['code']
-            await send(ws, type='create' if index == 0 else 'join', code='' if index == 0 else code, name=f'Amigo {index + 1}', driver=index % 13, laps=9)
+            await send(ws, type='create' if index == 0 else 'join', code='' if index == 0 else code, name=f'Amigo {index + 1}', driver=index % 16, laps=9)
             welcome = await receive(ws, 'welcome')
             code = welcome['code']
-        state = await receive(clients[0], 'state', lambda m: len(m['players']) == 13)
-        assert len({p['id'] for p in state['players']}) == 13
+        state = await receive(clients[0], 'state', lambda m: len(m['players']) == 16)
+        assert len({p['id'] for p in state['players']}) == 16
         assert state['laps'] == 9
         assert isinstance(state['time'], (int, float))
         assert all(len(p['velocity']) == 3 for p in state['players'])
         assert len(state['boxes']) == 8
-        assert {p['driver'] for p in state['players']} == set(range(13))
+        assert {p['driver'] for p in state['players']} == set(range(16))
         assert len(state['neutral']) == 3
         async with websockets.connect(url, max_queue=None, close_timeout=1) as extra:
             await send(extra, type='list')
             directory = await receive(extra, 'rooms')
             assert not any(r['code'] == code for r in directory['rooms']), 'Full rooms hidden'
-            await send(extra, type='join', code=code, name='Decimocuarto')
+            await send(extra, type='join', code=code, name='Decimoséptimo')
             error = await receive(extra, 'error')
             assert 'llena' in error['message']
         await send(clients[1], type='start')
@@ -74,9 +74,9 @@ async def main():
         await receive(clients[0], 'state', lambda m: m['elapsed'] > state['elapsed'])
         host = state['host']
         await clients[0].close()
-        state = await receive(clients[1], 'state', lambda m: len(m['players']) == 12)
+        state = await receive(clients[1], 'state', lambda m: len(m['players']) == 15)
         assert state['host'] != host, 'Host migration after disconnect'
-        print('PASS: listado y entrada por selección, 13 clientes, capacidad, autoridad, listos, cuenta atrás, movimiento, disparos solicitados y desconexión')
+        print('PASS: listado y entrada por selección, 16 clientes, capacidad, autoridad, listos, cuenta atrás, movimiento, disparos solicitados y desconexión')
     finally:
         for ws in clients:
             await ws.close()
