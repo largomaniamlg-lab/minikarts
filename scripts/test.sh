@@ -23,3 +23,4 @@ fi
 "$engine" --headless --path "$repo_dir/godot" --editor --import --quit
 "$engine" --headless --path "$repo_dir/godot" --script tests/v02_test.gd -- --force-touch
 "$engine" --headless --path "$repo_dir/godot" --script tests/desktop_test.gd
+PORT=0 "$engine" --headless --path "$repo_dir/godot" --script tests/multiplayer_rules.gd -- --server

@@ -15,6 +15,9 @@ var hud: CanvasLayer
 var prev_z: float = -3.0
 
 func _ready() -> void:
+	if Network.server_mode:
+		queue_free()
+		return
 	initial_transform = kart.transform
 	prev_z = kart.position.z
 	var sun := DirectionalLight3D.new()
@@ -58,6 +61,9 @@ func recover() -> void:
 	notice_time = 2.0
 
 func _process(delta: float) -> void:
+	if Network.playing:
+		Network.update_game(self, delta)
+		return
 	if Input.is_action_just_pressed("restart_race"):
 		reset_race()
 	elif Input.is_action_just_pressed("reset"):

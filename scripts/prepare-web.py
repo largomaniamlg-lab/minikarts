@@ -3,6 +3,7 @@ import json
 import gzip
 import hashlib
 import shutil
+import os
 import re
 import sys
 from pathlib import Path
@@ -15,6 +16,7 @@ if match is None:
     raise RuntimeError('No se encontró la configuración del loader Godot')
 config = json.loads(match.group(1))
 config['args'] = ['--', '--force-touch']
+config['virtualKeyboard'] = True
 pack = page.parent / 'game.pck'
 pack_name = 'game-' + hashlib.sha256(pack.read_bytes()).hexdigest()[:16] + '.pck'
 shutil.copyfile(pack, page.parent / pack_name)
@@ -35,6 +37,11 @@ wasm = page.parent / 'game.wasm'
 binary = wasm.read_bytes()
 (page.parent / 'game.wasm.gz').write_bytes(gzip.compress(binary, mtime=0))
 wasm.unlink()
+server_url = os.environ.get('MULTIPLAYER_SERVER_URL', '')
+if server_url and not server_url.startswith(('wss://', 'ws://127.0.0.1', 'ws://localhost')):
+    raise RuntimeError('MULTIPLAYER_SERVER_URL debe usar wss:// en Internet')
+settings = '<script>window.MINIKARTS_SERVER_URL = ' + json.dumps(server_url) + ';</script>'
+text = text.replace('<script src="game.js"></script>', settings + '\n<script src="game.js"></script>')
 page.write_text(text)
 
 # The published landing page may refer to an older versioned HTML file.
