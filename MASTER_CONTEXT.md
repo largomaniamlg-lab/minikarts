@@ -269,3 +269,11 @@ Backend Live `dep-db5qd3142hec739rvgv0` (commit `00b86d8`); cliente publicado en
 Pruebas Chromium locales de selección (cuatro páginas), nueve vueltas/doce bots, modo por defecto de tres bots, arranque y trece coches online superadas. 382 comprobaciones nativas sin fallos. El intento adicional de navegación directa desde Chromium a la web pública se detuvo por `ERR_CERT_AUTHORITY_INVALID` del proxy de este entorno; no se desactivó TLS. Los recursos públicos y el WebSocket sí se verificaron con clientes que confían en la CA del entorno. No se ha validado esta versión con trece teléfonos físicos ni Safari/iPhone real.
 
 No quedan personajes pendientes de foto. Pruebas con amigos, medición de fluidez en teléfonos y futuras mejoras de reconexión siguen como validación/desarrollo posterior, no como cambios bloqueados de esta entrega. Para cargar la versión nueva, cerrar la partida abierta y recargar el enlace habitual; una pestaña ya abierta conserva su versión y puede intervenir la caché del navegador.
+
+### Web18 — fluidez en Render Free
+
+Respuesta visual local en cada fotograma, anticipación acotada a 5 m/250 ms y congelación ante estados obsoletos; corrección contra el servidor y reinicio inmediato ante golpes. Rivales con margen adaptativo según variación de llegadas y reloj de presentación monotónico. No es reconciliación física completa; colisiones, saltos, vueltas y resultados mantienen autoridad del servidor.
+
+Estados serializados una vez por sala, precisión de un centímetro en posiciones de red, envío regular a 20 Hz durante carrera y descarte de estados nuevos cuando la cola de un cliente supera 8 KiB. Las entradas se envían solo durante cuenta atrás/carrera, hasta 30 Hz al cambiar y 20 Hz como latido. Comparación de escenario de trece pilotos: mediana de 3428,5 frente a 4794 bytes por estado (aprox. 28 % menos por mensaje; no mide ahorro total por segundo).
+
+428 comprobaciones nativas superadas en conjunto. Pruebas de selección, nueve vueltas/doce bots, arranque y navegador con doce compañeros de protocolo superadas. Cuatro Chromium a 640×360 con retrasos añadidos de 60–120 ms por sentido pasan sin errores; RTT observado 278–308 ms incluye procesamiento del entorno. Sin pruebas con teléfonos físicos. Exportación game-6a052662d3a739bc.pck. Actualizar backend primero, cliente después.

@@ -126,3 +126,5 @@ Trece personajes y plazas online; Kikoso completo; distancias 3/6/9; IA de hasta
 ### Entrega completada: web17 publicada
 
 Trece personajes y plazas, selector de 3/6/9 vueltas y IA de 3/6/12 rivales publicados y verificados por protocolo público y HTTP. Mejoras de fluidez de web15 incluidas. Validación física y mejoras posteriores de reconexión continúan en backlog; ninguna foto pendiente.
+
+Web18 mejora la respuesta visual local, adapta el suavizado de rivales a la variación de red, reduce el tamaño de estados y limita la cola de clientes lentos. Conserva Render Free, 13 pilotos, 65 km/h y 3/6/9 vueltas. Pruebas nativas y navegadores con retrasos superadas; quedan mediciones con teléfonos físicos y no se garantiza eliminar los tirones causados por latencia o rendimiento del dispositivo.

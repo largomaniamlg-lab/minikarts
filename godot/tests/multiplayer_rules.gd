@@ -165,6 +165,19 @@ func run_checks() -> void:
 		check(network.room_state(large_room).laps == target, "Selected laps reach all clients")
 		check(large_room.phase == "results" and large_room.results.size() == 13, "Thirteen racers finish selected distance")
 	check(network.Settings.valid_laps(4) == 3 and network.Settings.valid_laps("9") == 3 and network.Settings.valid_laps(9.5) == 3 and network.Settings.valid_laps(9.0) == 9, "Invalid lap input defaults safely")
+	large_room.phase = "racing"
+	var previous_clock: float = network.clock
+	var emissions := 0
+	for frame in range(60):
+		network.clock = previous_clock + frame / 60.0
+		if network.broadcast_room(large_room):
+			emissions += 1
+	check(emissions == 20, "Server emits twenty states per second without rounding away frame time")
+	network.clock += 10.0
+	check(network.broadcast_room(large_room) and not network.broadcast_room(large_room), "Server stall emits one latest state without catch-up burst")
+	large_room.phase = "results"
+	check(network.broadcast_room(large_room), "Phase transition broadcasts immediately")
+	network.clock = previous_clock
 	for id in range(200, 214):
 		network.remove_peer(id)
 	print("MiniKarts multiplayer rules: %d checks, %d failures" % [checks, failures])

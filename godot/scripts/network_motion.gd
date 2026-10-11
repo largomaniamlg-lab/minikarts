@@ -3,6 +3,18 @@ extends RefCounted
 # Presentation only: never sends positions or changes race rules.
 const BUFFER_SECONDS := 0.10
 const MAX_PREDICTION := 0.15
+const MAX_LOCAL_PREDICTION := 0.25
+const MAX_LOCAL_STALE := 0.35
+const MAX_LOCAL_DISTANCE := 5.0
+const MAX_BUFFER := 0.22
+var buffer_seconds := BUFFER_SECONDS
+var jitter := 0.0
+var arrival_samples := 0
+var render_time := INF
+var render_clock := -1.0
+var local_pose: Dictionary = {}
+var local_source: Dictionary = {}
+var local_stamp := -INF
 var states: Array = []
 var offset := INF
 var received_at := 0.0
@@ -11,6 +23,14 @@ func clear() -> void:
 	states.clear()
 	offset = INF
 	received_at = 0.0
+	buffer_seconds = BUFFER_SECONDS
+	jitter = 0.0
+	arrival_samples = 0
+	render_time = INF
+	render_clock = -1.0
+	local_pose.clear()
+	local_source.clear()
+	local_stamp = -INF
 
 func push(state: Dictionary, arrival: float) -> void:
 	if not states.is_empty() and states.back().phase != state.phase:
@@ -18,6 +38,14 @@ func push(state: Dictionary, arrival: float) -> void:
 	var timestamp := float(state.get("time", arrival))
 	if not states.is_empty() and timestamp <= float(states.back().get("time", 0.0)):
 		return
+	if not states.is_empty():
+		var server_interval := timestamp - float(states.back().time)
+		var error := absf((arrival - received_at) - server_interval)
+		jitter = lerpf(jitter, minf(error, 0.30), 0.15)
+		arrival_samples += 1
+		if arrival_samples >= 5:
+			var desired := clampf(BUFFER_SECONDS + 2.0 * jitter, BUFFER_SECONDS, MAX_BUFFER)
+			buffer_seconds = lerpf(buffer_seconds, desired, 0.35 if desired > buffer_seconds else 0.05)
 	offset = minf(offset, arrival - timestamp)
 	received_at = arrival
 	states.append(state)
@@ -27,9 +55,9 @@ func push(state: Dictionary, arrival: float) -> void:
 func vec(value: Array) -> Vector3:
 	return Vector3(value[0], value[1], value[2])
 
-func project(racer: Dictionary, seconds: float, controls: Dictionary = {}) -> Dictionary:
+func project(racer: Dictionary, seconds: float, controls: Dictionary = {}, limit: float = MAX_PREDICTION) -> Dictionary:
 	var result := racer.duplicate()
-	var age := clampf(seconds, 0.0, MAX_PREDICTION)
+	var age := clampf(seconds, 0.0, limit)
 	var pos := vec(racer.position)
 	var yaw := float(racer.rotation[1])
 	var speed := float(racer.speed)
@@ -53,11 +81,11 @@ func project(racer: Dictionary, seconds: float, controls: Dictionary = {}) -> Di
 			rate = 4.0
 		var predicted_speed := move_toward(speed, target, rate * age)
 		# Do not anticipate movement through a wall when the server reports blocked velocity.
-		if Vector2(velocity.x, velocity.z).length() > 0.1:
-			var turn := -steering * (speed + predicted_speed) / 44.0 * age
+		var turn := -steering * (speed + predicted_speed) / 44.0 * age
+		if Vector2(velocity.x, velocity.z).length() > 0.1 or absf(speed) < 0.05:
 			velocity.x = -sin(yaw + turn * 0.5) * (speed + predicted_speed) * 0.5
 			velocity.z = -cos(yaw + turn * 0.5) * (speed + predicted_speed) * 0.5
-			yaw += turn
+		yaw += turn
 		speed = predicted_speed
 	else:
 		yaw -= steering * speed / 22.0 * age
@@ -66,12 +94,25 @@ func project(racer: Dictionary, seconds: float, controls: Dictionary = {}) -> Di
 	result.rotation = [racer.rotation[0], yaw, racer.rotation[2]]
 	result.speed = speed
 	result.steering = steering
+	result.velocity = [velocity.x, velocity.y, velocity.z]
+	result.hit = maxf(0.0, float(racer.hit) - age)
 	return result
 
 func remote(id: int, now: float) -> Dictionary:
 	if states.is_empty():
 		return {}
-	var time := now - offset - BUFFER_SECONDS
+	var desired := now - offset - buffer_seconds
+	if render_time == INF:
+		render_time = desired
+	elif now > render_clock:
+		var delta := maxf(0.0, now - render_clock)
+		# Change playback speed gently instead of rewinding when the buffer grows.
+		var drift := desired - render_time - delta
+		render_time += delta * clampf(1.0 + drift * 3.0, 0.75, 1.25)
+		if absf(desired - render_time) > 0.75:
+			render_time = desired
+	render_clock = now
+	var time := render_time
 	var before: Dictionary = states.front()
 	var after: Dictionary = before
 	for state in states:
@@ -101,3 +142,37 @@ func find_racer(state: Dictionary, id: int) -> Dictionary:
 		if int(racer.id) == id:
 			return racer
 	return {}
+
+# Frame-by-frame visual prediction, corrected toward authoritative snapshots.
+# This does not simulate local collisions or change laps, hits, or results.
+func local(racer: Dictionary, now: float, delta: float, controls: Dictionary, rtt: float) -> Dictionary:
+	var age := maxf(0.0, now - received_at)
+	var timestamp := float(states.back().time) if not states.is_empty() else now
+	var horizon := minf(age + maxf(0.0, rtt) * 0.5, MAX_LOCAL_PREDICTION)
+	var target := project(racer, horizon, controls, MAX_LOCAL_PREDICTION)
+	var fresh := timestamp != local_stamp
+	var discontinuity := local_pose.is_empty()
+	if fresh and not local_source.is_empty():
+		discontinuity = discontinuity or vec(racer.position).distance_to(vec(local_source.position)) > 6.0
+		discontinuity = discontinuity or float(racer.hit) > float(local_source.hit) + 0.10
+	if discontinuity:
+		local_pose = target.duplicate(true)
+	elif age <= MAX_LOCAL_STALE:
+		if fresh:
+			# Ground/air velocity and a blocked wall come from the server.
+			local_pose.velocity = racer.velocity.duplicate()
+			local_pose.hit = racer.hit
+		var step := clampf(delta, 0.0, 0.05)
+		local_pose = project(local_pose, step, controls)
+		var correction := 1.0 - exp(-6.0 * step)
+		var position := vec(local_pose.position).lerp(vec(target.position), correction)
+		local_pose.position = [position.x, position.y, position.z]
+		local_pose.rotation[1] = lerp_angle(float(local_pose.rotation[1]), float(target.rotation[1]), 1.0 - exp(-3.0 * step))
+		local_pose.speed = lerpf(float(local_pose.speed), float(target.speed), correction)
+		var anchor := vec(racer.position)
+		var bounded := anchor + (vec(local_pose.position) - anchor).limit_length(MAX_LOCAL_DISTANCE)
+		local_pose.position = [bounded.x, bounded.y, bounded.z]
+	if fresh:
+		local_source = racer.duplicate(true)
+		local_stamp = timestamp
+	return local_pose.duplicate(true)

@@ -1,5 +1,13 @@
 extends Node
 
+const Wire = preload("res://scripts/network_wire.gd")
+var state_packet_bytes := 0
+var diagnostics_due := false
+var diagnostics_clock := 0.0
+var menu_snapshot_time := -INF
+var menu_refresh_clock := 0.0
+var previous_inputs: Dictionary = {}
+
 const Motion = preload("res://scripts/network_motion.gd")
 var motion := Motion.new()
 var round_trip := 0.0
@@ -29,7 +37,6 @@ var status_until := 0.0
 var connecting := false
 var connection_job := 0
 var clock := 0.0
-var send_clock := 0.0
 var input_clock := 0.0
 var pending_reset := false
 var displayed_phase := ""
@@ -74,9 +81,12 @@ func send(peer: WebSocketPeer, message: Dictionary) -> void:
 
 func _process(delta: float) -> void:
 	clock += delta
-	if browser_test and is_instance_valid(info):
+	diagnostics_due = browser_test and clock >= diagnostics_clock
+	if diagnostics_due:
+		diagnostics_clock = clock + 0.1
+	if diagnostics_due and is_instance_valid(info):
 		JavaScriptBridge.eval("window.minikartsConnectionTest=" + JSON.stringify({"connecting": connecting, "message": info.text, "room": room_code}) + ";")
-	if browser_test and is_instance_valid(room_list):
+	if diagnostics_due and is_instance_valid(room_list):
 		var buttons := {}
 		for key in lobby_buttons:
 			var button: Control = lobby_buttons[key]
@@ -93,8 +103,10 @@ func _process(delta: float) -> void:
 	if socket == null:
 		return
 	socket.poll()
+	var received_state := false
 	while socket.get_available_packet_count() > 0:
-		var message = JSON.parse_string(socket.get_packet().get_string_from_utf8())
+		var packet := socket.get_packet()
+		var message = JSON.parse_string(packet.get_string_from_utf8())
 		if message is Dictionary:
 			if message.get("type") == "welcome":
 				room_request_pending = false
@@ -107,10 +119,11 @@ func _process(delta: float) -> void:
 				if clock >= status_until:
 					info.text = "Elige una sala y pulsa Entrar, o crea la tuya."
 			elif message.get("type") == "state":
+				state_packet_bytes = packet.size()
 				snapshot = message
 				motion.push(message, clock)
 				playing = true
-				show_lobby_mode(true)
+				received_state = true
 			elif message.get("type") == "pong" and ping_pending >= 0 and message.get("stamp") == ping_serial:
 				var sample := clampf(clock - ping_pending, 0.0, 2.0)
 				round_trip = sample if round_trip == 0 else lerpf(round_trip, sample, 0.25)
@@ -120,6 +133,8 @@ func _process(delta: float) -> void:
 				status = str(message.message)
 				status_until = clock + 6.0
 				info.text = status
+	if received_state:
+		show_lobby_mode(true)
 	if room_request_pending and clock > room_request_deadline:
 		room_request_pending = false
 		info.text = "La sala no respondió. Actualiza la lista y vuelve a intentar."
@@ -140,12 +155,15 @@ func _process(delta: float) -> void:
 		send(socket, {"type": "ping", "stamp": ping_serial})
 	pending_reset = pending_reset or Input.is_action_just_pressed("reset")
 	input_clock += delta
-	if playing and input_clock >= 0.05:
-		input_clock = 0.0
+	if playing and snapshot.get("phase", "") in ["countdown", "racing"] and input_clock >= 1.0 / 30.0:
 		var inputs := driving_inputs()
-		inputs["reset"] = pending_reset
-		pending_reset = false
-		send(socket, {"type": "input", "controls": inputs})
+		var changed := inputs != previous_inputs or pending_reset
+		if input_clock >= 0.05 or changed:
+			input_clock = 0.0
+			previous_inputs = inputs.duplicate()
+			inputs["reset"] = pending_reset
+			pending_reset = false
+			send(socket, {"type": "input", "controls": inputs})
 
 func driving_inputs() -> Dictionary:
 	var inputs := {}
@@ -193,18 +211,29 @@ func server_tick(delta: float) -> void:
 				server_message(id, message)
 	for room in rooms.values():
 		tick_room(room, delta)
-	send_clock += delta
-	if send_clock >= 0.05:
-		send_clock = 0.0
-		for room in rooms.values():
-			var interval := 0.20 if room.phase == "lobby" or room.phase == "results" else 0.05
-			if clock - float(room.get("last_broadcast", -1.0)) < interval:
-				continue
-			room.last_broadcast = clock
-			var state := room_state(room)
-			for id in room.players:
-				if peers.has(id):
-					send(peers[id].socket, state)
+	for room in rooms.values():
+		broadcast_room(room)
+
+func broadcast_room(room: Dictionary) -> bool:
+	var interval := 0.20 if room.phase == "lobby" or room.phase == "results" else 0.05
+	var due := float(room.get("next_broadcast", clock))
+	if room.get("broadcast_phase", "") != room.phase:
+		due = clock
+	if clock + 0.001 < due:
+		return false
+	# Keep the scheduled cadence rather than losing fractional frame time.
+	# After a stall send only the latest state, never a burst of catch-up states.
+	if clock - due >= interval:
+		due = clock
+	room.next_broadcast = due + interval
+	room.broadcast_phase = room.phase
+	var payload := JSON.stringify(room_state(room))
+	for id in room.players:
+		if peers.has(id):
+			var peer: WebSocketPeer = peers[id].socket
+			if peer.get_ready_state() == WebSocketPeer.STATE_OPEN and Wire.can_queue_state(peer.get_current_outbound_buffered_amount()):
+				peer.send_text(payload)
+	return true
 
 func reject(id: int, message: String) -> void:
 	send(peers[id].socket, {"type": "error", "message": message})
@@ -408,7 +437,7 @@ func tick_room(room: Dictionary, delta: float) -> void:
 				room.results.append({"id": id, "name": player.name, "time": -1})
 
 func vector(v: Vector3) -> Array:
-	return [v.x, v.y, v.z]
+	return Wire.vector(v)
 
 func room_state(room: Dictionary) -> Dictionary:
 	room.results.sort_custom(func(a, b): return a.time >= 0 and (b.time < 0 or a.time < b.time))
@@ -416,7 +445,7 @@ func room_state(room: Dictionary) -> Dictionary:
 	for id in room.players:
 		var player: Dictionary = room.players[id]
 		var kart = player.kart
-		racers.append({"id": id, "name": player.name, "driver": player.driver, "ready": player.ready, "position": vector(kart.position), "velocity": vector(kart.velocity), "rotation": vector(kart.rotation), "speed": kart.speed, "steering": kart._steering, "hit": kart.hit_time, "protection": kart.protection_time, "lap": player.lap, "finished": player.finished, "color": kart.kart_color.to_html()})
+		racers.append({"id": id, "name": player.name, "driver": player.driver, "ready": player.ready, "position": vector(kart.position), "velocity": vector(kart.velocity), "rotation": Wire.vector(kart.rotation, 0.001), "speed": Wire.number(kart.speed), "steering": Wire.number(kart._steering, 0.001), "hit": Wire.number(kart.hit_time), "protection": Wire.number(kart.protection_time), "lap": player.lap, "finished": player.finished, "color": kart.kart_color.to_html()})
 	var shots := []
 	for child in room.stage.get_children():
 		if child.is_in_group("projectiles"):
@@ -425,7 +454,7 @@ func room_state(room: Dictionary) -> Dictionary:
 	for child in room.track.get_children():
 		if child.is_in_group("destructible"):
 			boxes.append(vector(child.position))
-	return {"type": "state", "time": clock, "code": room.code, "host": room.host, "phase": room.phase, "laps": room.laps, "countdown": maxi(0, ceili(room.timer)), "elapsed": room.elapsed, "players": racers, "shots": shots, "boxes": boxes, "neutral": vector(room.track.get_node("NeutralSleeper").position), "results": room.results}
+	return {"type": "state", "time": Wire.number(clock, 0.001), "code": room.code, "host": room.host, "phase": room.phase, "laps": room.laps, "countdown": maxi(0, ceili(room.timer)), "elapsed": Wire.number(room.elapsed, 0.001), "players": racers, "shots": shots, "boxes": boxes, "neutral": vector(room.track.get_node("NeutralSleeper").position), "results": room.results}
 
 func as_vector(value: Array) -> Vector3:
 	return Vector3(value[0], value[1], value[2])
@@ -467,18 +496,15 @@ func update_game(game: Node3D, delta: float) -> void:
 		var visual: Dictionary = racer
 		if snapshot.phase == "racing" and not racer.finished:
 			if id == player_id:
-				var age := clock - motion.received_at
-				# Freeze anticipation on a stalled connection; never extrapolate indefinitely.
-				var horizon := minf(age + round_trip * 0.5, Motion.MAX_PREDICTION)
-				visual = motion.project(racer, horizon, driving_inputs() if age < Motion.MAX_PREDICTION else {})
+				visual = motion.local(racer, clock, delta, driving_inputs(), round_trip)
 			else:
 				var buffered := motion.remote(id, clock)
 				if not buffered.is_empty():
 					visual = buffered
 		var position := as_vector(visual.position)
-		kart.position = position if kart.position.distance_to(position) > 6 else kart.position.lerp(position, 1.0 - exp(-20 * delta))
+		kart.position = position if id == player_id or kart.position.distance_to(position) > 6 else kart.position.lerp(position, 1.0 - exp(-20 * delta))
 		var rotation := as_vector(visual.rotation)
-		kart.rotation.y = lerp_angle(kart.rotation.y, rotation.y, 1.0 - exp(-20 * delta))
+		kart.rotation.y = rotation.y if id == player_id else lerp_angle(kart.rotation.y, rotation.y, 1.0 - exp(-20 * delta))
 		kart._body_visual.material_override.albedo_color = Color(racer.color)
 		kart.get_node("Driver").set_face(int(racer.get("driver", 0)))
 		kart.speed = visual.speed
@@ -511,9 +537,12 @@ func update_game(game: Node3D, delta: float) -> void:
 					exists = true
 			if not exists:
 				child.hit()
-	update_menu()
-	if browser_test:
-		JavaScriptBridge.eval("window.minikartsTest = " + JSON.stringify({"state": snapshot, "rendered_karts": 1 + remote_karts.size(), "rtt_ms": round_trip * 1000, "snapshot_age_ms": (clock - motion.received_at) * 1000}) + ";")
+	if float(snapshot.time) != menu_snapshot_time or clock >= menu_refresh_clock:
+		update_menu()
+		menu_snapshot_time = float(snapshot.time)
+		menu_refresh_clock = clock + 0.5
+	if diagnostics_due:
+		JavaScriptBridge.eval("window.minikartsTest = " + JSON.stringify({"state": snapshot, "rendered_karts": 1 + remote_karts.size(), "rtt_ms": round_trip * 1000, "snapshot_age_ms": (clock - motion.received_at) * 1000, "jitter_ms": motion.jitter * 1000, "buffer_ms": motion.buffer_seconds * 1000, "state_bytes": state_packet_bytes, "fps": Engine.get_frames_per_second(), "local_position": vector(game.kart.position), "local_rotation": vector(game.kart.rotation)}) + ";")
 
 func make_menu() -> void:
 	if OS.has_feature("web"):
@@ -803,6 +832,8 @@ func leave_room() -> void:
 	playing = false
 	snapshot.clear()
 	motion.clear()
+	previous_inputs.clear()
+	menu_snapshot_time = -INF
 	round_trip = 0.0
 	ping_pending = -1.0
 	ping_clock = -2.0
