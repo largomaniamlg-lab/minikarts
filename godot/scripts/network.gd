@@ -429,6 +429,8 @@ func make_menu() -> void:
 			get_tree().current_scene.kart.enabled = not menu.get_node("Panel").visible
 	)
 	menu.add_child(toggle)
+	if "--solo-preview" in OS.get_cmdline_user_args():
+		toggle.hide()
 	driver_button = Button.new()
 	driver_button.position = Vector2(500, 120)
 	driver_button.text = "Piloto %d/4" % (selected_driver + 1)
