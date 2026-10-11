@@ -28,10 +28,12 @@ func run_checks() -> void:
 	fake_peer(103)
 	network.server_message(101, {"type": "create", "name": "Uno", "driver": 2})
 	var room: Dictionary = network.rooms[network.peers[101].room]
-	network.server_message(102, {"type": "join", "code": room.code, "name": "Dos", "driver": 3})
+	network.server_message(102, {"type": "join", "code": " \n" + room.code.to_lower() + " \t", "name": "Dos", "driver": 3})
 	network.server_message(103, {"type": "create", "name": "Otra sala"})
 	var other: Dictionary = network.rooms[network.peers[103].room]
 	await frames(10)
+	check(network.peers[102].room == room.code, "Pasted lowercase code with whitespace joins the correct room")
+	check(network.normalize_room_code(" ab cd\u00a0ef ") == "ABCDEF", "Mobile pasted nonbreaking whitespace is cleaned")
 	check(room.players[101].driver == 2 and room.players[102].driver == 3, "Each racer retains their chosen driver")
 	check(room.players[102].kart.get_node("Driver").face_id == 3, "Server kart uses selected face")
 	check(network.room_state(room).has("neutral"), "Moving neutral position is shared with clients")

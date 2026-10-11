@@ -201,3 +201,11 @@ Validación: suite existente (73 comprobaciones, 0 fallos, sin errores de Godot)
 Prueba adicional online local: dos clientes Chromium se unen a la misma sala, arrancan sincronizados y activan motor y señal de salida; sin errores del navegador. No es una prueba de escucha desde cuatro móviles reales.
 
 Mezclador web: sliders de música y efectos comprobados de forma independiente; música a cero produce silencio y vuelve al subirla. Smoke de la landing web12 superado: recursos del juego HTTP 200, controles táctiles configurados y Volver funciona. Publicación pendiente; el enlace público mantiene web11 hasta autorizar el push.
+
+## Conexión y salas — mejora preparada, 11/10/2026
+
+Web12 fue publicada con autorización en el commit `3b96a94`; GitHub Pages completó el despliegue y se verificaron landing, loader y pack públicos HTTP 200. El usuario informa que sus amigos no conectan desde ese mismo enlace. La dirección WSS publicada es correcta y una prueba actual contra Render con cuatro clientes pasó; esto no identifica la causa en sus móviles. Prueba de Chromium contra HTTPS público bloqueada por `ERR_CERT_AUTHORITY_INVALID` del entorno, sin desactivar verificación TLS. Pendiente captura/móvil/navegador del fallo real.
+
+Preparada web13: normalización de espacios, saltos de línea, espacios no separables y minúsculas en códigos tanto en cliente como servidor; validación de seis caracteres sin truncar un código pegado. Tres intentos automáticos de conexión (hasta 40 s cada uno, intervalo 3 s), contador visible y reintento manual sin salir de la pantalla. Salir cancela los intentos pendientes. Mensajes distintos para sala inexistente, llena o carrera comenzada; errores del servidor visibles durante seis segundos y texto ajustado al panel. No añade reconexión durante una carrera ni conserva salas al reiniciar el servidor.
+
+Suite: 75 comprobaciones, 0 fallos; exportación Godot 4.5.1 correcta. Prueba táctil específica: código vacío explica formato, servidor apagado provoca tres intentos automáticos y permite Crear sala de nuevo tras arrancar el servidor. La publicación web13 y despliegue del servidor mejorado están pendientes de autorización; el enlace público sigue web12.

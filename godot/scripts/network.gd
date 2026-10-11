@@ -14,6 +14,9 @@ var snapshot: Dictionary = {}
 var player_id := 0
 var room_code := ""
 var status := ""
+var status_until := 0.0
+var connecting := false
+var connection_job := 0
 var clock := 0.0
 var send_clock := 0.0
 var input_clock := 0.0
@@ -52,6 +55,8 @@ func send(peer: WebSocketPeer, message: Dictionary) -> void:
 
 func _process(delta: float) -> void:
 	clock += delta
+	if browser_test and is_instance_valid(info):
+		JavaScriptBridge.eval("window.minikartsConnectionTest=" + JSON.stringify({"connecting": connecting, "message": info.text, "room": room_code}) + ";")
 	if server_mode:
 		server_tick(delta)
 		return
@@ -62,6 +67,7 @@ func _process(delta: float) -> void:
 		var message = JSON.parse_string(socket.get_packet().get_string_from_utf8())
 		if message is Dictionary:
 			if message.get("type") == "welcome":
+				status_until = 0.0
 				player_id = int(message.id)
 				room_code = message.code
 			elif message.get("type") == "state":
@@ -69,6 +75,7 @@ func _process(delta: float) -> void:
 				playing = true
 			elif message.get("type") == "error":
 				status = str(message.message)
+				status_until = clock + 6.0
 				info.text = status
 	if socket.get_ready_state() == WebSocketPeer.STATE_CLOSED:
 		if playing:
@@ -146,7 +153,7 @@ func server_message(id: int, message: Dictionary) -> void:
 		if connection.room != "":
 			reject(id, "Ya estás en una sala.")
 			return
-		var code := str(message.get("code", "")).to_upper()
+		var code := normalize_room_code(str(message.get("code", "")))
 		if kind == "create":
 			if rooms.size() >= 4:
 				reject(id, "Servidor lleno. Inténtalo más tarde.")
@@ -163,11 +170,14 @@ func server_message(id: int, message: Dictionary) -> void:
 			stage.add_child(track)
 			rooms[code] = {"code": code, "host": id, "world": world, "stage": stage, "track": track, "players": {}, "phase": "lobby", "timer": 0.0, "elapsed": 0.0, "results": [], "first_finish": -1.0}
 		if not rooms.has(code):
-			reject(id, "No existe esa sala.")
+			reject(id, "No existe esa sala. Comprueba el código; el creador debe mantener el juego abierto.")
 			return
 		var room: Dictionary = rooms[code]
-		if room.phase != "lobby" or room.players.size() >= LIMIT:
-			reject(id, "Sala llena o carrera en marcha.")
+		if room.phase != "lobby":
+			reject(id, "La carrera ya ha empezado. Espera a que el creador vuelva a la sala.")
+			return
+		if room.players.size() >= LIMIT:
+			reject(id, "Sala llena: ya hay cuatro jugadores.")
 			return
 		var kart = preload("res://scenes/kart.tscn").instantiate()
 		kart.network_controlled = true
@@ -465,6 +475,7 @@ func make_menu() -> void:
 	column.add_theme_constant_override("separation", 8)
 	panel.add_child(column)
 	info = Label.new()
+	info.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 	info.text = "Carrera privada · hasta 4 pilotos"
 	column.add_child(info)
 	address = LineEdit.new()
@@ -480,7 +491,13 @@ func make_menu() -> void:
 	column.add_child(nickname)
 	code_input = LineEdit.new()
 	code_input.placeholder_text = "Código de sala (para unirse)"
-	code_input.max_length = 6
+	code_input.max_length = 64
+	code_input.text_changed.connect(func(value: String):
+		var clean := normalize_room_code(value)
+		if clean != value:
+			code_input.text = clean
+			code_input.caret_column = clean.length()
+	)
 	if OS.has_feature("web"):
 		code_input.text = str(JavaScriptBridge.eval("new URLSearchParams(location.search).get('room') || ''"))
 	column.add_child(code_input)
@@ -512,33 +529,69 @@ func make_menu() -> void:
 		child.add_theme_font_size_override("font_size", 22)
 	panel.hide()
 
+func normalize_room_code(value: String) -> String:
+	var clean := value.to_upper()
+	for whitespace in [" ", "\t", "\n", "\r", "\u00a0"]:
+		clean = clean.replace(whitespace, "")
+	return clean
+
 func connect_room(create: bool) -> void:
+	if connecting:
+		return
+	if not create:
+		code_input.text = normalize_room_code(code_input.text)
+		if code_input.text.length() != 6:
+			info.text = "Introduce el código de seis caracteres de tu amigo."
+			return
+	if socket != null and socket.get_ready_state() == WebSocketPeer.STATE_CLOSED and not playing:
+		socket = null
 	if socket != null and socket.get_ready_state() == WebSocketPeer.STATE_OPEN and player_id == 0:
-		send(socket, {"type": "create" if create else "join", "code": code_input.text.to_upper(), "name": nickname.text, "driver": selected_driver})
+		send(socket, {"type": "create" if create else "join", "code": normalize_room_code(code_input.text), "name": nickname.text, "driver": selected_driver})
 		return
 	if socket != null:
 		info.text = "Sal de la sala antes de conectar a otra."
 		return
 	var url := address.text.strip_edges()
 	if not (url.begins_with("wss://") or url.begins_with("ws://")):
-		info.text = "Indica el servidor de la partida."
+		info.text = "No hay servidor configurado. Abre el enlace actualizado del juego."
 		return
 	if OS.has_feature("web") and not url.begins_with("wss://") and not ("127.0.0.1" in url or "localhost" in url):
 		info.text = "La web necesita un servidor seguro wss://."
 		return
-	socket = WebSocketPeer.new()
-	if socket.connect_to_url(url) != OK:
-		info.text = "No se pudo conectar."
+	connecting = true
+	connection_job += 1
+	var job := connection_job
+	var started_at := Time.get_ticks_msec()
+	for attempt in range(3):
+		if job != connection_job:
+			return
+		var peer := WebSocketPeer.new()
+		socket = peer
+		var error := peer.connect_to_url(url)
+		var deadline := Time.get_ticks_msec() + 40000
+		while error == OK and peer.get_ready_state() == WebSocketPeer.STATE_CONNECTING and Time.get_ticks_msec() < deadline:
+			if job != connection_job:
+				peer.close()
+				return
+			info.text = "Conectando al servidor · intento %d/3 · %d s\nEl servidor gratuito puede tardar en despertar." % [attempt + 1, (Time.get_ticks_msec() - started_at) / 1000]
+			await get_tree().process_frame
+		if job != connection_job:
+			peer.close()
+			return
+		if error == OK and peer.get_ready_state() == WebSocketPeer.STATE_OPEN:
+			connecting = false
+			info.text = "Servidor conectado. Entrando en la sala…"
+			send(peer, {"type": "create" if create else "join", "code": normalize_room_code(code_input.text), "name": nickname.text, "driver": selected_driver})
+			return
+		peer.close()
 		socket = null
+		if attempt < 2:
+			info.text = "El servidor aún no responde. Reintentando automáticamente…"
+			await get_tree().create_timer(3.0).timeout
+	if job != connection_job:
 		return
-	info.text = "Conectando… El servidor gratuito puede tardar en despertar."
-	var deadline := clock + 60.0
-	while socket != null and socket.get_ready_state() == WebSocketPeer.STATE_CONNECTING and clock < deadline:
-		await get_tree().process_frame
-	if socket != null and socket.get_ready_state() == WebSocketPeer.STATE_OPEN:
-		send(socket, {"type": "create" if create else "join", "code": code_input.text.to_upper(), "name": nickname.text, "driver": selected_driver})
-	else:
-		info.text = "Servidor no disponible. Sal de la sala para reintentar."
+	connecting = false
+	info.text = "No se pudo conectar tras tres intentos.\nPulsa Crear sala o Unirse para reintentar."
 
 func update_menu() -> void:
 	driver_button.disabled = playing
@@ -555,6 +608,8 @@ func update_menu() -> void:
 			var result: Dictionary = snapshot.results[i]
 			lines.append("%d. %s · %s" % [i + 1, result.name, "%.2f s" % result.time if result.time >= 0 else "Sin terminar"])
 		menu.get_node("Panel").show()
+	if clock < status_until:
+		lines.append(status)
 	info.text = "\n".join(lines)
 	start_button.disabled = int(snapshot.host) != player_id
 	start_button.text = "Volver a la sala" if snapshot.phase == "results" else "Iniciar carrera"
@@ -562,6 +617,8 @@ func update_menu() -> void:
 	displayed_phase = snapshot.phase
 
 func leave_room() -> void:
+	connection_job += 1
+	connecting = false
 	if socket != null:
 		socket.close()
 	socket = null

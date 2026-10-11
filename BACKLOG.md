@@ -95,3 +95,9 @@ Usuario sin cuenta Render. Crear cuenta/conectar GitHub desde móvil, desplegar 
 Hecho: música original en bucle, fanfarria CC0 y efectos sintetizados con procedencia/licencia; motor vinculado a velocidad, efectos de acciones, cuenta atrás/meta, mezclador persistente, silencio y pausa al perder foco. Suite y prueba WebAudio táctil superadas.
 
 Siguiente aceptación: publicar web12 con autorización; abrir desde Android y Safari/iPhone, comprobar que el gesto desbloquea sonido y que el motor no tapa disparos ni cuenta atrás; probar música y efectos a cero/medio/máximo, silencio, preferencias tras recargar, cambio de aplicación y vuelta; repetir sala online con cuatro teléfonos. No presentar estas pruebas físicas como realizadas.
+
+## Salas — conexión tolerante y siguiente ciclo
+
+Preparado: limpieza de códigos pegados, validación, tres reintentos, contador de espera, reintento manual y mensajes diferenciados; regresiones de código y conexión reproducibles. Publicación pendiente.
+
+Prioridad siguiente: (1) reproducir el fallo reportado en Android/iPhone y navegador concreto; aceptación: los cuatro amigos entran desde el enlace público sin dirección manual. (2) invitación compartible con código precargado y botón Copiar/Compartir; aceptación: abrir invitación dirige a la sala correcta, el creador permanece conectado. (3) reconexión con identidad y reserva temporal de plaza; aceptación: una interrupción breve no crea otro jugador ni reinicia progreso, sin duplicar autoridad del kart.
