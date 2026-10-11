@@ -21,6 +21,12 @@ async def main():
         for index in range(4):
             ws = await websockets.connect(url)
             clients.append(ws)
+            await send(ws, type='list')
+            directory = await receive(ws, 'rooms')
+            if index:
+                selected = next(r for r in directory['rooms'] if r['code'] == code)
+                assert selected['players'] == index and selected['host'] == 'Amigo 1'
+                code = selected['code']
             await send(ws, type='create' if index == 0 else 'join', code='' if index == 0 else code, name=f'Amigo {index + 1}', driver=index)
             welcome = await receive(ws, 'welcome')
             code = welcome['code']
@@ -30,6 +36,9 @@ async def main():
         assert {p['driver'] for p in state['players']} == {0, 1, 2, 3}
         assert len(state['neutral']) == 3
         async with websockets.connect(url) as extra:
+            await send(extra, type='list')
+            directory = await receive(extra, 'rooms')
+            assert not any(r['code'] == code for r in directory['rooms']), 'Full rooms hidden'
             await send(extra, type='join', code=code, name='Quinto')
             error = await receive(extra, 'error')
             assert 'llena' in error['message']
@@ -58,7 +67,7 @@ async def main():
         await clients[0].close()
         state = await receive(clients[1], 'state', lambda m: len(m['players']) == 3)
         assert state['host'] != host, 'Host migration after disconnect'
-        print('PASS: 4 clientes, capacidad, autoridad, listos, cuenta atrás, movimiento, disparos solicitados y desconexión')
+        print('PASS: listado y entrada por selección, 4 clientes, capacidad, autoridad, listos, cuenta atrás, movimiento, disparos solicitados y desconexión')
     finally:
         for ws in clients:
             await ws.close()

@@ -5,3 +5,4 @@ godot/export_templates/
 godot/build/
 *.apk
 *.aab
+scripts/__pycache__/

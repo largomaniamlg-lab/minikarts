@@ -93,3 +93,7 @@ La prueba automatizada desde Cloud al servidor público está bloqueada por el p
 ## Actualización coordinada de Jordan (web11 pendiente de publicación)
 
 El nuevo recorte de Jordan se muestra a ×1,875 y el área autoritativa de contacto aumenta en la misma proporción. Posición compartida y protocolo no cambian. Hasta actualizar Render, el servidor mantiene el tamaño de contacto anterior; no dar por verificado Jordan grande en partidas públicas. Publicar fuente y cliente autorizados, luego Manual Deploy → Deploy latest commit y esperar Live. Motes del selector/bots incluidos en el mismo ciclo.
+
+## Listado de salas (web14 preparada)
+
+ONLINE abre un navegador de salas por nombre del creador y número de jugadores. Crear sala entra automáticamente; los demás tocan Entrar en esa sala. El servidor responde a `list` con `rooms` (code, host, players, capacity). Solo ofrece salas esperando y con huecos, y la UI consulta cada tres segundos. El código sigue como alternativa. Todos los visitantes del mismo servidor pueden descubrir estas salas; no se anuncian como secretas. La publicación debe desplegar el servidor con soporte de listado antes de publicar los artefactos web14.

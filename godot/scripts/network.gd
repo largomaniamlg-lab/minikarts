@@ -34,6 +34,14 @@ var nickname: LineEdit
 var code_input: LineEdit
 var start_button: Button
 var ready_button: Button
+var browse_controls: Control
+var waiting_controls: Control
+var room_list: VBoxContainer
+var directory_clock := 0.0
+var room_request_pending := false
+var room_request_deadline := 0.0
+var available_rooms: Array = []
+var lobby_buttons: Dictionary = {}
 
 func _ready() -> void:
 	server_mode = "--server" in OS.get_cmdline_user_args()
@@ -57,9 +65,20 @@ func _process(delta: float) -> void:
 	clock += delta
 	if browser_test and is_instance_valid(info):
 		JavaScriptBridge.eval("window.minikartsConnectionTest=" + JSON.stringify({"connecting": connecting, "message": info.text, "room": room_code}) + ";")
+	if browser_test and is_instance_valid(room_list):
+		var buttons := {}
+		for key in lobby_buttons:
+			var button: Control = lobby_buttons[key]
+			if is_instance_valid(button) and button.is_visible_in_tree():
+				var rect := button.get_global_rect()
+				buttons[key] = {"x": rect.position.x, "y": rect.position.y, "width": rect.size.x, "height": rect.size.y}
+		JavaScriptBridge.eval("window.minikartsLobbyTest=" + JSON.stringify({"rooms": available_rooms, "joined": player_id != 0, "connected": socket != null and socket.get_ready_state() == WebSocketPeer.STATE_OPEN, "buttons": buttons}) + ";")
 	if server_mode:
 		server_tick(delta)
 		return
+	if is_instance_valid(browse_controls):
+		for key in ["create", "refresh", "join"]:
+			lobby_buttons[key].disabled = connecting or room_request_pending
 	if socket == null:
 		return
 	socket.poll()
@@ -67,17 +86,32 @@ func _process(delta: float) -> void:
 		var message = JSON.parse_string(socket.get_packet().get_string_from_utf8())
 		if message is Dictionary:
 			if message.get("type") == "welcome":
+				room_request_pending = false
 				status_until = 0.0
 				player_id = int(message.id)
 				room_code = message.code
+			elif message.get("type") == "rooms":
+				available_rooms = message.get("rooms", [])
+				render_room_directory()
+				if clock >= status_until:
+					info.text = "Elige una sala y pulsa Entrar, o crea la tuya."
 			elif message.get("type") == "state":
 				snapshot = message
 				playing = true
+				show_lobby_mode(true)
 			elif message.get("type") == "error":
+				room_request_pending = false
 				status = str(message.message)
 				status_until = clock + 6.0
 				info.text = status
+	if room_request_pending and clock > room_request_deadline:
+		room_request_pending = false
+		info.text = "La sala no respondió. Actualiza la lista y vuelve a intentar."
+	if socket.get_ready_state() == WebSocketPeer.STATE_OPEN and player_id == 0 and is_instance_valid(menu) and menu.get_node("Panel").visible and clock - directory_clock >= 3.0:
+		directory_clock = clock
+		send(socket, {"type": "list"})
 	if socket.get_ready_state() == WebSocketPeer.STATE_CLOSED:
+		room_request_pending = false
 		if playing:
 			status = "Conexión perdida. Sal de la sala para volver a jugar."
 			info.text = status
@@ -146,9 +180,23 @@ func server_tick(delta: float) -> void:
 func reject(id: int, message: String) -> void:
 	send(peers[id].socket, {"type": "error", "message": message})
 
+func room_directory() -> Array:
+	var directory := []
+	for room in rooms.values():
+		if room.phase != "lobby" or room.players.size() >= LIMIT or room.players.is_empty():
+			continue
+		var host: Dictionary = room.players[room.host]
+		directory.append({"code": room.code, "host": str(host.name).replace("\n", " ").replace("\r", " "), "players": room.players.size(), "capacity": LIMIT})
+	directory.sort_custom(func(a: Dictionary, b: Dictionary): return str(a.code) < str(b.code))
+	return directory
+
 func server_message(id: int, message: Dictionary) -> void:
 	var connection: Dictionary = peers[id]
 	var kind := str(message.get("type", ""))
+	if kind == "list" and connection.room == "":
+		connection.since = clock
+		send(connection.socket, {"type": "rooms", "rooms": room_directory()})
+		return
 	if kind == "create" or kind == "join":
 		if connection.room != "":
 			reject(id, "Ya estás en una sala.")
@@ -462,35 +510,64 @@ func make_menu() -> void:
 			get_tree().current_scene.kart.get_node("Driver").set_face(selected_driver)
 	)
 	menu.add_child(driver_button)
-	var panel := PanelContainer.new()
+	var panel := Panel.new()
 	panel.name = "Panel"
-	panel.position = Vector2(320, 150)
-	panel.custom_minimum_size = Vector2(640, 380)
+	panel.position = Vector2(280, 135)
+	panel.size = Vector2(720, 530)
 	var background := StyleBoxFlat.new()
 	background.bg_color = Color(0.08, 0.12, 0.16, 0.97)
 	background.set_corner_radius_all(10)
 	panel.add_theme_stylebox_override("panel", background)
 	menu.add_child(panel)
-	var column := VBoxContainer.new()
-	column.add_theme_constant_override("separation", 8)
-	panel.add_child(column)
 	info = Label.new()
+	info.position = Vector2(20, 16)
+	info.size = Vector2(680, 66)
 	info.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
-	info.text = "Carrera privada · hasta 4 pilotos"
-	column.add_child(info)
+	info.add_theme_font_size_override("font_size", 21)
+	info.text = "Salas online · hasta cuatro pilotos"
+	panel.add_child(info)
 	address = LineEdit.new()
-	address.placeholder_text = "Dirección de conexión (solo configuración inicial)"
 	address.text = OS.get_environment("MULTIPLAYER_SERVER_URL")
 	if OS.has_feature("web"):
 		address.text = str(JavaScriptBridge.eval("window.MINIKARTS_SERVER_URL || new URLSearchParams(location.search).get('server') || ''"))
-	address.visible = address.text == ""
-	column.add_child(address)
+	panel.add_child(address)
+	address.hide()
+	browse_controls = Control.new()
+	browse_controls.position = Vector2(0, 95)
+	panel.add_child(browse_controls)
+	var name_label := Label.new()
+	name_label.text = "Tu nombre"
+	name_label.position = Vector2(20, 12)
+	name_label.add_theme_font_size_override("font_size", 20)
+	browse_controls.add_child(name_label)
 	nickname = LineEdit.new()
-	nickname.placeholder_text = "Tu nombre"
 	nickname.text = "Piloto"
-	column.add_child(nickname)
+	nickname.position = Vector2(145, 0)
+	nickname.size = Vector2(230, 48)
+	nickname.add_theme_font_size_override("font_size", 22)
+	browse_controls.add_child(nickname)
+	lobby_buttons.name = nickname
+	lobby_button(browse_controls, "Crear sala", "create", Vector2(395, 0), Vector2(300, 48)).pressed.connect(connect_room.bind(true))
+	lobby_button(browse_controls, "Actualizar salas", "refresh", Vector2(20, 65), Vector2(330, 48)).pressed.connect(refresh_rooms)
+	var manual := Control.new()
+	manual.position = Vector2(0, 300)
+	browse_controls.add_child(manual)
+	manual.hide()
+	lobby_button(browse_controls, "Tengo un código", "manual", Vector2(365, 65), Vector2(330, 48)).pressed.connect(func(): manual.visible = not manual.visible)
+	var scroll := ScrollContainer.new()
+	scroll.position = Vector2(20, 125)
+	scroll.size = Vector2(680, 160)
+	scroll.horizontal_scroll_mode = ScrollContainer.SCROLL_MODE_DISABLED
+	browse_controls.add_child(scroll)
+	room_list = VBoxContainer.new()
+	room_list.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	room_list.add_theme_constant_override("separation", 8)
+	scroll.add_child(room_list)
 	code_input = LineEdit.new()
-	code_input.placeholder_text = "Código de sala (para unirse)"
+	code_input.placeholder_text = "Código de sala (opcional)"
+	code_input.position = Vector2(20, 0)
+	code_input.size = Vector2(430, 48)
+	code_input.add_theme_font_size_override("font_size", 22)
 	code_input.max_length = 64
 	code_input.text_changed.connect(func(value: String):
 		var clean := normalize_room_code(value)
@@ -498,36 +575,74 @@ func make_menu() -> void:
 			code_input.text = clean
 			code_input.caret_column = clean.length()
 	)
+	manual.add_child(code_input)
+	lobby_buttons.code = code_input
+	lobby_button(manual, "Unirse", "join", Vector2(465, 0), Vector2(230, 48)).pressed.connect(connect_room.bind(false))
 	if OS.has_feature("web"):
 		code_input.text = str(JavaScriptBridge.eval("new URLSearchParams(location.search).get('room') || ''"))
-	column.add_child(code_input)
-	var row := HBoxContainer.new()
-	column.add_child(row)
-	for label in ["Crear sala", "Unirse"]:
-		var button := Button.new()
-		button.text = label
-		button.pressed.connect(connect_room.bind(label == "Crear sala"))
-		row.add_child(button)
-	ready_button = Button.new()
-	ready_button.text = "Listo"
+		manual.visible = not code_input.text.is_empty()
+	waiting_controls = Control.new()
+	waiting_controls.position = Vector2(0, 275)
+	panel.add_child(waiting_controls)
+	ready_button = lobby_button(waiting_controls, "Listo", "ready", Vector2(20, 0), Vector2(680, 48))
 	ready_button.pressed.connect(func(): send(socket, {"type": "ready", "ready": true}) if socket != null else null)
-	column.add_child(ready_button)
-	start_button = Button.new()
-	start_button.text = "Iniciar carrera"
+	start_button = lobby_button(waiting_controls, "Iniciar carrera", "start", Vector2(20, 65), Vector2(680, 48))
 	start_button.pressed.connect(func(): send(socket, {"type": "restart" if snapshot.get("phase") == "results" else "start"}) if socket != null else null)
-	column.add_child(start_button)
-	var leave := Button.new()
-	leave.text = "Salir de la sala / jugar solo"
-	leave.pressed.connect(leave_room)
-	column.add_child(leave)
-	for child in column.get_children():
-		if child is LineEdit or child is Button:
-			child.custom_minimum_size.y = 44
-			child.add_theme_font_size_override("font_size", 22)
-	for child in row.get_children():
-		child.custom_minimum_size.y = 44
-		child.add_theme_font_size_override("font_size", 22)
+	lobby_button(panel, "Salir / volver al juego", "leave", Vector2(20, 465), Vector2(680, 48)).pressed.connect(leave_room)
+	show_lobby_mode(false)
+	render_room_directory()
 	panel.hide()
+	panel.visibility_changed.connect(func():
+		if panel.visible and not playing:
+			show_lobby_mode(false)
+			refresh_rooms()
+	)
+
+func lobby_button(parent: Node, text: String, key: String, position: Vector2, size: Vector2) -> Button:
+	var button := Button.new()
+	button.text = text
+	button.position = position
+	button.size = size
+	button.add_theme_font_size_override("font_size", 22)
+	parent.add_child(button)
+	lobby_buttons[key] = button
+	return button
+
+func show_lobby_mode(joined: bool) -> void:
+	if not is_instance_valid(browse_controls):
+		return
+	browse_controls.visible = not joined
+	waiting_controls.visible = joined
+	info.size.y = 240 if joined else 66
+
+func render_room_directory() -> void:
+	for key in lobby_buttons.keys():
+		if str(key).begins_with("room_"):
+			lobby_buttons.erase(key)
+	for child in room_list.get_children():
+		room_list.remove_child(child)
+		child.queue_free()
+	if available_rooms.is_empty():
+		var label := Label.new()
+		label.text = "No hay salas disponibles. Crea una y tus amigos la verán aquí."
+		label.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+		label.custom_minimum_size.x = 650
+		label.add_theme_font_size_override("font_size", 20)
+		room_list.add_child(label)
+	for room in available_rooms:
+		var button := Button.new()
+		button.text = "Entrar · Sala de %s · %d/%d" % [room.host, room.players, room.capacity]
+		button.custom_minimum_size = Vector2(650, 52)
+		button.add_theme_font_size_override("font_size", 22)
+		room_list.add_child(button)
+		lobby_buttons["room_" + str(room.code)] = button
+		button.pressed.connect(func():
+			code_input.text = str(room.code)
+			connect_room(false)
+		)
+
+func refresh_rooms() -> void:
+	request_connection("list")
 
 func normalize_room_code(value: String) -> String:
 	var clean := value.to_upper()
@@ -536,9 +651,12 @@ func normalize_room_code(value: String) -> String:
 	return clean
 
 func connect_room(create: bool) -> void:
-	if connecting:
+	request_connection("create" if create else "join")
+
+func request_connection(kind: String) -> void:
+	if connecting or room_request_pending:
 		return
-	if not create:
+	if kind == "join":
 		code_input.text = normalize_room_code(code_input.text)
 		if code_input.text.length() != 6:
 			info.text = "Introduce el código de seis caracteres de tu amigo."
@@ -546,7 +664,7 @@ func connect_room(create: bool) -> void:
 	if socket != null and socket.get_ready_state() == WebSocketPeer.STATE_CLOSED and not playing:
 		socket = null
 	if socket != null and socket.get_ready_state() == WebSocketPeer.STATE_OPEN and player_id == 0:
-		send(socket, {"type": "create" if create else "join", "code": normalize_room_code(code_input.text), "name": nickname.text, "driver": selected_driver})
+		send_lobby_request(kind)
 		return
 	if socket != null:
 		info.text = "Sal de la sala antes de conectar a otra."
@@ -581,7 +699,7 @@ func connect_room(create: bool) -> void:
 		if error == OK and peer.get_ready_state() == WebSocketPeer.STATE_OPEN:
 			connecting = false
 			info.text = "Servidor conectado. Entrando en la sala…"
-			send(peer, {"type": "create" if create else "join", "code": normalize_room_code(code_input.text), "name": nickname.text, "driver": selected_driver})
+			send_lobby_request(kind)
 			return
 		peer.close()
 		socket = null
@@ -592,6 +710,13 @@ func connect_room(create: bool) -> void:
 		return
 	connecting = false
 	info.text = "No se pudo conectar tras tres intentos.\nPulsa Crear sala o Unirse para reintentar."
+
+func send_lobby_request(kind: String) -> void:
+	directory_clock = clock
+	if kind != "list":
+		room_request_pending = true
+		room_request_deadline = clock + 10.0
+	send(socket, {"type": kind, "code": normalize_room_code(code_input.text), "name": nickname.text, "driver": selected_driver})
 
 func update_menu() -> void:
 	driver_button.disabled = playing
@@ -617,6 +742,8 @@ func update_menu() -> void:
 	displayed_phase = snapshot.phase
 
 func leave_room() -> void:
+	room_request_pending = false
+	available_rooms.clear()
 	connection_job += 1
 	connecting = false
 	if socket != null:

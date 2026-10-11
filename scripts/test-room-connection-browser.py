@@ -2,6 +2,7 @@
 import functools,http.server,threading,subprocess,os,sys,time
 from pathlib import Path
 from playwright.sync_api import sync_playwright
+from browser_lobby import tap_control
 repo=Path(__file__).resolve().parents[1]
 web=Path(sys.argv[1]);pagefile=web/'game.html';original=pagefile.read_text();server_process=None
 http=http.server.ThreadingHTTPServer(('127.0.0.1',0),functools.partial(http.server.SimpleHTTPRequestHandler,directory=str(web)))
@@ -14,10 +15,12 @@ try:
   page.goto(f'http://127.0.0.1:{http.server_port}/game.html?test=1')
   page.locator('#status').wait_for(state='detached',timeout=180000)
   page.touchscreen.tap(320,232)
-  page.touchscreen.tap(237,154)
+  page.wait_for_function("window.minikartsConnectionTest && !window.minikartsConnectionTest.connecting && window.minikartsConnectionTest.message.includes(\"tras tres intentos\")",timeout=40000)
+  tap_control(page, "manual")
+  tap_control(page, "join")
   page.wait_for_function('window.minikartsConnectionTest && window.minikartsConnectionTest.message.includes("seis caracteres")',timeout=10000)
   print('PASS: empty room code explains required format',flush=True)
-  page.touchscreen.tap(185,154)
+  tap_control(page, "create")
   page.wait_for_function('window.minikartsConnectionTest.message.includes("tras tres intentos")',timeout=40000)
   assert not page.evaluate('window.minikartsConnectionTest.connecting')
   print('PASS: three automatic attempts against unavailable server, actionable final error',flush=True)
@@ -25,7 +28,7 @@ try:
   server_process=subprocess.Popen(['bash','scripts/server.sh','--preimported'],cwd=repo,env=dict(os.environ,PORT='18089'),stdout=log,stderr=subprocess.STDOUT)
   time.sleep(1)
   page.screenshot(path="/tmp/minikarts-room-retry-before.png")
-  page.touchscreen.tap(185,167)
+  tap_control(page, "create")
   try:
    page.wait_for_function('window.minikartsTest && window.minikartsTest.state.players.length === 1',timeout=30000)
   except Exception:

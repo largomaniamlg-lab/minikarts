@@ -101,3 +101,9 @@ Siguiente aceptación: publicar web12 con autorización; abrir desde Android y S
 Preparado: limpieza de códigos pegados, validación, tres reintentos, contador de espera, reintento manual y mensajes diferenciados; regresiones de código y conexión reproducibles. Publicación pendiente.
 
 Prioridad siguiente: (1) reproducir el fallo reportado en Android/iPhone y navegador concreto; aceptación: los cuatro amigos entran desde el enlace público sin dirección manual. (2) invitación compartible con código precargado y botón Copiar/Compartir; aceptación: abrir invitación dirige a la sala correcta, el creador permanece conectado. (3) reconexión con identidad y reserva temporal de plaza; aceptación: una interrupción breve no crea otro jugador ni reinicia progreso, sin duplicar autoridad del kart.
+
+## Navegador de salas sin códigos — preparado para publicar
+
+Hecho: listado por creador y ocupación, entrada con un toque, refresco manual/automático, creación con entrada inmediata, separación búsqueda/espera, alternativa por código, filtros de salas llenas/en carrera y retirada de salas vacías. Pruebas reales de protocolo y cuatro navegadores superadas. Aceptación técnica alcanzada; pendiente publicar backend antes del cliente y probar con los amigos en móviles físicos.
+
+Siguiente prioridad después de esa prueba: reconexión con plaza reservada e identidad, y mejora de navegación móvil según feedback real. La lista no elimina por sí sola problemas de conexión al servidor.
