@@ -36,15 +36,15 @@ El exportador genera loader, PCK y WASM juntos, comprime WASM con gzip y reutili
 
 Teclado en el proyecto nativo: W/flechas aceleran, A/D giran, S frena y permite reversa desde parado, B activa marcha atrás, espacio salta y Shift aplica freno de mano. El freno mantiene prioridad.
 
-## Multijugador privado (prototipo local)
+## Multijugador online
 
-Salas para hasta trece pilotos, salida compartida, elección de 3, 6 o 9 vueltas, clasificación y trompos por disparos. Servidor requerido: `PORT=8080 bash scripts/server.sh`. Instrucciones, pruebas y publicación pendiente en [MULTIPLAYER.md](MULTIPLAYER.md). La versión pública existente sigue siendo individual hasta desplegar servidor y cliente.
+Salas para hasta trece pilotos, salida compartida, elección de 3, 6 o 9 vueltas, clasificación y trompos por disparos. Servidor requerido: `PORT=8080 bash scripts/server.sh`. Instrucciones y pruebas en [MULTIPLAYER.md](MULTIPLAYER.md). Enlace estable: https://largomaniamlg-lab.github.io/minikarts/prueba-grupo.html.
 
-### Selector y carreras offline (ciclo local)
+### Selector y carreras offline
 
-Al arrancar se abre un menú con las cuatro caras. Pulsar una y elegir **Carrera · 3 rivales IA** para correr tres vueltas contra bots, o **Entrenar a solas**. **Menú · piloto** permite pausar y volver a elegir. La carrera contra bots tiene cuenta atrás, clasificación y revancha. **Online · con amigos** solo se habilita si la exportación incluye una URL de servidor; el alojamiento público está pendiente de alta en Render desde el móvil.
+Al arrancar se abre un menú con trece personajes en cuatro páginas. Elegir 3, 6 o 9 vueltas y **Carrera contra la IA**, con 3, 6 o 12 rivales; **Entrenar a solas** mantiene la distancia elegida. **Menú · piloto** permite pausar y volver a elegir. Las carreras tienen cuenta atrás, clasificación y revancha. **Online · con amigos** conecta con el servidor gratuito de Render.
 
-Validación offline adicional: `bash scripts/test.sh` y `python3 scripts/test-offline-browser.py DIRECTORIO_EXPORTADO`. Las pruebas físicas usan conducción automática, no una partida manual en un teléfono. Estas mejoras permanecen locales; el enlace de prueba web8 publicado todavía conserva la versión anterior.
+Validación offline adicional: `bash scripts/test.sh` y `python3 scripts/test-offline-browser.py DIRECTORIO_EXPORTADO`. Las pruebas físicas usan conducción automática, no una partida manual en un teléfono. Web17 incorpora estas mejoras; la validación automática no sustituye las pruebas en teléfonos físicos.
 
 Actualización web9: el usuario autorizó publicar estas mejoras en `prueba-grupo.html`; el juego habitual se conserva. Esta prueba incluye selección visual y carrera contra tres bots; online sigue pendiente del despliegue Render y la URL WSS.
 

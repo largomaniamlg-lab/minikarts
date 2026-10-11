@@ -1,12 +1,12 @@
-# Carreras privadas para cuatro
+# Carreras online para trece
 
-Prototipo de servidor autoritativo Godot 4.5.1 y clientes WebSocket para Web y Godot nativo. La web publicada anterior sigue intacta: este trabajo no despliega ni contrata un servidor público.
+Prototipo de servidor autoritativo Godot 4.5.1 y clientes WebSocket para Web y Godot nativo. Servidor gratuito en Render; el cliente web se publica en GitHub Pages.
 
 ## Flujo de juego
 
-Antes de abrir Amigos, tocar Piloto 1/4 para recorrer las cuatro caras disponibles. Abrir Amigos, escribir nombre, crear sala o introducir código para unirse. Máximo cuatro pilotos por sala. Todos marcan Listo; el creador inicia una cuenta atrás de tres segundos. Se conserva aceleración automática, joystick, freno, reversa, salto, disparo y recuperación. Cada jugador tiene un kart de color diferente; los rivales muestran nombres y la cara elegida. La elección queda fija durante la sala.
+Elegir uno de los trece personajes y 3, 6 o 9 vueltas antes de entrar en online. Crear sala o tocar una sala disponible en la lista; el código sigue siendo una alternativa. Máximo trece pilotos por sala. Todos marcan Listo; el creador inicia una cuenta atrás de tres segundos. Se conserva aceleración automática, joystick, freno, reversa, salto, disparo y recuperación. Cada jugador tiene un kart de color diferente; los rivales muestran nombres y la cara elegida. La elección queda fija durante la sala.
 
-Se completan tres vueltas con checkpoints ordenados. Clasificación por tiempo de llegada; los restantes tienen un minuto después del primer finisher para terminar. Límite global de carrera: diez minutos. El creador puede volver a la sala desde resultados. Si se desconecta, otro jugador pasa a ser creador. No hay reconexión a la misma identidad en esta versión; se puede salir y entrar en una sala nueva.
+Se completan las 3, 6 o 9 vueltas elegidas por el creador, con checkpoints ordenados. Clasificación por tiempo de llegada; los restantes tienen un minuto después del primer finisher para terminar. Límite global de carrera: diez minutos. El creador puede volver a la sala desde resultados. Si se desconecta, otro jugador pasa a ser creador. No hay reconexión a la misma identidad en esta versión; se puede salir y entrar en una sala nueva.
 
 Impacto: pierde el 75 % de velocidad, trompo de un segundo y tres segundos de protección total, incluido el trompo. Los tiros se consumen al impactar incluso si el receptor está protegido. Cajas, disparos, impactos, vueltas y posiciones se deciden en el servidor. Recuperar no cancela trompo ni protección.
 
@@ -28,7 +28,7 @@ python3 scripts/smoke-web.py /tmp/minikarts-web.DIRECTORIO
 python3 scripts/test-multiplayer-browser.py /tmp/minikarts-web.DIRECTORIO
 ```
 
-Usar el directorio que imprime la exportación. Python WebSockets y Playwright/Chromium están disponibles en este Cloud. Las pruebas de reglas fuerzan posiciones desde el servidor para comprobar tres vueltas; no acreditan una carrera manual completa. El test de protocolo usa cuatro conexiones reales, y el de navegador usa clientes Web reales con la interfaz de sala. `?test=1` habilita únicamente datos de diagnóstico de la sala que ese cliente ya recibe; no concede control adicional.
+Usar el directorio que imprime la exportación. Python WebSockets y Playwright/Chromium están disponibles en este Cloud. Las pruebas de reglas fuerzan posiciones desde el servidor para comprobar tres vueltas; no acreditan una carrera manual completa. El test de protocolo usa trece conexiones reales, y el de navegador usa clientes Web reales con la interfaz de sala. `?test=1` habilita únicamente datos de diagnóstico de la sala que ese cliente ya recibe; no concede control adicional.
 
 ## Contenedor de despliegue
 
@@ -121,3 +121,7 @@ Trece personajes: Kikoso, Largo, Sipollo, Antocino, Fubux, Orehas, Young Ex, Sup
 Carreras online de hasta 13 pilotos, parrilla curva con dos carriles y colores diferentes. Opciones 3/6/9 vueltas antes de crear sala; autoridad del creador, valor incluido en lista/estados y compartido con todos. Valores JSON decimales enteros aceptados; entradas no válidas vuelven a tres. Contra IA: 3/6/12 rivales y las mismas distancias. Entrenamiento también respeta vueltas. Velocidad 65 km/h y mejora visual de red conservadas.
 
 Validación: 382 comprobaciones nativas sin fallos, protocolo real de 13 clientes con nueve vueltas y rechazo del decimocuarto, Chromium con un navegador y doce clientes de protocolo muestra 13 coches en carrera de seis vueltas; arranque web correcto. No equivale a trece teléfonos físicos. El usuario solicita terminar las tareas pendientes; se procederá a actualizar backend primero y después el enlace estable.
+
+### Backend actualizado — web17
+
+Render Live: despliegue `dep-db5qd3142hec739rvgv0`, commit `00b86d8`. Selección real de nueve vueltas y doce bots por el menú de Chromium superada, además de las pruebas anteriores. Web17 preparada con paquete `game-59c7e5a74e58634c.pck`; tanto la portada principal como el enlace estable de grupo apuntan a la versión nueva. Pendiente publicar este cliente y verificar GitHub Pages.

@@ -257,3 +257,7 @@ Trece personajes: Kikoso, Largo, Sipollo, Antocino, Fubux, Orehas, Young Ex, Sup
 Carreras online de hasta 13 pilotos, parrilla curva con dos carriles y colores diferentes. Opciones 3/6/9 vueltas antes de crear sala; autoridad del creador, valor incluido en lista/estados y compartido con todos. Valores JSON decimales enteros aceptados; entradas no válidas vuelven a tres. Contra IA: 3/6/12 rivales y las mismas distancias. Entrenamiento también respeta vueltas. Velocidad 65 km/h y mejora visual de red conservadas.
 
 Validación: 382 comprobaciones nativas sin fallos, protocolo real de 13 clientes con nueve vueltas y rechazo del decimocuarto, Chromium con un navegador y doce clientes de protocolo muestra 13 coches en carrera de seis vueltas; arranque web correcto. No equivale a trece teléfonos físicos. El usuario solicita terminar las tareas pendientes; se procederá a actualizar backend primero y después el enlace estable.
+
+### Backend actualizado — web17
+
+Render Live: despliegue `dep-db5qd3142hec739rvgv0`, commit `00b86d8`. Selección real de nueve vueltas y doce bots por el menú de Chromium superada, además de las pruebas anteriores. Web17 preparada con paquete `game-59c7e5a74e58634c.pck`; tanto la portada principal como el enlace estable de grupo apuntan a la versión nueva. Pendiente publicar este cliente y verificar GitHub Pages.
