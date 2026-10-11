@@ -62,8 +62,10 @@ Aceptación: CI fija Godot, verifica importación y suite real, conserva código
 
 Dividir en tareas pequeñas tras aprobar dirección creativa y estabilidad. Aceptación: recursos originales/licenciados, coste móvil medido; IA completa vueltas y se recupera; selección y progreso tienen persistencia comprobada. No mezclar estas ampliaciones con correcciones básicas.
 
-## MK-13 — Carreras privadas para cuatro amigos (pendiente de alcance)
+## MK-13 — Carreras privadas para cuatro amigos (implementación local; publicación pendiente)
 
-El usuario pregunta cómo correr con tres amigos. Hoy no existe multijugador. Propuesta a aprobar: sala privada por código, cuatro karts, servidor de autoridad compatible con Web y Android mediante WebSocket, salida compartida, vueltas/resultados y desconexiones. Diseñar frecuencia de sincronización, interpolación/predicción y latencia antes de integrar disparos.
+El usuario aprobó carreras privadas con tres amigos e impactos con trompo. Implementación local: sala por código, cuatro karts y servidor Godot autoritativo mediante WebSocket. La publicación y las pruebas desde teléfonos siguen pendientes.
 
-Aceptación inicial propuesta: cuatro clientes completan una carrera de tres vueltas con posiciones y resultados coherentes; código de sala y plazas funcionan; desconexión no bloquea la carrera. Probar latencia y reconexión, luego sincronizar cajas/disparos. Alojamiento, coste y despliegue requieren decisión del usuario; no se ha implementado ni contratado ningún servicio.
+Aceptación pendiente por Internet: cuatro clientes completan una carrera de tres vueltas con posiciones y resultados coherentes; código de sala y plazas funcionan; desconexión no bloquea la carrera. Medir latencia y suspensión del navegador en teléfonos. Cajas y disparos ya se sincronizan; reconexión a la misma identidad queda para otra tarea. No se ha contratado ni desplegado ningún servicio público.
+
+Estado MK-13: implementación y reglas locales preparadas; cuenta atrás, posiciones autoritativas, nombres/colores, checkpoints/vueltas, clasificación, host transferible, impactos y protección. Pruebas y detalles en MULTIPLAYER.md. Falta alojamiento público, revisión de coste/acceso, prueba con cuatro teléfonos y ajuste de latencia. No considerar completada la experiencia por Internet.

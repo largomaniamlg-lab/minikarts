@@ -115,3 +115,11 @@ Cámara de seguimiento pasa de 7 m/4,3 m (distancia/altura) a 5,8 m/3,6 m en seg
 ## Publicación autorizada — web7
 
 El usuario autorizó publicar el ajuste de cámara y tamaño de cara. Exportación local verificada copiada a la raíz; acceso directo piloto-web7.html y mainPack game-1e5fd3e454290320.pck. Cámara 5,8 m/3,6 m, cara pixel_size 0,00072. Sin cambios de conducción. Se conservan los accesos antiguos; para este ajuste usar web7.
+
+## Multijugador privado — primera implementación local
+
+El usuario priorizó carreras con tres amigos y aprobó también disparos que provocan trompo/protección. `scripts/network.gd` es autoload; servidor Godot/WebSocket autoritativo, salas por código de seis caracteres, cuatro jugadores, estados lobby/countdown/racing/results, colores/nombres, tres vueltas y resultados. Clientes interpolan posiciones y envían controles; no deciden vueltas, impactos ni destrucciones. El tiro pasa a altura compatible con el chasis y raycast admite inicio dentro de colisión móvil. Trompo 1 s, velocidad ×0,25 y protección 3 s.
+
+Véase MULTIPLAYER.md para comandos, contenedor, pruebas y limitaciones. Nuevas pruebas de reglas: 21 comprobaciones; se conserva la suite táctil y de teclado. No asumir que un servidor Cloud/local está accesible en Samsung. Alojamiento público WSS pendiente de selección, autorización del coste y acceso. La web publicada se conserva; no se ha publicado este prototipo ni contratado servicios.
+
+Verificación: 50 comprobaciones Godot sin fallos, exportación y arranque web correctos, cuatro conexiones WebSocket contra servidor nativo y contenedor, y cuatro clientes Chromium crean/comparten sala y arrancan sincronizados desde la interfaz. No acredita carrera manual completa ni prueba de cuatro teléfonos. `render.yaml` prepara una opción gratuita de alojamiento sin desplegarla; falta una cuenta autorizada y comprobar las condiciones actuales del proveedor.

@@ -65,3 +65,7 @@ MK-01 autorizada e implementada. Siguiente tarea recomendada: MK-02; no publicar
 ## Actualización del siguiente ciclo
 
 MK-02 y MK-03 implementadas y verificadas localmente: controles de escritorio y exportación web reproducible. No publicadas. Siguiente prioridad: decidir si publicar esta web para evaluación en Samsung o preparar Android. Multijugador privado para cuatro jugadores requiere una fase propia de red, servidor/salas, sincronización y pruebas de latencia (MK-13), todavía por acordar.
+
+## Prioridad elegida: multijugador privado
+
+El usuario adelanta MK-13 para carreras con tres amigos, incluyendo trompos por disparos y protección. Primera implementación local verificada con servidor de autoridad y cuatro clientes web. Las mejoras artísticas quedan aplazadas. Hito siguiente: seleccionar y desplegar alojamiento WSS, configurar cliente automáticamente y probar una carrera desde cuatro móviles. Borrador gratuito en render.yaml; sin contratación ni publicación automática.

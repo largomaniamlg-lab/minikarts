@@ -35,3 +35,7 @@ No se publican claves de firma ni credenciales. El motor y sus componentes tiene
 El exportador genera loader, PCK y WASM juntos, comprime WASM con gzip y reutiliza el cargador de descompresión existente. Activa controles táctiles y aceleración automática en la web, incluida la prueba desde escritorio. La publicación requiere autorización aparte.
 
 Teclado en el proyecto nativo: W/flechas aceleran, A/D giran, S frena y permite reversa desde parado, B activa marcha atrás, espacio salta y Shift aplica freno de mano. El freno mantiene prioridad.
+
+## Multijugador privado (prototipo local)
+
+Salas para hasta cuatro pilotos, salida compartida, tres vueltas, clasificación y trompos por disparos. Servidor requerido: `PORT=8080 bash scripts/server.sh`. Instrucciones, pruebas y publicación pendiente en [MULTIPLAYER.md](MULTIPLAYER.md). La versión pública existente sigue siendo individual hasta desplegar servidor y cliente.
