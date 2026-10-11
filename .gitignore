@@ -1,5 +1,6 @@
 godot/.godot/
 godot/*.import
+godot/**/*.import
 godot/export_templates/
 godot/build/
 *.apk
