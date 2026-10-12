@@ -39,7 +39,7 @@ async def main():
         assert state['laps'] == 9
         assert isinstance(state['time'], (int, float))
         assert all(len(p['velocity']) == 3 for p in state['players'])
-        assert len(state['boxes']) == (8 if track==0 else 12)
+        assert len(state['boxes']) == (8 if track==0 else 18)
         assert {p['driver'] for p in state['players']} == set(range(16))
         assert len(state['neutral']) == 3
         async with websockets.connect(url, max_queue=None, close_timeout=1) as extra:
