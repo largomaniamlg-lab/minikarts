@@ -329,3 +329,11 @@ Suite nativa completa superada; prueba focalizada posterior verifica fila compac
 Ajuste final Web23: abrir Menú cierra el panel de sonido para que no cubra la opción Piloto y vueltas. Prueba real de navegador recorre Sonido → Menú → Piloto y vueltas. Paquete final game-a9fedda31e8465f4.pck, 17176408 bytes.
 
 Web23 final publicada en 5724e47. HTTP confirma portada y enlaces antiguos web12/web13 hacia el cargador final a9fedda31e8465f4. Cargador y paquete responden 200; paquete público de 17.176.408 bytes con SHA-256 idéntico al probado localmente. Servidor local de pruebas detenido.
+
+### Web24 — giro más cerrado y suavidad de presentación
+
+Dirección compartida por física autoritativa y predicción: radio a pleno giro 15 m frente a 22 m (+46,7 % de velocidad angular); subida de dirección 6/s frente a 3/s, liberación 12/s. Se conservan 65 km/h, controles y reglas. Predicción integra horizontes en pasos de 1/60 s para no aplicar el ángulo final a todo un paquete atrasado. Transformaciones actualizadas por red desactivan la interpolación física adicional (kart local/remotos, Jordan y proyectiles); el filtrado de red conserva sus límites y autoridad.
+
+Cámara actualizada por fotograma: sigue la transformación interpolada offline y la posición de presentación online, sin interpolar de nuevo la cámara. Excluye coches del rayo de oclusión para que un rival no la empuje; mantiene las barreras estáticas. Las cámaras del servidor no ejecutan seguimiento ni rayos, reduciendo trabajo innecesario por jugador.
+
+Suite nativa completa sin fallos; prueba focalizada nueva de conducción/cámara, nueve comprobaciones: trayectoria física y predicción coinciden durante 200 ms, giro más cerrado, cambio de dirección y liberación, velocidad limitada, rival sin salto de cámara y barrera respetada. Movimiento: 57 comprobaciones, incluyendo curvas bajo ráfagas de 60–220 ms: máximo 0,337 m y 0,021 rad por fotograma simulado a 60 Hz. Protocolo de 16 conexiones y cuatro navegadores reales a través de retrasos inyectados de 60–120 ms por sentido pasan (RTT observado 221–351 ms). Chromium con quince conexiones independientes muestra 16 karts, HUD y ausencia de segunda interpolación física; cinco contactos táctiles reales conservan independencia y cancelación. No son pruebas en móviles físicos ni garantizan eliminar problemas de conexión externos.

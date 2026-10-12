@@ -7,6 +7,7 @@ var _steering: float = 0.0
 var _camera: Camera3D
 var _body_visual: MeshInstance3D
 var _shadow_visual: MeshInstance3D
+const Handling = preload("res://scripts/handling.gd")
 const MAX_SPEED: float = 65.0 / 3.6
 const CameraFollow = preload("res://scripts/camera_follow.gd")
 const TouchControls = preload("res://scripts/touch_controls.gd")
@@ -37,6 +38,7 @@ func receive_hit() -> bool:
 	return true
 
 func _ready() -> void:
+	add_to_group("karts")
 	_touch_driving = network_controlled or TouchControls.is_touch_mode()
 	spawn_transform = global_transform
 	floor_snap_length = 0.5
@@ -85,10 +87,8 @@ func _physics_process(delta: float) -> void:
 		speed = move_toward(speed, 0.0, 32.0 * delta)
 	var steer_input: float = (strength("steer_right") - strength("steer_left")) if active else 0.0
 	if _touch_driving:
-		# Progressive press, quick release; a held arrow follows the broad track curve.
-		var steering_rate: float = 12.0 if is_zero_approx(steer_input) else 3.0
-		_steering = move_toward(_steering, steer_input, steering_rate * delta)
-		rotate_y(-_steering * speed / 22.0 * delta)
+		_steering = Handling.steer(_steering, steer_input, delta)
+		rotate_y(Handling.turn(_steering, speed, delta))
 	else:
 		_steering = move_toward(_steering, steer_input, 5.0 * delta)
 		rotate_y(-_steering * 1.6 * clampf(absf(speed) / 7.0, 0.0, 1.0) * signf(speed) * delta)

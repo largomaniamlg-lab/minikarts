@@ -26,3 +26,5 @@ fi
 PORT=0 "$engine" --headless --path "$repo_dir/godot" --script tests/multiplayer_rules.gd -- --server
 PORT=0 "$engine" --headless --path "$repo_dir/godot" --script tests/network_motion_test.gd -- --server
 "$engine" --headless --path "$repo_dir/godot" --fixed-fps 60 --script tests/offline_race_test.gd
+
+"$engine" --headless --path "$repo_dir/godot" --script tests/handling_test.gd

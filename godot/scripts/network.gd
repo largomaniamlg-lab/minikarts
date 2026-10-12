@@ -479,7 +479,9 @@ func update_game(game: Node3D, delta: float) -> void:
 	if snapshot.phase == "lobby" and displayed_phase == "results":
 		game.get_node("Track").reset_obstacles()
 	game.kart.set_physics_process(false)
+	game.kart.physics_interpolation_mode = Node.PHYSICS_INTERPOLATION_MODE_OFF
 	if snapshot.has("neutral"):
+		game.get_node("Track/NeutralSleeper").physics_interpolation_mode = Node.PHYSICS_INTERPOLATION_MODE_OFF
 		game.get_node("Track/NeutralSleeper").position = as_vector(snapshot.neutral)
 	var active_ids := []
 	for racer in snapshot.players:
@@ -491,6 +493,7 @@ func update_game(game: Node3D, delta: float) -> void:
 			kart.kart_color = Color(racer.color)
 			game.add_child(kart)
 			kart.set_physics_process(false)
+			kart.physics_interpolation_mode = Node.PHYSICS_INTERPOLATION_MODE_OFF
 			kart._camera.queue_free()
 			remote_karts[id] = kart
 			var tag := Label3D.new()
@@ -531,6 +534,7 @@ func update_game(game: Node3D, delta: float) -> void:
 		var shot = preload("res://scripts/projectile.gd").new()
 		game.add_child(shot)
 		shot.set_physics_process(false)
+		shot.physics_interpolation_mode = Node.PHYSICS_INTERPOLATION_MODE_OFF
 		remote_shots.append(shot)
 	for i in range(remote_shots.size()):
 		remote_shots[i].position = as_vector(snapshot.shots[i])
@@ -547,7 +551,7 @@ func update_game(game: Node3D, delta: float) -> void:
 		menu_snapshot_time = float(snapshot.time)
 		menu_refresh_clock = clock + 0.5
 	if diagnostics_due:
-		JavaScriptBridge.eval("window.minikartsTest = " + JSON.stringify({"state": snapshot, "rendered_karts": 1 + remote_karts.size(), "rtt_ms": round_trip * 1000, "snapshot_age_ms": (clock - motion.received_at) * 1000, "jitter_ms": motion.jitter * 1000, "buffer_ms": motion.buffer_seconds * 1000, "state_bytes": state_packet_bytes, "fps": Engine.get_frames_per_second(), "local_position": vector(game.kart.position), "local_rotation": vector(game.kart.rotation)}) + ";")
+		JavaScriptBridge.eval("window.minikartsTest = " + JSON.stringify({"state": snapshot, "rendered_karts": 1 + remote_karts.size(), "rtt_ms": round_trip * 1000, "snapshot_age_ms": (clock - motion.received_at) * 1000, "jitter_ms": motion.jitter * 1000, "buffer_ms": motion.buffer_seconds * 1000, "state_bytes": state_packet_bytes, "fps": Engine.get_frames_per_second(), "physics_interpolation": game.kart.is_physics_interpolated(), "local_position": vector(game.kart.position), "local_rotation": vector(game.kart.rotation)}) + ";")
 
 func make_menu() -> void:
 	if OS.has_feature("web"):

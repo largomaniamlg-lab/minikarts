@@ -42,6 +42,7 @@ async def main():
    for _ in range(25):
     for ws in clients:await send(ws,type='input',controls={'accelerate':1})
     await asyncio.sleep(.05)
+   assert await page.evaluate('window.minikartsTest.physics_interpolation === false'), 'Online poses must not be interpolated a second time'
    await page.wait_for_function('window.minikartsHudTest?.rects.timing.visible && window.minikartsHudTest.rects.timing.height<=66')
    await page.screenshot(path='/tmp/minikarts-ten-race.png')
    state=await page.evaluate('window.minikartsTest')

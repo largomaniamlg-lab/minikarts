@@ -1,5 +1,7 @@
 extends RefCounted
 
+const Handling = preload("res://scripts/handling.gd")
+
 # Presentation only: never sends positions or changes race rules.
 const BUFFER_SECONDS := 0.10
 const MAX_PREDICTION := 0.15
@@ -67,7 +69,6 @@ func project(racer: Dictionary, seconds: float, controls: Dictionary = {}, limit
 		yaw += TAU * minf(age, float(racer.hit))
 	elif not controls.is_empty():
 		var desired := float(controls.get("steer_right", 0)) - float(controls.get("steer_left", 0))
-		steering = move_toward(steering, desired, (12.0 if is_zero_approx(desired) else 3.0) * age)
 		var target := 65.0 / 3.6
 		var rate := 10.0
 		if float(controls.get("brake", 0)) > 0 or float(controls.get("handbrake", 0)) > 0:
@@ -79,17 +80,24 @@ func project(racer: Dictionary, seconds: float, controls: Dictionary = {}, limit
 		elif float(controls.get("accelerate", 0)) <= 0:
 			target = 0.0
 			rate = 4.0
-		var predicted_speed := move_toward(speed, target, rate * age)
-		# Do not anticipate movement through a wall when the server reports blocked velocity.
-		var turn := -steering * (speed + predicted_speed) / 44.0 * age
-		if Vector2(velocity.x, velocity.z).length() > 0.1 or absf(speed) < 0.05:
-			velocity.x = -sin(yaw + turn * 0.5) * (speed + predicted_speed) * 0.5
-			velocity.z = -cos(yaw + turn * 0.5) * (speed + predicted_speed) * 0.5
-		yaw += turn
-		speed = predicted_speed
+		var blocked := Vector2(velocity.x, velocity.z).length() <= 0.1 and absf(speed) >= 0.05
+		var remaining := age
+		# A packet horizon must integrate the same gradual turn as physics;
+		# applying the final steering angle to the whole horizon over-turns it.
+		while remaining > 0.000001:
+			var step := minf(remaining, 1.0 / 60.0)
+			steering = Handling.steer(steering, desired, step)
+			speed = move_toward(speed, target, rate * step)
+			yaw += Handling.turn(steering, speed, step)
+			if not blocked:
+				velocity.x = -sin(yaw) * speed
+				velocity.z = -cos(yaw) * speed
+			pos += velocity * step
+			remaining -= step
 	else:
-		yaw -= steering * speed / 22.0 * age
-	pos += velocity * age
+		yaw += Handling.turn(steering, speed, age)
+	if controls.is_empty() or float(racer.hit) > 0:
+		pos += velocity * age
 	result.position = [pos.x, pos.y, pos.z]
 	result.rotation = [racer.rotation[0], yaw, racer.rotation[2]]
 	result.speed = speed

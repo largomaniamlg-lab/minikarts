@@ -122,6 +122,37 @@ func _initialize() -> void:
 	check(largest_local_step < 0.55, "Continuous local motion limits jumps under delayed bursts")
 	check(not reversed, "Network corrections do not reverse a steadily moving local kart")
 	print("Largest local jitter step: %.3f m" % largest_local_step)
+	motion.clear()
+	pending.clear()
+	due = 0.0
+	for index in range(80):
+		due = maxf(due, index * 0.05 + [0.06, 0.10, 0.22, 0.08][index % 4])
+		pending.append({"due": due, "time": index * 0.05})
+	var previous_yaw := 0.0
+	var largest_turn_step := 0.0
+	var largest_turn_move := 0.0
+	for frame in range(240):
+		var now := frame / 60.0
+		while not pending.is_empty() and pending.front().due <= now:
+			var item: Dictionary = pending.pop_front()
+			var theta: float = 18.0 / 15.0 * item.time
+			var packet := state(item.time, -15.0 * sin(theta), "racing", -theta)
+			packet.players[0].position[0] = 15.0 * (1.0 - cos(theta))
+			packet.players[0].speed = 18.0
+			packet.players[0].steering = 1.0
+			packet.players[0].velocity = [18.0 * sin(theta), 0, -18.0 * cos(theta)]
+			motion.push(packet, now)
+		if motion.states.is_empty():
+			continue
+		var pose := motion.local(motion.states.back().players[0], now, 1.0 / 60.0, {"accelerate": 1, "steer_right": 1}, 0.24)
+		var position := motion.vec(pose.position)
+		if now > 0.5:
+			largest_turn_move = maxf(largest_turn_move, position.distance_to(previous_position))
+			largest_turn_step = maxf(largest_turn_step, absf(angle_difference(previous_yaw, float(pose.rotation[1]))))
+		previous_position = position
+		previous_yaw = pose.rotation[1]
+	check(largest_turn_move < 0.55 and largest_turn_step < 0.03, "Sharper continuous turns stay smooth under delayed packet bursts")
+	print("Turning jitter: %.3f m/frame, %.3f radians/frame" % [largest_turn_move, largest_turn_step])
 	var Wire = load("res://scripts/network_wire.gd")
 	var original := Vector3(31.123456, 0.712345, -29.987654)
 	var rounded: Array = Wire.vector(original)
