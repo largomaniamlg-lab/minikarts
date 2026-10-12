@@ -1,6 +1,8 @@
 extends Node
 
 var game: Node3D
+var music_circuit:=0
+var music_path:="res://assets/audio/race_music.ogg"
 var music: AudioStreamPlayer
 var engine: AudioStreamPlayer
 var effects: Array[AudioStreamPlayer] = []
@@ -45,6 +47,16 @@ func _ready() -> void:
 	build_controls()
 	apply_volumes()
 	music.play()
+
+func set_circuit(id: int) -> void:
+	if music==null: return
+	music_circuit=id
+	var path="res://assets/audio/velocity_music.ogg" if id==1 and ResourceLoader.exists("res://assets/audio/velocity_music.ogg") else "res://assets/audio/race_music.ogg"
+	if path==music_path: return
+	var song=load(path).duplicate() as AudioStreamOggVorbis
+	song.loop=true
+	music.stop(); music.stream=song; music_path=path
+	music.play(); apply_volumes()
 
 func player(stream: AudioStream) -> AudioStreamPlayer:
 	var node := AudioStreamPlayer.new()
@@ -137,6 +149,8 @@ func build_controls() -> void:
 func _process(delta: float) -> void:
 	if not is_instance_valid(game) or music == null:
 		return
+	var circuit: int=game.get_node("Track").layout_id
+	if circuit!=music_circuit: set_circuit(circuit)
 	var phase := "menu" if game.race_menu.visible else "racing"
 	var count := 0
 	var done: bool = game.finished
@@ -179,7 +193,17 @@ func _process(delta: float) -> void:
 	else:
 		engine.stop()
 	if Network.browser_test:
-		JavaScriptBridge.eval("window.minikartsAudioTest=" + JSON.stringify({"music": music.playing, "muted": muted, "music_volume": music_volume, "effects_volume": effects_volume, "engine": engine.playing, "pitch": engine.pitch_scale, "events": events}) + ";")
+		JavaScriptBridge.eval("window.minikartsAudioTest=" + JSON.stringify({"music": music.playing, "circuit":music_circuit,"track":music_path, "muted": muted, "music_volume": music_volume, "effects_volume": effects_volume, "mixer":mixer_rects(), "engine": engine.playing, "pitch": engine.pitch_scale, "events": events}) + ";")
+
+func mixer_rects() -> Dictionary:
+	var result: Dictionary={}
+	for key in ["MusicVolume","EffectsVolume"]:
+		var control=panel.get_node(key)
+		var rect=control.get_global_rect()
+		result[key]={"x":rect.position.x,"y":rect.position.y,"width":rect.size.x,"height":rect.size.y}
+	var rect=mute_button.get_global_rect()
+	result.mute={"x":rect.position.x,"y":rect.position.y,"width":rect.size.x,"height":rect.size.y}
+	return result
 
 func _notification(what: int) -> void:
 	if what == NOTIFICATION_APPLICATION_FOCUS_OUT or what == NOTIFICATION_APPLICATION_FOCUS_IN:

@@ -132,7 +132,7 @@ func _ready() -> void:
 	page_label=label("",Vector2(700,420),Vector2(200,28),18)
 	circuit_choice=OptionButton.new()
 	circuit_choice.position=Vector2(420,460); circuit_choice.size=Vector2(780,48)
-	for id in range(5): circuit_choice.add_item(preload("res://scripts/circuit_catalog.gd").NAMES[id],id)
+	for id in range(5): circuit_choice.add_item("%s · %s" % [preload("res://scripts/circuit_catalog.gd").NAMES[id],preload("res://scripts/scenario_theme.gd").TITLES[id]] if id>0 else "Circuito de juguete",id)
 	circuit_choice.item_selected.connect(func(index): Network.selected_track=index)
 	root.add_child(circuit_choice)
 	# Kept as a model selector for existing callers; the visible choices are the large cards.

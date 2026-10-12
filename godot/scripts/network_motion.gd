@@ -63,6 +63,7 @@ func project(racer: Dictionary, seconds: float, controls: Dictionary = {}, limit
 	var pos := vec(racer.position)
 	var yaw := float(racer.rotation[1])
 	var speed := float(racer.speed)
+	var boost := float(racer.get("boost",0.0))
 	var steering := float(racer.steering)
 	var velocity := vec(racer.get("velocity", [0, 0, 0]))
 	if float(racer.hit) > 0:
@@ -86,6 +87,8 @@ func project(racer: Dictionary, seconds: float, controls: Dictionary = {}, limit
 		# applying the final steering angle to the whole horizon over-turns it.
 		while remaining > 0.000001:
 			var step := minf(remaining, 1.0 / 60.0)
+			boost=maxf(0.0,boost-step)
+			if target>0: target=80.0/3.6 if boost>0 else 65.0/3.6
 			steering = Handling.steer(steering, desired, step)
 			speed = move_toward(speed, target, rate * step)
 			yaw += Handling.turn(steering, speed, step)
@@ -100,6 +103,7 @@ func project(racer: Dictionary, seconds: float, controls: Dictionary = {}, limit
 		pos += velocity * age
 	result.position = [pos.x, pos.y, pos.z]
 	result.rotation = [racer.rotation[0], yaw, racer.rotation[2]]
+	result.boost = maxf(0.0,boost-age) if controls.is_empty() or float(racer.hit)>0 else boost
 	result.speed = speed
 	result.steering = steering
 	result.velocity = [velocity.x, velocity.y, velocity.z]
@@ -170,6 +174,7 @@ func local(racer: Dictionary, now: float, delta: float, controls: Dictionary, rt
 			# Ground/air velocity and a blocked wall come from the server.
 			local_pose.velocity = racer.velocity.duplicate()
 			local_pose.hit = racer.hit
+			local_pose.boost=target.get("boost",0.0)
 		var step := clampf(delta, 0.0, 0.05)
 		local_pose = project(local_pose, step, controls)
 		var correction := 1.0 - exp(-6.0 * step)

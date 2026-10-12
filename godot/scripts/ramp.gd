@@ -3,6 +3,7 @@ var length := 7.0
 var width := 7.0
 var height := 1.2
 var dangerous := false
+var theme_id:=0
 var safe_spawn := Transform3D.IDENTITY
 
 func _ready() -> void:
@@ -21,7 +22,7 @@ func _ready() -> void:
 	var visual := MeshInstance3D.new()
 	visual.mesh = mesh.commit()
 	var surface := StandardMaterial3D.new()
-	surface.albedo_color = Color("ed7046") if dangerous else Color("329ad2")
+	surface.albedo_color = preload("res://scripts/scenario_theme.gd").ACCENTS[theme_id] if theme_id>0 else (Color("ed7046") if dangerous else Color("329ad2"))
 	visual.material_override = surface
 	add_child(visual)
 	var trigger := Area3D.new()
@@ -41,7 +42,7 @@ func _ready() -> void:
 			body.launch_from_ramp(5.4 if dangerous and fast else (2.0 if dangerous else 4.3))
 	)
 	var sign := Label3D.new()
-	sign.text = "65 km/h · HUECO" if dangerous else "RAMPA"
+	sign.text = "65 km/h · HUECO" if dangerous else ("RAMPA DE CARGA" if theme_id==1 else "RAMPA")
 	sign.font_size = 36
 	sign.pixel_size = 0.015
 	sign.position = Vector3(0,3.8,length/2+8)

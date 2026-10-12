@@ -35,3 +35,7 @@ PORT=0 "$engine" --headless --path "$repo_dir/godot" --script tests/tournament_t
 "$engine" --headless --path "$repo_dir/godot" --script tests/offline_tournament_test.gd
 
 "$engine" --headless --path "$repo_dir/godot" --script tests/menu_test.gd
+
+"$engine" --headless --path "$repo_dir/godot" --script tests/boost_theme_test.gd
+
+PORT=0 "$engine" --headless --path "$repo_dir/godot" --script tests/server_boost_test.gd -- --server

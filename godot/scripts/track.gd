@@ -1,10 +1,12 @@
 extends Node3D
 
+const Scenery = preload("res://scripts/scenario_theme.gd")
 const Circuits = preload("res://scripts/circuit_catalog.gd")
 var layout_id := 0
 var route := PackedVector3Array()
 var distances := PackedFloat32Array()
 var track_length := 0.0
+var boost_sites: Array[float] = []
 var ramp_sites: Array = []
 var gaps: Array = []
 var gate_points: Array[Vector3] = []
@@ -204,8 +206,9 @@ func configure(id: int) -> void:
 	for child in get_children():
 		remove_child(child)
 		child.queue_free()
-	route.clear(); distances.clear(); ramp_sites.clear(); gaps.clear(); gate_points.clear()
+	route.clear(); distances.clear(); boost_sites.clear(); ramp_sites.clear(); gaps.clear(); gate_points.clear()
 	_ready()
+	Scenery.sky(self,layout_id)
 
 func _build_new() -> void:
 	route = Circuits.points(layout_id)
@@ -214,10 +217,11 @@ func _build_new() -> void:
 		distances.append(distances[-1]+route[i].distance_to(route[(i+1)%route.size()]))
 	track_length = distances[-1]
 	_choose_ramps()
+	_choose_boosts()
 	var minimum := route[0]
 	var maximum := route[0]
 	for p in route: minimum = minimum.min(p); maximum = maximum.max(p)
-	box("Ground",maximum-minimum+Vector3(130,1,130),(minimum+maximum)*0.5-Vector3(0,0.55,0),material(Color("76bc4c")))
+	box("Ground",maximum-minimum+Vector3(270,1,270),(minimum+maximum)*0.5-Vector3(0,0.55,0),material(Scenery.GROUND[layout_id]))
 	var road := SurfaceTool.new()
 	road.begin(Mesh.PRIMITIVE_TRIANGLES)
 	for i in range(route.size()):
@@ -234,13 +238,13 @@ func _build_new() -> void:
 	road_body.name = "Road"
 	add_child(road_body)
 	var road_visual := MeshInstance3D.new()
-	road_visual.mesh = road_mesh; road_visual.material_override = material(Color("505968"))
+	road_visual.mesh = road_mesh; road_visual.material_override = material(Scenery.ROAD[layout_id])
 	road_body.add_child(road_visual)
 	var road_shape := CollisionShape3D.new()
 	road_shape.shape = road_mesh.create_trimesh_shape()
 	road_body.add_child(road_shape)
-	var white := material(Color("fff4d8"))
-	var coral := material(Color("ed5046"))
+	var white := material(Scenery.BARRIERS[layout_id])
+	var coral := material(Scenery.ACCENTS[layout_id])
 	for i in range(ceili(track_length/10)):
 		var from := i*10.0
 		var to := minf(track_length,from+10.0)
@@ -258,6 +262,7 @@ func _build_new() -> void:
 		pit.add_to_group("track_holes")
 	for site in ramp_sites:
 		var ramp = preload("res://scripts/ramp.gd").new()
+		ramp.theme_id=layout_id
 		ramp.dangerous = site.dangerous
 		ramp.width = 18.0 if site.dangerous else 7.0
 		ramp.height = 1.6 if site.dangerous else 1.2
@@ -265,19 +270,31 @@ func _build_new() -> void:
 		ramp.transform = transform_at(site.distance+3.5,site.offset,0.025)
 		add_child(ramp)
 	_build_new_finish()
-	for i in range(24):
-		var p := sample(i*track_length/24.0,19.0 if i%2==0 else -19.0)
-		_scenery_ball(p+Vector3.UP*3,Vector3(5,6,5),Color("49a94b"))
-		if i%3==0:
-			var legs := Sprite3D.new()
-			legs.texture = preload("res://assets/memes/legs.png")
-			legs.pixel_size = 6.0/float(legs.texture.get_height())
-			legs.position = p+Vector3.UP*3
-			legs.billboard = BaseMaterial3D.BILLBOARD_ENABLED
-			legs.shaded = false
-			add_child(legs)
+	Scenery.build(self,layout_id)
+	for distance in boost_sites:
+		var panel=preload("res://scripts/boost_panel.gd").new()
+		panel.accent=Color("55efbd") if layout_id==1 else Scenery.ACCENTS[layout_id]
+		panel.transform=transform_at(distance,0,0.035)
+		add_child(panel)
 	_build_obstacles()
 	add_child(preload("res://scripts/neutral_sleeper.gd").new())
+
+func _choose_boosts() -> void:
+	var desired_count=[0,2,1,1,2][layout_id]
+	for index in range(desired_count):
+		var desired=track_length*(0.07+index*0.45)
+		var best: float=-1
+		var score: float=INF
+		for distance in range(40,int(track_length)-100,3):
+			if boost_sites.any(func(site): return absf(site-distance)<150): continue
+			if ramp_sites.any(func(site): return fposmod(site.distance-distance,track_length)<95 or fposmod(distance-site.distance,track_length)<30): continue
+			var straight=true
+			for offset in range(-8,101,5):
+				if tangent(distance).angle_to(tangent(distance+offset))>0.025: straight=false; break
+			if not straight: continue
+			if absf(distance-desired)<score: score=absf(distance-desired); best=distance
+		if best<0: break
+		boost_sites.append(best)
 
 func _choose_ramps() -> void:
 	for index in range(Circuits.RAMP_COUNTS[layout_id]):
@@ -372,8 +389,9 @@ func _build_new_crates() -> void:
 	var occupied: Array[Vector3] = []
 	for i in range(12):
 		var s := (i+0.5)*track_length/12
-		while ramp_sites.any(func(site): return absf(site.distance-s)<35) or occupied.any(func(p):return p.distance_to(sample(s,-5.0 if i%2==0 else 5.0,0.7))<6.0): s+=4
+		while ramp_sites.any(func(site): return absf(site.distance-s)<35) or boost_sites.any(func(site): return absf(site-s)<16) or occupied.any(func(p):return p.distance_to(sample(s,-5.0 if i%2==0 else 5.0,0.7))<6.0): s+=4
 		var crate := Obstacle.new()
+		crate.theme_id=layout_id
 		crate.transform = transform_at(s, -5.0 if i%2==0 else 5.0)
 		occupied.append(crate.position)
 		add_child(crate)

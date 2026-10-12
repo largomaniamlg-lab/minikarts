@@ -58,7 +58,7 @@ func drive_route(delta: float) -> void:
 	var error := atan2(forward.cross(desired).y,forward.dot(desired))
 	var steer := clampf(-15.0*2.0*sin(error)/lookahead,-1,1)
 	var curvature: float = track.tangent(distance+5).angle_to(track.tangent(distance+25))/20.0
-	var limit := minf(kart.MAX_SPEED-0.1,sqrt(12.0/maxf(curvature,0.001)))
+	var limit := minf(kart.speed_limit()-0.1,sqrt(12.0/maxf(curvature,0.001)))
 	for site in track.ramp_sites:
 		if site.dangerous and fposmod(site.distance-distance,track.track_length)<55: limit=kart.MAX_SPEED
 	var shoot := 0.0

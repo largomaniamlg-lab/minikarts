@@ -9,6 +9,9 @@ var _body_visual: MeshInstance3D
 var _shadow_visual: MeshInstance3D
 const Handling = preload("res://scripts/handling.gd")
 const MAX_SPEED: float = 65.0 / 3.6
+const BOOST_SPEED: float = 80.0 / 3.6
+var boost_time := 0.0
+var boost_cooldown := 0.0
 const CameraFollow = preload("res://scripts/camera_follow.gd")
 const TouchControls = preload("res://scripts/touch_controls.gd")
 var _touch_driving: bool = false
@@ -22,6 +25,15 @@ var protection_time: float = 0.0
 var _jump_held: bool = false
 var _impact_cooldown := 0.0
 var _ramp_launch := 0.0
+
+func speed_limit() -> float:
+	return BOOST_SPEED if boost_time>0 else MAX_SPEED
+
+func try_boost() -> bool:
+	if not enabled or not _focused or hit_time>0 or boost_cooldown>0 or speed<=0.1 or not is_on_floor(): return false
+	boost_time=3.0; boost_cooldown=6.0
+	Sound.play_effect("go",global_position)
+	return true
 
 func launch_from_ramp(lift: float) -> void:
 	_ramp_launch = lift
@@ -37,6 +49,7 @@ func receive_hit() -> bool:
 	if not enabled or protection_time > 0.0:
 		return false
 	Sound.play_effect("spin", global_position)
+	boost_time=0.0
 	speed *= 0.25
 	hit_time = 1.0
 	protection_time = 3.0
@@ -67,6 +80,8 @@ func _ready() -> void:
 	camera.current = true
 
 func _physics_process(delta: float) -> void:
+	boost_time=maxf(0.0,boost_time-delta)
+	boost_cooldown=maxf(0.0,boost_cooldown-delta)
 	_impact_cooldown = maxf(0, _impact_cooldown - delta)
 	protection_time = maxf(0.0, protection_time - delta)
 	if hit_time > 0.0:
@@ -85,7 +100,7 @@ func _physics_process(delta: float) -> void:
 	elif active and pressed("reverse"):
 		speed = move_toward(speed, -6.0, 12.0 * delta)
 	elif throttle > 0.0:
-		speed = move_toward(speed, MAX_SPEED, 10.0 * delta)
+		speed = move_toward(speed, speed_limit(), 10.0 * delta)
 	else:
 		speed = move_toward(speed, 0.0, 4.0 * delta)
 	if active and pressed("handbrake"):
@@ -146,6 +161,7 @@ func reset_to(new_transform: Transform3D) -> void:
 	protection_time = 0.0
 	_jump_held = false
 	_ramp_launch = 0.0
+	boost_time=0.0; boost_cooldown=0.0
 	reset_physics_interpolation()
 	if is_instance_valid(_camera):
 		_camera.call("reset_follow")

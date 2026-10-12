@@ -29,6 +29,7 @@ func _ready() -> void:
 	sun.light_energy = 1.15
 	add_child(sun)
 	var world := WorldEnvironment.new()
+	world.name="WorldEnvironment"
 	var environment := Environment.new()
 	environment.background_mode = Environment.BG_SKY
 	var sky := Sky.new()

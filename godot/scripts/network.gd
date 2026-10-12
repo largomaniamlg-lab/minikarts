@@ -466,7 +466,7 @@ func room_state(room: Dictionary) -> Dictionary:
 	for id in room.players:
 		var player: Dictionary = room.players[id]
 		var kart = player.kart
-		racers.append({"id": id, "name": player.name, "driver": player.driver, "ready": player.ready, "position": vector(kart.position), "velocity": vector(kart.velocity), "rotation": Wire.vector(kart.rotation, 0.001), "speed": Wire.number(kart.speed), "steering": Wire.number(kart._steering, 0.001), "hit": Wire.number(kart.hit_time), "protection": Wire.number(kart.protection_time), "lap": player.lap, "finished": player.finished, "color": kart.kart_color.to_html()})
+		racers.append({"id": id, "name": player.name, "driver": player.driver, "ready": player.ready, "position": vector(kart.position), "velocity": vector(kart.velocity), "rotation": Wire.vector(kart.rotation, 0.001), "speed": Wire.number(kart.speed), "steering": Wire.number(kart._steering, 0.001), "boost": Wire.number(kart.boost_time), "hit": Wire.number(kart.hit_time), "protection": Wire.number(kart.protection_time), "lap": player.lap, "finished": player.finished, "color": kart.kart_color.to_html()})
 	var shots := []
 	for child in room.stage.get_children():
 		if child.is_in_group("projectiles"):
@@ -538,6 +538,7 @@ func update_game(game: Node3D, delta: float) -> void:
 		kart.rotation.y = rotation.y if id == player_id else lerp_angle(kart.rotation.y, rotation.y, 1.0 - exp(-20 * delta))
 		kart._body_visual.material_override.albedo_color = Color(racer.color)
 		kart.get_node("Driver").set_face(int(racer.get("driver", 0)))
+		kart.boost_time=float(visual.get("boost",0.0))
 		kart.speed = visual.speed
 		kart._steering = visual.steering
 		if id == player_id:

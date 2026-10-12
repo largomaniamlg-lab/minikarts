@@ -130,6 +130,10 @@ func update_display(lap: int, elapsed: float, best: float, speed: float, finishe
 	else:
 		stats.text = "VUELTA %d / %d\nTIEMPO %.2f s    MEJOR %s" % [_lap, lap_target, elapsed, best_text]
 	speed_number.text = ("%d km/h" if _touch_mode else "%d") % roundi(absf(speed))
+	if is_instance_valid(get_parent().get("kart")) and get_parent().kart.boost_time>0:
+		speed_number.text+=" · BOOST" if _touch_mode else " BOOST"
+		speed_number.add_theme_color_override("font_color",GREEN)
+	else: speed_number.add_theme_color_override("font_color",WHITE)
 	_message_panel.visible = finished or recovered or not started
 	if finished:
 		message.text = "¡META! Espera los resultados de la sala." if Network.playing else ("¡META! Abre Menú para otra carrera." if _touch_mode else "¡META!\nPulsa Enter para otra carrera.")
