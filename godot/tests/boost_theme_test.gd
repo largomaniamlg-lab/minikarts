@@ -47,6 +47,11 @@ func run() -> void:
 	await frames(180)
 	check(kart.boost_time==0 and kart.speed<=kart.MAX_SPEED+0.01,"Boost expires and speed returns smoothly to 65")
 	kart.boost_time=2; kart.protection_time=0
+	game.hud.update_display(9,3599,INF,80,false,true,false,9)
+	game.hud.set_position(16,16)
+	await process_frame
+	check(game.hud.speed_number.text.contains("BOOST"),"HUD identifies temporary boost")
+	check(game.hud.timing_panel.size.x<=640,"Boost marker fits compact timing bar")
 	check(kart.receive_hit() and kart.boost_time==0,"Shot cancels boost")
 	kart.boost_time=2; kart.boost_cooldown=5
 	kart.reset_to(track.grid_transform(0))
