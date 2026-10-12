@@ -31,6 +31,9 @@ func painted_mesh() -> ArrayMesh:
 func _ready() -> void:
 	if Network.server_mode: set_process(false)
 	if not has_node("PaintedBody"): build()
+	# Mutable instance transforms must never be shared by different racers.
+	$Wheels.multimesh=$Wheels.multimesh.duplicate()
+	$Flames.multimesh=$Flames.multimesh.duplicate()
 	var mat=Style.material(body_color,true,0.05).duplicate() as ShaderMaterial
 	mat.set_shader_parameter("use_vertex_color",true)
 	Style.register_transient(mat)

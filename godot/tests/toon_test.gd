@@ -13,6 +13,13 @@ func run() -> void:
 	var visual=game.kart.get_node("ToonKartVisual")
 	check(not visual.get_node("PilotPrototype").visible,"Original faces are not replaced by generic helmets")
 	check(visual.get_node("Wheels").multimesh.instance_count==4,"Original kart has four animated wheels")
+	var other=load("res://scenes/toon/kart_prototype.tscn").instantiate(); root.add_child(other)
+	other.set_process(false); visual.set_process(false)
+	visual.speed=6; other.speed=0
+	visual.animate(0.1); other.animate(0.1)
+	check(visual.get_node("Wheels").multimesh.get_instance_transform(0).basis!=other.get_node("Wheels").multimesh.get_instance_transform(0).basis,"Each racer animates wheels at its own speed")
+	check(visual.get_node("Flames").multimesh!=other.get_node("Flames").multimesh,"Exhaust transforms cannot leak between racers")
+	other.queue_free()
 	var material=visual.get_node("PaintedBody").material_override
 	check(material.next_pass!=null,"High quality includes kart outline")
 	style.set_low(true)
