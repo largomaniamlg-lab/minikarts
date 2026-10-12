@@ -11,6 +11,8 @@ var speed_number: Label
 var _message_panel: PanelContainer
 const TouchControls = preload("res://scripts/touch_controls.gd")
 var _touch_mode: bool = false
+var circuit_panel: PanelContainer
+var circuit_label: Label
 var timing_panel: PanelContainer
 var time_number: Label
 var options: PanelContainer
@@ -76,6 +78,12 @@ func _ready() -> void:
 	touch_controls = TouchControls.new()
 	root.add_child(touch_controls)
 	if _touch_mode:
+		circuit_panel=_panel(root,Vector2.ZERO,Rect2(24,12,278,54))
+		circuit_label=_label("",17,WHITE)
+		circuit_label.horizontal_alignment=HORIZONTAL_ALIGNMENT_CENTER
+		circuit_label.vertical_alignment=VERTICAL_ALIGNMENT_CENTER
+		circuit_panel.add_child(circuit_label)
+		circuit_panel.hide()
 		_build_options(root)
 
 func _panel(root: Control, anchor: Vector2, bounds: Rect2) -> PanelContainer:
@@ -124,7 +132,7 @@ func update_display(lap: int, elapsed: float, best: float, speed: float, finishe
 	speed_number.text = ("%d km/h" if _touch_mode else "%d") % roundi(absf(speed))
 	_message_panel.visible = finished or recovered or not started
 	if finished:
-		message.text = "¡META! Abre Menú para otra carrera." if _touch_mode else "¡META!\nPulsa Enter para otra carrera."
+		message.text = "¡META! Espera los resultados de la sala." if Network.playing else ("¡META! Abre Menú para otra carrera." if _touch_mode else "¡META!\nPulsa Enter para otra carrera.")
 		message.add_theme_color_override("font_color", GREEN)
 	elif recovered:
 		message.text = "De vuelta en la pista.\nEl reloj sigue corriendo."
@@ -168,6 +176,8 @@ func _build_options(root: Control) -> void:
 		touch_controls.release_actions()
 		if is_instance_valid(Sound.panel):
 			Sound.panel.hide()
+		var game=get_parent()
+		column.get_child(1).text="Reiniciar torneo" if is_instance_valid(game.offline_race) and game.offline_race.tournament!=null else "Nueva carrera"
 		column.get_child(1).disabled = Network.playing
 		column.get_child(3).disabled = Network.playing
 	)
@@ -182,7 +192,7 @@ func _choose_option(caption: String) -> void:
 			elif is_instance_valid(game.offline_race):
 				if not game.offline_race.racers[0].finished:
 					game.kart.reset_to(game.kart.spawn_transform)
-					game.offline_race.racers[0].prev_z = game.kart.position.z
+					game.offline_race.racers[0].prev_z = game.get_node("Track").finish_side(game.kart.position)
 			else:
 				game.recover()
 		"Nueva carrera":
@@ -211,3 +221,11 @@ func _process(delta: float) -> void:
 		var rect := node.get_global_rect()
 		rects[entry] = {"x": rect.position.x, "y": rect.position.y, "width": rect.size.x, "height": rect.size.y, "visible": node.is_visible_in_tree()}
 	JavaScriptBridge.eval("window.minikartsHudTest=" + JSON.stringify({"rects": rects, "text": stats.text, "viewport": [get_viewport().get_visible_rect().size.x, get_viewport().get_visible_rect().size.y]}) + ";")
+
+func set_circuit(id: int, stage: int=-1) -> void:
+	if circuit_panel==null: return
+	circuit_panel.visible=id>0 or stage>=0
+	var catalog=preload("res://scripts/circuit_catalog.gd")
+	if stage==0: circuit_label.text="CLASIFICACIÓN · 3 VUELTAS"
+	elif stage>0: circuit_label.text="TORNEO %d/4 · %s" % [stage,catalog.NAMES[id].to_upper()]
+	else: circuit_label.text="%s · %d m" % [catalog.NAMES[id].to_upper(),catalog.LENGTHS[id]]

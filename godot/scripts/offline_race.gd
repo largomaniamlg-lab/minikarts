@@ -1,5 +1,7 @@
 extends Node
 
+const Progress = preload("res://scripts/race_progress.gd")
+var tournament: RefCounted
 const BotDriver = preload("res://scripts/bot_driver.gd")
 const Catalog = preload("res://scripts/driver_catalog.gd")
 const NAMES = Catalog.NAMES
@@ -38,10 +40,28 @@ func _ready() -> void:
 		bots.append(bot)
 		racers.append({"kart": kart, "name": label.text, "lap": 0, "checkpoint": 0, "prev_z": -3.0, "finished": false})
 	game.kart._camera.current = true
+	begin()
+
+func begin() -> void:
+	tournament = null
+	if Network.selected_mode=="tournament":
+		tournament=preload("res://scripts/tournament.gd").new()
+		var entries := []
+		for index in range(racers.size()):
+			var driver_id: int=(Network.selected_driver+index)%NAMES.size()
+			entries.append({"id":index,"name":"Tú" if index==0 else "IA · "+NAMES[driver_id],"driver":driver_id})
+		tournament.start(entries,Network.selected_laps)
 	reset()
 
+func continue_tournament() -> void:
+	if tournament!=null and tournament.next():
+		reset()
+		game.race_menu.resume()
+
 func reset() -> void:
-	lap_target = Network.selected_laps
+	lap_target = tournament.laps() if tournament!=null else Network.selected_laps
+	game.get_node("Track").configure(tournament.stage if tournament!=null else Network.selected_track)
+	game.hud.set_circuit(game.get_node("Track").layout_id,tournament.stage if tournament!=null else -1)
 	phase = "countdown"
 	timer = 3.0
 	elapsed = 0.0
@@ -55,7 +75,8 @@ func reset() -> void:
 			child.queue_free()
 	for index in range(racers.size()):
 		var racer: Dictionary = racers[index]
-		var spawn := Network.Settings.grid_transform(index)
+		var slot: int = tournament.grid.find(index) if tournament!=null else index
+		var spawn: Transform3D = game.get_node("Track").grid_transform(maxi(0,slot))
 		racer.kart.reset_to(spawn)
 		racer.kart.spawn_transform = spawn
 		racer.kart.enabled = false
@@ -63,16 +84,19 @@ func reset() -> void:
 		racer.kart.controls = {}
 		racer.lap = 0
 		racer.checkpoint = 0
-		racer.prev_z = -3.0
+		racer.prev_z = game.get_node("Track").finish_side(spawn.origin)
+		racer.lap_start=0.0
+		racer.best_lap=INF
 		racer.finished = false
 		if index > 0:
-			var driver_id: int = (Network.selected_driver + index) % NAMES.size()
+			var driver_id: int = int(tournament.table[index].driver) if tournament!=null else (Network.selected_driver+index)%NAMES.size()
 			racer.kart.get_node("Driver").set_face(driver_id)
-			racer.name = "IA · " + NAMES[driver_id]
+			racer.name = tournament.table[index].name if tournament!=null else "IA · "+NAMES[driver_id]
 			racer.kart.get_node("BotName").text = racer.name
 	for bot in bots:
 		bot.stuck_time = 0.0
 		bot.jump_cooldown = 0.0
+		bot.route_hint = -1
 	game.kart.get_node("Driver").set_face(Network.selected_driver)
 
 func pause_race(value: bool) -> void:
@@ -100,6 +124,7 @@ func update(delta: float) -> void:
 		game.kart.reset_to(game.kart.spawn_transform)
 		game.kart.protection_time = shield
 		game.kart.hit_time = stun
+		racers[0].prev_z = game.get_node("Track").finish_side(game.kart.position)
 	if phase == "countdown":
 		timer -= delta
 		if timer <= 0:
@@ -113,15 +138,17 @@ func update(delta: float) -> void:
 			if not racer.finished:
 				all_finished = false
 				advance_racer(racer)
-		if all_finished or elapsed >= 600.0 or (first_finish >= 0 and elapsed - first_finish >= 60.0):
+		if all_finished or elapsed >= (600 if game.get_node("Track").layout_id==0 else maxi(600,lap_target*150+120)) or (first_finish >= 0 and elapsed - first_finish >= (60 if game.get_node("Track").layout_id==0 else 120)):
 			phase = "results"
 			for racer in racers:
 				racer.kart.enabled = false
 				if not racer.finished:
-					results.append({"name": racer.name, "time": -1.0})
+					results.append({"id":racers.find(racer),"name": racer.name, "time": -1.0,"best_lap":racer.best_lap if is_finite(racer.best_lap) else -1.0})
+			if tournament!=null: results=tournament.finish(results)
 			game.race_menu.show_results(results)
 	var player: Dictionary = racers[0]
 	game.hud.update_display(mini(player.lap + 1, lap_target), elapsed, INF, absf(game.kart.speed) * 3.6, player.finished, phase == "racing", false, lap_target)
+	if player.finished and tournament!=null: game.hud.message.text="¡META! Espera a los demás pilotos."
 	if phase == "countdown":
 		game.hud._message_panel.show()
 		game.hud.message.text = "Salida en %d…" % maxi(1, ceili(timer))
@@ -134,30 +161,17 @@ func update(delta: float) -> void:
 		var summary := []
 		for racer in racers:
 			summary.append({"name": racer.name, "lap": racer.lap, "finished": racer.finished})
-		JavaScriptBridge.eval("window.minikartsOfflineTest=" + JSON.stringify({"phase": phase, "laps": lap_target, "racers": summary, "elapsed": elapsed}) + ";")
+		JavaScriptBridge.eval("window.minikartsOfflineTest=" + JSON.stringify({"phase": phase, "laps": lap_target, "racers": summary, "elapsed": elapsed,"track":game.get_node("Track").layout_id,"tournament":tournament.summary() if tournament!=null else {"enabled":false}}) + ";")
 
 func advance_racer(racer: Dictionary) -> void:
-	var kart = racer.kart
-	if kart.position.y < -4:
-		kart.reset_to(kart.spawn_transform)
-	var crossed: bool = racer.prev_z < 0 and kart.position.z >= 0 and kart.position.x > 21 and kart.position.x < 39
-	var point: Vector3 = game.checkpoints[racer.checkpoint]
-	var flat := Vector3(kart.position.x, 0, kart.position.z)
-	if (flat.distance_to(point) < 11.0 if racer.checkpoint < 3 else crossed):
-		kart.spawn_transform = Transform3D(Basis.looking_at(Vector3(-point.z, 0, point.x).normalized()), point + Vector3.UP * 0.7)
-		racer.checkpoint += 1
-		if racer.checkpoint == 4:
-			racer.checkpoint = 0
-			racer.lap += 1
-			if racer.lap == lap_target:
-				racer.finished = true
-				kart.enabled = false
-				results.append({"name": racer.name, "time": elapsed})
-				if first_finish < 0:
-					first_finish = elapsed
-	racer.prev_z = kart.position.z
+	if Progress.advance(game.get_node("Track"),racer,elapsed,lap_target):
+		results.append({"id":racers.find(racer),"name":racer.name,"time":elapsed,"best_lap":racer.best_lap})
+		if first_finish<0: first_finish=elapsed
 
 func progress(racer: Dictionary) -> float:
+	if game.get_node("Track").layout_id>0:
+		var points: Array = game.get_node("Track").gates()
+		return racer.lap*points.size()+racer.checkpoint-clampf(racer.kart.position.distance_to(points[racer.checkpoint]),0,80)/80.0
 	var angle: float = fposmod(atan2(racer.kart.position.z, racer.kart.position.x), TAU)
 	# Before the start line, a kart is behind racers that have begun the lap.
 	if racer.checkpoint == 0 and racer.kart.position.z < 0 and racer.kart.position.x > 0:

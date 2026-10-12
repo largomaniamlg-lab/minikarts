@@ -2,6 +2,7 @@
 import asyncio
 import json
 import sys
+import os
 import websockets
 
 async def receive(ws, kind, predicate=lambda m: True):
@@ -16,6 +17,7 @@ async def send(ws, **message):
 
 async def main():
     url = sys.argv[1] if len(sys.argv) > 1 else 'ws://127.0.0.1:8080'
+    track=int(os.environ.get("MINIKARTS_TEST_TRACK","0"))
     clients = []
     try:
         for index in range(16):
@@ -29,7 +31,7 @@ async def main():
                 selected = next(r for r in directory['rooms'] if r['code'] == code)
                 assert selected['players'] == index and selected['host'] == 'Amigo 1'
                 code = selected['code']
-            await send(ws, type='create' if index == 0 else 'join', code='' if index == 0 else code, name=f'Amigo {index + 1}', driver=index % 16, laps=9)
+            await send(ws, type='create' if index == 0 else 'join', code='' if index == 0 else code, name=f'Amigo {index + 1}', driver=index % 16, laps=9, track=track)
             welcome = await receive(ws, 'welcome')
             code = welcome['code']
         state = await receive(clients[0], 'state', lambda m: len(m['players']) == 16)
@@ -37,7 +39,7 @@ async def main():
         assert state['laps'] == 9
         assert isinstance(state['time'], (int, float))
         assert all(len(p['velocity']) == 3 for p in state['players'])
-        assert len(state['boxes']) == 8
+        assert len(state['boxes']) == (8 if track==0 else 12)
         assert {p['driver'] for p in state['players']} == set(range(16))
         assert len(state['neutral']) == 3
         async with websockets.connect(url, max_queue=None, close_timeout=1) as extra:
@@ -65,7 +67,7 @@ async def main():
             await asyncio.sleep(.05)
         state = await receive(clients[0], 'state', lambda m: m['elapsed'] > .8)
         assert all(p['lap'] == 0 for p in state['players']), 'Client cannot forge laps'
-        assert all(p['position'][0] < 100 for p in state['players']), 'Client cannot teleport'
+        assert all(p['position'][0] < (100 if track==0 else 700) for p in state['players']), 'Client cannot teleport'
         assert any(p['position'] != origins[p['id']] for p in state['players'])
         assert any(p['speed'] > 1 for p in state['players'])
         assert all(abs(p['speed']) <= 65 / 3.6 + .01 for p in state['players']), 'Authoritative speed cap'

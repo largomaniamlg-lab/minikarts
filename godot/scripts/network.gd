@@ -16,9 +16,17 @@ var ping_pending := -1.0
 var ping_serial := 0
 
 const Catalog = preload("res://scripts/driver_catalog.gd")
+const Progress = preload("res://scripts/race_progress.gd")
+const Tournament = preload("res://scripts/tournament.gd")
+const Circuits = preload("res://scripts/circuit_catalog.gd")
 const Settings = preload("res://scripts/race_settings.gd")
 const LIMIT = Settings.CAPACITY
 var friends_button: Button
+var selected_track := 0
+var selected_mode := "single"
+var render_track := -1
+var podium: Control
+var info_scroll: ScrollContainer
 var selected_laps := 3
 var selected_bots := 3
 const CHECKPOINTS := [Vector3(0, 0, 30), Vector3(-30, 0, 0), Vector3(0, 0, -30), Vector3(30, 0, 0)]
@@ -242,10 +250,10 @@ func reject(id: int, message: String) -> void:
 func room_directory() -> Array:
 	var directory := []
 	for room in rooms.values():
-		if room.phase != "lobby" or room.players.size() >= LIMIT or room.players.is_empty():
+		if room.phase != "lobby" or room.players.size() >= LIMIT or room.players.is_empty() or (room.get("mode","single")=="tournament" and room.tournament.started):
 			continue
 		var host: Dictionary = room.players[room.host]
-		directory.append({"code": room.code, "host": str(host.name).replace("\n", " ").replace("\r", " "), "players": room.players.size(), "capacity": LIMIT, "laps": room.laps})
+		directory.append({"code": room.code, "host": str(host.name).replace("\n", " ").replace("\r", " "), "players": room.players.size(), "capacity": LIMIT, "laps": room.laps,"track":room.track.layout_id,"mode":room.get("mode","single")})
 	directory.sort_custom(func(a: Dictionary, b: Dictionary): return str(a.code) < str(b.code))
 	return directory
 
@@ -277,14 +285,16 @@ func server_message(id: int, message: Dictionary) -> void:
 			var stage := Node3D.new()
 			world.add_child(stage)
 			var track = preload("res://scenes/track.tscn").instantiate()
+			var mode := "tournament" if message.get("mode", "single")=="tournament" else "single"
+			track.layout_id=0 if mode=="tournament" else Circuits.valid(message.get("track",0))
 			stage.add_child(track)
-			rooms[code] = {"code": code, "host": id, "world": world, "stage": stage, "track": track, "players": {}, "phase": "lobby", "timer": 0.0, "elapsed": 0.0, "results": [], "first_finish": -1.0, "laps": Settings.valid_laps(message.get("laps", 3))}
+			rooms[code] = {"code": code, "host": id, "world": world, "stage": stage, "track": track, "players": {}, "phase": "lobby", "timer": 0.0, "elapsed": 0.0, "results": [], "first_finish": -1.0, "mode":mode,"tournament":Tournament.new(),"race_laps":Settings.valid_laps(message.get("laps",3)),"laps":3 if mode=="tournament" else Settings.valid_laps(message.get("laps", 3))}
 		if not rooms.has(code):
 			reject(id, "No existe esa sala. Comprueba el código; el creador debe mantener el juego abierto.")
 			return
 		var room: Dictionary = rooms[code]
-		if room.phase != "lobby":
-			reject(id, "La carrera ya ha empezado. Espera a que el creador vuelva a la sala.")
+		if room.phase != "lobby" or (room.get("mode","single")=="tournament" and room.tournament.started):
+			reject(id, "La carrera o torneo ya ha empezado. Espera a que el creador vuelva a la sala.")
 			return
 		if room.players.size() >= LIMIT:
 			reject(id, "Sala llena: ya hay dieciséis jugadores.")
@@ -296,7 +306,7 @@ func server_message(id: int, message: Dictionary) -> void:
 		while grid_slot in occupied:
 			grid_slot += 1
 		kart.kart_color = COLORS[grid_slot]
-		kart.transform = Settings.grid_transform(grid_slot)
+		kart.transform = room.track.grid_transform(grid_slot)
 		room.stage.add_child(kart)
 		kart.enabled = false
 		var name_text := str(message.get("name", "Piloto")).strip_edges().left(20)
@@ -305,7 +315,7 @@ func server_message(id: int, message: Dictionary) -> void:
 		var requested_driver = message.get("driver", 0)
 		var driver_id := clampi(int(requested_driver), 0, Catalog.NAMES.size() - 1) if (requested_driver is int or requested_driver is float) and is_finite(float(requested_driver)) else 0
 		kart.get_node("Driver").set_face(driver_id)
-		room.players[id] = {"grid_slot": grid_slot, "kart": kart, "name": name_text, "driver": driver_id, "ready": false, "lap": 0, "checkpoint": 0, "prev_z": -3.0, "input_time": clock, "finished": false, "spawn": kart.transform}
+		room.players[id] = {"grid_slot": grid_slot, "kart": kart, "name": name_text, "driver": driver_id, "ready": false, "lap": 0, "checkpoint": 0, "prev_z": -3.0, "input_time": clock, "finished": false, "spawn": kart.transform,"best_lap":INF,"lap_start":0.0}
 		connection.room = code
 		send(connection.socket, {"type": "welcome", "id": id, "code": code})
 		return
@@ -328,6 +338,13 @@ func server_message(id: int, message: Dictionary) -> void:
 				if not participant.ready:
 					reject(id, "Todos deben marcar Listo.")
 					return
+			if room.get("mode","single")=="tournament" and not room.tournament.started:
+				var entries := []
+				for participant_id in room.players:
+					var participant: Dictionary = room.players[participant_id]
+					entries.append({"id":participant_id,"name":participant.name,"driver":participant.driver})
+				room.tournament.start(entries,room.race_laps)
+				reset_room(room)
 			room.phase = "countdown"
 			room.timer = 3.0
 	elif kind == "input" and message.get("controls") is Dictionary:
@@ -343,7 +360,7 @@ func server_message(id: int, message: Dictionary) -> void:
 			player.kart.reset_to(player.kart.spawn_transform)
 			player.kart.protection_time = shield
 			player.kart.hit_time = stun
-			player.prev_z = player.kart.position.z
+			player.prev_z = room.track.finish_side(player.kart.position)
 
 func new_code() -> String:
 	var alphabet := "ABCDEFGHJKLMNPQRSTUVWXYZ23456789"
@@ -376,6 +393,11 @@ func remove_peer(id: int) -> void:
 	peers.erase(id)
 
 func reset_room(room: Dictionary) -> void:
+	if room.get("mode","single")=="tournament":
+		if room.tournament.completed and not room.tournament.next():
+			room.tournament=Tournament.new()
+		room.laps=room.tournament.laps()
+		room.track.configure(room.tournament.stage)
 	room.phase = "lobby"
 	room.results = []
 	room.elapsed = 0.0
@@ -384,7 +406,14 @@ func reset_room(room: Dictionary) -> void:
 		if child.is_in_group("projectiles"):
 			child.queue_free()
 	room.track.reset_obstacles()
-	for player in room.players.values():
+	for id in room.players:
+		var player: Dictionary = room.players[id]
+		if room.get("mode","single")=="tournament":
+			var rank: int=room.tournament.grid.find(id)
+			player.grid_slot=rank if rank>=0 else room.players.keys().find(id)
+			player.spawn=room.track.grid_transform(player.grid_slot)
+		player.best_lap=INF
+		player.lap_start=0.0
 		player.kart.reset_to(player.spawn)
 		player.kart.spawn_transform = player.spawn
 		player.kart.enabled = false
@@ -392,7 +421,7 @@ func reset_room(room: Dictionary) -> void:
 		player.ready = false
 		player.lap = 0
 		player.checkpoint = 0
-		player.prev_z = -3.0
+		player.prev_z = room.track.finish_side(player.spawn.origin)
 		player.finished = false
 
 func tick_room(room: Dictionary, delta: float) -> void:
@@ -414,38 +443,25 @@ func tick_room(room: Dictionary, delta: float) -> void:
 		all_finished = false
 		if clock - player.input_time > 1.5:
 			kart.controls = {"brake": 1.0}
-		if kart.position.y < -4.0:
-			kart.reset_to(kart.spawn_transform)
-			player.prev_z = kart.position.z
-		var crossed: bool = player.prev_z < 0 and kart.position.z >= 0 and kart.position.x > 21 and kart.position.x < 39
-		var point: Vector3 = CHECKPOINTS[player.checkpoint]
-		var flat := Vector3(kart.position.x, 0, kart.position.z)
-		if (flat.distance_to(point) < 11.0 if player.checkpoint < 3 else crossed):
-			kart.spawn_transform = Transform3D(Basis.looking_at(Vector3(-point.z, 0, point.x).normalized()), point + Vector3.UP * 0.7)
-			player.checkpoint += 1
-			if player.checkpoint == 4:
-				player.checkpoint = 0
-				player.lap += 1
-				if player.lap == room.laps:
-					player.finished = true
-					kart.enabled = false
-					room.results.append({"id": id, "name": player.name, "time": room.elapsed})
-					if room.first_finish < 0:
-						room.first_finish = room.elapsed
-		player.prev_z = kart.position.z
-	if all_finished or room.elapsed >= 600 or (room.first_finish >= 0 and room.elapsed - room.first_finish >= 60):
+		if Progress.advance(room.track,player,room.elapsed,room.laps):
+			room.results.append({"id":id,"name":player.name,"time":room.elapsed,"best_lap":player.best_lap})
+			if room.first_finish<0: room.first_finish=room.elapsed
+	if all_finished or room.elapsed >= (600 if room.track.layout_id==0 else maxi(600,room.laps*150+120)) or (room.first_finish >= 0 and room.elapsed - room.first_finish >= (60 if room.track.layout_id==0 else 120)):
 		room.phase = "results"
 		for id in room.players:
 			var player: Dictionary = room.players[id]
 			player.kart.enabled = false
 			if not player.finished:
-				room.results.append({"id": id, "name": player.name, "time": -1})
+				room.results.append({"id": id, "name": player.name, "time": -1,"best_lap":player.get("best_lap",-1) if is_finite(float(player.get("best_lap",INF))) else -1})
+
+		if room.get("mode","single")=="tournament": room.results=room.tournament.finish(room.results)
 
 func vector(v: Vector3) -> Array:
 	return Wire.vector(v)
 
 func room_state(room: Dictionary) -> Dictionary:
-	room.results.sort_custom(func(a, b): return a.time >= 0 and (b.time < 0 or a.time < b.time))
+	if room.get("mode","single")!="tournament":
+		room.results.sort_custom(func(a, b): return a.time >= 0 and (b.time < 0 or a.time < b.time))
 	var racers := []
 	for id in room.players:
 		var player: Dictionary = room.players[id]
@@ -459,7 +475,10 @@ func room_state(room: Dictionary) -> Dictionary:
 	for child in room.track.get_children():
 		if child.is_in_group("destructible"):
 			boxes.append(vector(child.position))
-	return {"type": "state", "time": Wire.number(clock, 0.001), "code": room.code, "host": room.host, "phase": room.phase, "laps": room.laps, "countdown": maxi(0, ceili(room.timer)), "elapsed": Wire.number(room.elapsed, 0.001), "players": racers, "shots": shots, "boxes": boxes, "neutral": vector(room.track.get_node("NeutralSleeper").position), "results": room.results}
+	var tour_summary: Dictionary={"enabled":false}
+	if room.get("mode","single")=="tournament":
+		tour_summary=room.tournament.summary() if room.phase in ["lobby","results"] else {"enabled":true,"stage":room.tournament.stage,"finished":false}
+	return {"type": "state", "time": Wire.number(clock, 0.001), "code": room.code, "host": room.host, "phase": room.phase, "laps": room.laps, "countdown": maxi(0, ceili(room.timer)), "elapsed": Wire.number(room.elapsed, 0.001), "players": racers, "shots": shots, "boxes": boxes, "neutral": vector(room.track.get_node("NeutralSleeper").position), "results": room.results,"track":room.track.layout_id,"tournament":tour_summary}
 
 func as_vector(value: Array) -> Vector3:
 	return Vector3(value[0], value[1], value[2])
@@ -478,6 +497,10 @@ func update_game(game: Node3D, delta: float) -> void:
 				child.queue_free()
 	if snapshot.phase == "lobby" and displayed_phase == "results":
 		game.get_node("Track").reset_obstacles()
+	if render_track!=int(snapshot.get("track",0)):
+		render_track=int(snapshot.get("track",0))
+		game.get_node("Track").configure(render_track)
+		game.hud.set_circuit(render_track,int(snapshot.tournament.stage) if snapshot.get("tournament",{}).get("enabled",false) else -1)
 	game.kart.set_physics_process(false)
 	game.kart.physics_interpolation_mode = Node.PHYSICS_INTERPOLATION_MODE_OFF
 	if snapshot.has("neutral"):
@@ -605,13 +628,19 @@ func make_menu() -> void:
 	background.set_corner_radius_all(10)
 	panel.add_theme_stylebox_override("panel", background)
 	menu.add_child(panel)
+	info_scroll=ScrollContainer.new()
+	info_scroll.position=Vector2(20,16)
+	info_scroll.size=Vector2(680,66)
+	info_scroll.horizontal_scroll_mode=ScrollContainer.SCROLL_MODE_DISABLED
+	panel.add_child(info_scroll)
 	info = Label.new()
-	info.position = Vector2(20, 16)
+	info.custom_minimum_size.x=650
+	info.size_flags_horizontal=Control.SIZE_EXPAND_FILL
 	info.size = Vector2(680, 66)
 	info.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 	info.add_theme_font_size_override("font_size", 21)
 	info.text = "Salas online · hasta dieciséis pilotos"
-	panel.add_child(info)
+	info_scroll.add_child(info)
 	address = LineEdit.new()
 	address.text = OS.get_environment("MULTIPLAYER_SERVER_URL")
 	if OS.has_feature("web"):
@@ -699,7 +728,7 @@ func show_lobby_mode(joined: bool) -> void:
 		return
 	browse_controls.visible = not joined
 	waiting_controls.visible = joined
-	info.size.y = 240 if joined else 66
+	info_scroll.size.y = 240 if joined else 66
 
 func render_room_directory() -> void:
 	for key in lobby_buttons.keys():
@@ -717,7 +746,7 @@ func render_room_directory() -> void:
 		room_list.add_child(label)
 	for room in available_rooms:
 		var button := Button.new()
-		button.text = "Entrar · %s · %d/%d · %d vueltas" % [room.host, room.players, room.capacity, room.get("laps", 3)]
+		button.text = "Entrar · %s · %d/%d · %s" % [room.host, room.players, room.capacity, "Torneo" if room.get("mode","single")=="tournament" else Circuits.NAMES[int(room.get("track",0))]]
 		button.custom_minimum_size = Vector2(650, 52)
 		button.add_theme_font_size_override("font_size", 22)
 		room_list.add_child(button)
@@ -806,7 +835,7 @@ func send_lobby_request(kind: String) -> void:
 	if kind != "list":
 		room_request_pending = true
 		room_request_deadline = clock + 10.0
-	send(socket, {"type": kind, "code": normalize_room_code(code_input.text), "name": nickname.text, "driver": selected_driver, "laps": selected_laps})
+	send(socket, {"type": kind, "code": normalize_room_code(code_input.text), "name": nickname.text, "driver": selected_driver, "laps": selected_laps,"track":selected_track,"mode":selected_mode})
 
 func update_menu() -> void:
 	driver_button.disabled = playing
@@ -827,11 +856,35 @@ func update_menu() -> void:
 			var result: Dictionary = snapshot.results[i]
 			lines.append("%d. %s · %s" % [i + 1, result.name, "%.2f s" % result.time if result.time >= 0 else "Sin terminar"])
 		menu.get_node("Panel").show()
+	var tour: Dictionary = snapshot.get("tournament",{"enabled":false})
+	if tour.enabled:
+		lines.insert(0,"CLASIFICACIÓN · mejor de 3 vueltas" if tour.stage==0 else "TORNEO · carrera %d/4 · %s" % [tour.stage,Circuits.NAMES[int(snapshot.get("track",0))]])
+		if snapshot.phase=="results":
+			if tour.stage==0:
+				lines=["PARRILLA · mejor vuelta de clasificación"]
+				for i in range(snapshot.results.size()):
+					var result: Dictionary = snapshot.results[i]
+					lines.append("%d. %s · %s" % [i+1,result.name,"%.2f s" % result.get("best_lap",-1) if result.get("best_lap",-1)>=0 else "Sin vuelta válida"])
+			else:
+				lines=["TORNEO · puntos acumulados"]
+				for i in range(tour.standings.size()): lines.append("%d. %s · %d puntos" % [i+1,tour.standings[i].name,tour.standings[i].points])
+		if tour.get("finished",false) and podium==null:
+			podium=preload("res://scripts/podium.gd").new()
+			podium.position=Vector2(20,70); podium.size=Vector2(680,265)
+			menu.get_node("Panel").add_child(podium)
+			podium.present(tour.standings)
+			info_scroll.hide()
+	elif is_instance_valid(podium):
+		podium.queue_free(); podium=null; info_scroll.show()
+	if is_instance_valid(podium) and not tour.get("finished",false):
+		podium.queue_free(); podium=null; info_scroll.show()
 	if clock < status_until:
 		lines.append(status)
 	info.text = "\n".join(lines)
-	start_button.disabled = int(snapshot.host) != player_id
+	start_button.disabled = int(snapshot.host) != player_id or snapshot.phase not in ["lobby","results"]
 	start_button.text = "Volver a la sala" if snapshot.phase == "results" else "Iniciar carrera"
+	if tour.enabled and snapshot.phase=="results": start_button.text="Nuevo torneo" if tour.get("finished",false) else "Continuar torneo"
+	ready_button.visible = snapshot.phase!="results"
 	ready_button.disabled = snapshot.phase != "lobby"
 	displayed_phase = snapshot.phase
 
@@ -844,6 +897,10 @@ func leave_room() -> void:
 		socket.close()
 	socket = null
 	playing = false
+	info_scroll.show(); ready_button.show()
+	render_track=-1
+	if is_instance_valid(podium): podium.queue_free()
+	podium=null
 	snapshot.clear()
 	motion.clear()
 	previous_inputs.clear()

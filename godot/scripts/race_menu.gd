@@ -3,6 +3,11 @@ extends CanvasLayer
 const Driver = preload("res://scripts/driver.gd")
 const Catalog = preload("res://scripts/driver_catalog.gd")
 const NAMES = Catalog.NAMES
+var circuit_choice: OptionButton
+var mode_choice: OptionButton
+var race_button: Button
+var continuation_button: Button
+var podium: Control
 var lap_choice: OptionButton
 var bot_choice: OptionButton
 var page := 0
@@ -26,6 +31,22 @@ func _ready() -> void:
 	shade.color = Color(0.04, 0.08, 0.12, 0.94)
 	shade.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
 	root.add_child(shade)
+	circuit_choice=OptionButton.new()
+	circuit_choice.position=Vector2(260,12); circuit_choice.size=Vector2(470,38)
+	circuit_choice.add_theme_font_size_override("font_size",20)
+	for id in range(5): circuit_choice.add_item(preload("res://scripts/circuit_catalog.gd").NAMES[id],id)
+	circuit_choice.item_selected.connect(func(index): Network.selected_track=index)
+	root.add_child(circuit_choice)
+	mode_choice=OptionButton.new()
+	mode_choice.position=Vector2(750,12); mode_choice.size=Vector2(270,38)
+	mode_choice.add_theme_font_size_override("font_size",20)
+	mode_choice.add_item("Carrera suelta"); mode_choice.add_item("Torneo · 4 carreras")
+	mode_choice.item_selected.connect(func(index):
+		Network.selected_mode="single" if index==0 else "tournament"
+		circuit_choice.disabled=index==1
+		status.text="Clasificación: 3 vueltas en el original. Después, 4 carreras con las vueltas elegidas." if index==1 else "Elige circuito, piloto y vueltas."
+	)
+	root.add_child(mode_choice)
 	title = label("ELIGE TU PILOTO", Vector2(260, 60), Vector2(760, 50), 32)
 	for index in range(NAMES.size()):
 		var card := button(NAMES[index], Vector2(260 + (index % 4) * 195, 125), Vector2(175, 205))
@@ -66,7 +87,14 @@ func _ready() -> void:
 		bot_choice.add_item("IA · %d rivales" % count, count)
 	bot_choice.item_selected.connect(func(index): Network.selected_bots = bot_choice.get_item_id(index))
 	root.add_child(bot_choice)
-	button("CARRERA CONTRA LA IA", Vector2(260, 405), Vector2(760, 55)).pressed.connect(game.start_offline)
+	race_button=button("CARRERA CONTRA LA IA", Vector2(260,405),Vector2(760,55))
+	race_button.pressed.connect(game.start_offline)
+	continuation_button=button("CONTINUAR TORNEO",Vector2(260,405),Vector2(760,55))
+	continuation_button.pressed.connect(func():
+		if game.offline_race.tournament.stage==4: open()
+		else: game.offline_race.continue_tournament()
+	)
+	continuation_button.hide()
 	online = button("ONLINE · CON AMIGOS", Vector2(260, 475), Vector2(760, 60))
 	online.pressed.connect(func():
 		game.prepare_online()
@@ -75,6 +103,7 @@ func _ready() -> void:
 	button("ENTRENAR A SOLAS", Vector2(260, 545), Vector2(370, 55)).pressed.connect(game.start_solo)
 	button("VOLVER A LA CARRERA", Vector2(650, 545), Vector2(370, 55)).pressed.connect(resume)
 	status = label("", Vector2(260, 610), Vector2(760, 65), 21)
+	status.autowrap_mode=TextServer.AUTOWRAP_WORD_SMART
 	result_text = label("", Vector2(260, 110), Vector2(760, 285), 18)
 	result_text.hide()
 	select(Network.selected_driver)
@@ -101,6 +130,8 @@ func label(text: String, position: Vector2, size: Vector2, font: int) -> Label:
 
 func select(index: int) -> void:
 	Network.selected_driver = index
+	if is_instance_valid(game.offline_race) and game.offline_race.tournament!=null:
+		game.offline_race.tournament.table[0].driver=index
 	game.kart.get_node("Driver").set_face(index)
 	for i in range(cards.size()):
 		cards[i].set_pressed_no_signal(i == index)
@@ -109,6 +140,12 @@ func open() -> void:
 	if Network.playing:
 		return
 	show()
+	if is_instance_valid(podium): podium.queue_free()
+	podium=null
+	circuit_choice.show(); mode_choice.show(); race_button.show(); continuation_button.hide()
+	circuit_choice.select(Network.selected_track)
+	mode_choice.select(1 if Network.selected_mode=="tournament" else 0)
+	circuit_choice.disabled=Network.selected_mode=="tournament"
 	game.hud.hide()
 	game.kart.enabled = false
 	game.kart.set_physics_process(false)
@@ -149,6 +186,25 @@ func show_results(results: Array) -> void:
 	lap_choice.hide()
 	bot_choice.hide()
 	result_text.show()
+	circuit_choice.hide(); mode_choice.hide()
+	if game.offline_race.tournament!=null:
+		var tournament=game.offline_race.tournament
+		race_button.hide(); continuation_button.show()
+		if tournament.stage==0:
+			title.text="PARRILLA · MEJOR VUELTA DE CLASIFICACIÓN"
+			result_text.text=""
+			for i in range(results.size()): result_text.text+="%d. %s · %s\n" % [i+1,results[i].name,"%.2f s" % results[i].best_lap if results[i].best_lap>=0 else "Sin vuelta válida"]
+		else:
+			title.text="TORNEO · CARRERA %d/4" % tournament.stage
+			result_text.text=""
+			var standings: Array=tournament.standings()
+			for i in range(standings.size()): result_text.text+="%d. %s · %d puntos\n" % [i+1,standings[i].name,standings[i].points]
+			if tournament.stage==4:
+				result_text.hide()
+				podium=preload("res://scripts/podium.gd").new()
+				podium.position=Vector2(260,110); podium.size=Vector2(760,285)
+				root.add_child(podium); podium.present(standings)
+		continuation_button.text="VOLVER AL MENÚ" if tournament.stage==4 else "CONTINUAR TORNEO"
 
 func change_page(direction: int) -> void:
 	page = clampi(page + direction, 0, (NAMES.size() - 1) / 4)

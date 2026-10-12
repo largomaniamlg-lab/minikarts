@@ -1,5 +1,5 @@
 """Render sixteen racers in Chromium: one browser and fifteen WebSocket peers."""
-import asyncio,functools,http.server,threading,json,websockets,sys
+import asyncio,functools,http.server,threading,json,websockets,sys,os
 from pathlib import Path
 from playwright.async_api import async_playwright
 async def receive(ws,kind):
@@ -21,7 +21,7 @@ async def main():
  try:
   for i in range(15):
    ws=await websockets.connect('ws://127.0.0.1:8080',max_queue=None,close_timeout=1);clients.append(ws)
-   await send(ws,type='create' if i==0 else 'join',code='' if i==0 else code,name=f'Prueba {i+1}',driver=i, laps=6)
+   await send(ws,type='create' if i==0 else 'join',code='' if i==0 else code,name=f'Prueba {i+1}',driver=i, laps=6, track=int(os.environ.get('MINIKARTS_TEST_TRACK','0')))
    code=(await receive(ws,'welcome'))['code']
   async with async_playwright() as p:
    browser=await p.chromium.launch(executable_path='/usr/bin/chromium',headless=True,args=['--no-sandbox','--use-angle=swiftshader','--enable-unsafe-swiftshader'])

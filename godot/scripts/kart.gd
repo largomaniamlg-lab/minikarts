@@ -21,6 +21,11 @@ var hit_time: float = 0.0
 var protection_time: float = 0.0
 var _jump_held: bool = false
 var _impact_cooldown := 0.0
+var _ramp_launch := 0.0
+
+func launch_from_ramp(lift: float) -> void:
+	_ramp_launch = lift
+
 
 func strength(action: String) -> float:
 	return float(controls.get(action, 0.0)) if network_controlled else Input.get_action_strength(action)
@@ -103,6 +108,10 @@ func _physics_process(delta: float) -> void:
 		velocity.y = -0.5
 	else:
 		velocity.y = maxf(velocity.y - 24.0 * delta, -40.0)
+	if _ramp_launch > 0:
+		velocity.y = maxf(velocity.y,_ramp_launch)
+		_ramp_launch = 0.0
+		Sound.play_effect("jump",global_position)
 	var airborne := not is_on_floor()
 	move_and_slide()
 	if airborne and is_on_floor():
@@ -136,6 +145,7 @@ func reset_to(new_transform: Transform3D) -> void:
 	hit_time = 0.0
 	protection_time = 0.0
 	_jump_held = false
+	_ramp_launch = 0.0
 	reset_physics_interpolation()
 	if is_instance_valid(_camera):
 		_camera.call("reset_follow")

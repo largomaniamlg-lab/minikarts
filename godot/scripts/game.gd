@@ -23,7 +23,7 @@ func _ready() -> void:
 		return
 	Sound.game = self
 	initial_transform = kart.transform
-	prev_z = kart.position.z
+	prev_z = $Track.finish_side(kart.position)
 	var sun := DirectionalLight3D.new()
 	sun.rotation_degrees = Vector3(-55, -25, 0)
 	sun.light_energy = 1.15
@@ -64,7 +64,7 @@ func start_offline() -> void:
 		offline_race.game = self
 		add_child(offline_race)
 	else:
-		offline_race.reset()
+		offline_race.begin()
 	race_menu.resume()
 
 func clear_offline() -> void:
@@ -75,6 +75,10 @@ func clear_offline() -> void:
 func start_solo() -> void:
 	lap_target = Network.selected_laps
 	clear_offline()
+	$Track.configure(Network.selected_track)
+	hud.set_circuit(Network.selected_track)
+	initial_transform=$Track.grid_transform(0)
+	checkpoints=$Track.gates()
 	reset_race()
 	race_menu.resume()
 
@@ -89,7 +93,7 @@ func prepare_online() -> void:
 
 func reset_race() -> void:
 	if is_instance_valid(offline_race):
-		offline_race.reset()
+		offline_race.begin()
 		return
 	for projectile in get_tree().get_nodes_in_group("projectiles"):
 		projectile.queue_free()
@@ -104,14 +108,14 @@ func reset_race() -> void:
 	notice_time = 0.0
 	kart.set("spawn_transform", initial_transform)
 	kart.call("reset_to", initial_transform)
-	prev_z = kart.position.z
+	prev_z = $Track.finish_side(kart.position)
 
 func recover() -> void:
 	if finished:
 		reset_race()
 		return
 	kart.call("reset_to", kart.get("spawn_transform"))
-	prev_z = kart.position.z
+	prev_z = $Track.finish_side(kart.position)
 	notice_time = 2.0
 
 func _process(delta: float) -> void:
@@ -134,15 +138,15 @@ func _process(delta: float) -> void:
 	if started and not finished:
 		elapsed += delta
 		var flat := Vector3(kart.position.x, 0, kart.position.z)
-		var crossed := prev_z < 0.0 and kart.position.z >= 0.0 and kart.position.x > 21.0 and kart.position.x < 39.0
-		var reached := flat.distance_to(checkpoints[checkpoint]) < 11.0 if checkpoint < 3 else crossed
+		var crossed: bool = $Track.crossed_finish(prev_z,kart.position)
+		var reached := flat.distance_to(checkpoints[checkpoint]) < 11.0 if checkpoint < checkpoints.size()-1 else crossed
 		if reached:
 			var point: Vector3 = checkpoints[checkpoint]
 			var tangent := Vector3(-point.z, 0, point.x).normalized()
-			var respawn := Transform3D(Basis.looking_at(tangent), point + Vector3.UP * 0.7)
+			var respawn: Transform3D = $Track.gate_spawn(checkpoint)
 			kart.set("spawn_transform", respawn)
 			checkpoint += 1
-			if checkpoint == 4:
+			if checkpoint == checkpoints.size():
 				checkpoint = 0
 				lap += 1
 				best_lap = minf(best_lap, elapsed - lap_start)
@@ -151,5 +155,5 @@ func _process(delta: float) -> void:
 					finished = true
 					kart.set("enabled", false)
 	notice_time = maxf(0.0, notice_time - delta)
-	prev_z = kart.position.z
+	prev_z = $Track.finish_side(kart.position)
 	hud.call("update_display", mini(lap + 1, lap_target), elapsed, best_lap, absf(float(kart.get("speed"))) * 3.6, finished, started, notice_time > 0.0, lap_target)
