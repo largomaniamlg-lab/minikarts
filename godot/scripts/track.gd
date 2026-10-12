@@ -122,7 +122,7 @@ func reset_obstacles() -> void:
 
 func material(color: Color) -> Material:
 	var mat=ToonStyle.material(color)
-	mat.set_shader_parameter("surface_grain",0.2)
+	mat.set_shader_parameter("surface_grain",0.045)
 	mat.set_shader_parameter("finish_roughness",0.9)
 	return mat
 
