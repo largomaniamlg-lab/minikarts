@@ -32,7 +32,7 @@ func _ready() -> void:
 	capture_dir=ProjectSettings.globalize_path("res://").path_join("../docs/screenshots")
 	for argument in OS.get_cmdline_user_args():
 		if argument.begins_with("--capture-dir="): capture_dir=argument.trim_prefix("--capture-dir=")
-	DirAccess.make_dir_recursive_absolute(capture_dir)
+	if capture: DirAccess.make_dir_recursive_absolute(capture_dir)
 	if "--toon-low" in OS.get_cmdline_user_args(): Style.set_low(true)
 	for node in get_node("StaticTrack").find_children("*","GeometryInstance3D",true,false):
 		if node.material_override is ShaderMaterial and node.material_override.next_pass!=null: Style.register_transient(node.material_override)

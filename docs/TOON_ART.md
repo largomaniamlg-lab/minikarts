@@ -38,3 +38,9 @@ Los catálogos Kenney/Quaternius no fueron accesibles por la política de red; n
 ![Persecución](screenshots/toon-persecucion.png)
 ![Aérea](screenshots/toon-aerea.png)
 ![Frontal](screenshots/toon-frontal.png)
+
+## Estado de revisión
+
+La rama está subida como `art/toon-demo`. No se ha hecho merge ni actualizado el enlace publicado. La creación automática del PR está bloqueada por un 403 al conectar con `api.github.com/graphql`; título y descripción están preparados en `docs/TOON_PR.md`. Se guardó un borrador del entorno que añade `api.github.com`, conservando el resto de dominios. Debe publicarse la configuración del entorno antes de reintentar; no hace falta aportar otra clave por ese bloqueo de red.
+
+Los presets exportan también `assets/fonts/*OFL.txt` para acompañar las fuentes en los paquetes. En una copia limpia, espera a que Godot termine de importar las texturas antes de pulsar F6.
