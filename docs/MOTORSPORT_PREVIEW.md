@@ -45,3 +45,12 @@ promete 60 FPS. Renderizar bien en software valida funcionalidad, no rendimiento
 
 La publicación habitual sigue en Web29. La prueba separada permite comparar
 antes de reemplazarla, respetando la condición del usuario sobre fidelidad.
+
+Resultado final de navegador: cinco contactos independientes, tres tamaños de
+menú, sala real y enlace compartido, cuatro circuitos y clasificación: PASS.
+Arranque de la exportación final y comprobación de assets: PASS.
+Las capturas de carrera corresponden al pase anterior al último ajuste de grano:
+la prueba publicada reduce ese grano de 0.2 a 0.045, manteniendo los mismos modelos.
+
+Prueba pública: https://largomaniamlg-lab.github.io/minikarts/prueba-motorsport.html
+Código en revisión: https://github.com/largomaniamlg-lab/minikarts/pull/2
