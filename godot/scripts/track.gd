@@ -120,11 +120,8 @@ func reset_obstacles() -> void:
 			child.queue_free()
 	_build_obstacles()
 
-func material(color: Color) -> StandardMaterial3D:
-	var result := StandardMaterial3D.new()
-	result.albedo_color = color
-	result.roughness = 0.85
-	return result
+func material(color: Color) -> Material:
+	return ToonStyle.material(color)
 
 func box(label: String, size: Vector3, position: Vector3, surface: Material, solid: bool = false) -> Node3D:
 	var root: Node3D = StaticBody3D.new() if solid else Node3D.new()
@@ -209,6 +206,7 @@ func configure(id: int) -> void:
 	route.clear(); distances.clear(); boost_sites.clear(); ramp_sites.clear(); gaps.clear(); gate_points.clear()
 	_ready()
 	Scenery.sky(self,layout_id)
+	if not Network.server_mode: ToonStyle.batch_static(self)
 
 func _build_new() -> void:
 	route = Circuits.points(layout_id)

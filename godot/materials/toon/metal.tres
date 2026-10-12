@@ -1,0 +1,15 @@
+[gd_resource type="ShaderMaterial" load_steps=5 format=3]
+
+[ext_resource type="Shader" path="res://shaders/toon.gdshader" id="1"]
+[ext_resource type="Shader" path="res://shaders/outline.gdshader" id="3"]
+[ext_resource type="Texture2D" path="res://materials/toon/ramp.png" id="2"]
+
+[sub_resource type="ShaderMaterial" id="Outline"]
+shader = ExtResource("3")
+shader_parameter/thickness = 0.05
+
+[resource]
+shader = ExtResource("1")
+shader_parameter/albedo = Color(0.7254901960784313, 0.803921568627451, 0.8901960784313725, 1)
+shader_parameter/ramp = ExtResource("2")
+next_pass = SubResource("Outline")

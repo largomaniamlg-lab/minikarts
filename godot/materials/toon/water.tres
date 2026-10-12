@@ -1,0 +1,9 @@
+[gd_resource type="ShaderMaterial" load_steps=3 format=3]
+
+[ext_resource type="Shader" path="res://shaders/toon.gdshader" id="1"]
+[ext_resource type="Texture2D" path="res://materials/toon/ramp.png" id="2"]
+
+[resource]
+shader = ExtResource("1")
+shader_parameter/albedo = Color(0.3215686274509804, 0.8901960784313725, 1.0, 1)
+shader_parameter/ramp = ExtResource("2")
