@@ -1,0 +1,16 @@
+Continuamos MiniKarts con presupuesto 0 €, aprendizaje y pruebas entre amigos. Producto: APK Android gratuita descargable + web Safari para iPhone, con crossplay en las mismas salas.
+
+Confirma la ruta real joona y revisa los informes locales. El resumen recibido: no hay kart final; Kenney-oobi provisional 2.000×1.365×0.943m; cinco props y un material perfilados en Godot4.5.1 de escritorio; seis adaptaciones local-assets/codex-optimized; 221SHA coinciden; Claude intacto. No afirmar que esas pruebas demuestran rendimiento de móvil físico.
+
+Lee docs/project/PLAN_ANDROID_IPHONE.md si ya está disponible. Si no, usa estos pasos iniciales:
+1. Revisa estado de fuentes y diferencias entre esta copia, Web29 estable y la prueba Motorsport. No sobrescribas ni publiques.
+2. Godot4.5.1: preparar SDK/JDK/templates gratuitos y APK de prueba firmada. Guardar clave/contraseña fuera del proyecto/Git, con backup del usuario. Habilitar INTERNET. Mantener packageId y versionCode creciente. No contratar tiendas ni usar API de pago.
+3. Fijar endpoint WSS nativo del mismo servidor que web: no depender de variable de entorno de Windows en el APK. Comprobar conexión/salas y compatibilidad de protocolo/versiones sin romper web actual.
+4. Instrumentar FPS/tiempos de fotograma y red por separado. Preparar Ahorro30FPS con ajustes gráficos, manteniendo física y reglas. Medir cap en Android y navegador; no prometer que solo pasar a APK reduce calor.
+5. Añadir controles por dispositivo: sensibilidad, zona muerta, curva y suavizado limitado, presets/reset. Procesar entrada común a predicción y servidor; no cambiar límites físicos por jugador.
+6. Preparar una candidata APK y web compatibles para prueba mixta real: Android APK anfitrión+iPhone Safari invitado y viceversa, carrera15min. Esa prueba necesita que yo y mis amigos usemos nuestros móviles. No simular resultado como pruebareal.
+
+Se autoriza delegar entre agentes disponibles: red/Android, rendimiento, controles y QA. Asigna archivos y evita cambios simultáneos. Si no hay delegación, hazlo secuencial y dilo. Mantén arte nuevo aislado; no esperes al kart final para primera APK.
+Claude está construyendo garaje/Reactor solo en local-assets/claude-architecture y sus informes. No modificar sus carpetas; enviar medidas de kart mediante docs/local/CODEX_PARA_CLAUDE.md. Tras estabilidad, continuar atlas/AO/LOD y muestra real.
+
+Actualiza docs/local/ESTADO_PARA_CHATGPT.md con IDs, completadas/bloqueadas/pendientes, archivos, pruebas y próximos pasos. Muestra un resumen corto para copiar al chat Cloud. Ninguna compra ni publicación por esta instrucción; preparar resultados revisables primero.
