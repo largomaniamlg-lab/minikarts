@@ -536,7 +536,10 @@ func update_game(game: Node3D, delta: float) -> void:
 		kart.position = position if id == player_id or kart.position.distance_to(position) > 6 else kart.position.lerp(position, 1.0 - exp(-20 * delta))
 		var rotation := as_vector(visual.rotation)
 		kart.rotation.y = rotation.y if id == player_id else lerp_angle(kart.rotation.y, rotation.y, 1.0 - exp(-20 * delta))
-		kart._body_visual.material_override.albedo_color = Color(racer.color)
+		if kart._body_visual.material_override is ShaderMaterial:
+			kart._body_visual.material_override.set_shader_parameter("albedo",Color(racer.color))
+		else:
+			kart._body_visual.material_override.albedo_color=Color(racer.color)
 		kart.get_node("Driver").set_face(int(racer.get("driver", 0)))
 		kart.boost_time=float(visual.get("boost",0.0))
 		kart.speed = visual.speed
@@ -625,14 +628,14 @@ func make_menu() -> void:
 	panel.position = Vector2(500, 125)
 	panel.size = Vector2(720, 530)
 	var background := StyleBoxFlat.new()
-	background.bg_color = Color("f7faff")
-	background.set_corner_radius_all(24)
+	background.bg_color = Color("111c28")
+	background.set_corner_radius_all(12)
 	panel.add_theme_stylebox_override("panel", background)
 	panel.theme=preload("res://scripts/race_menu.gd").menu_theme()
 	menu.add_child(panel)
 	var shade:=ColorRect.new()
 	shade.position=Vector2(-500,-125); shade.size=Vector2(1600,900)
-	shade.color=Color("bce7f3")
+	shade.color=Color("09121d")
 	panel.add_child(shade)
 	var layout=func():
 		var viewport_size=get_viewport().get_visible_rect().size

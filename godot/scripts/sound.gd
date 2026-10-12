@@ -110,6 +110,7 @@ func build_controls() -> void:
 	if preload("res://scripts/touch_controls.gd").is_touch_mode():
 		button.hide()
 	panel = VBoxContainer.new()
+	panel.theme=preload("res://scripts/race_menu.gd").menu_theme()
 	panel.position = Vector2(970, 257)
 	panel.custom_minimum_size = Vector2(210, 200)
 	layer.add_child(panel)

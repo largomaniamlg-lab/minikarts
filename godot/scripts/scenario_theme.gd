@@ -5,11 +5,13 @@ const ROAD := [Color("505968"),Color("293c47"),Color("4b5551"),Color("625951"),C
 const ACCENTS := [Color("ed5046"),Color("e7ca45"),Color("65cbb0"),Color("f0a846"),Color("66e8eb")]
 const BARRIERS := [Color("fff4d8"),Color("26353c"),Color("f1dfaf"),Color("f1d5a4"),Color("7967b4")]
 const ICONS := [null,preload("res://assets/scenarios/radiation.svg"),preload("res://assets/scenarios/leaf.svg"),preload("res://assets/scenarios/fuel.svg"),preload("res://assets/scenarios/energy.svg")]
-const SKY := [Color("398cdb"),Color("6f99ad"),Color("369cce"),Color("83a4c4"),Color("162643")]
-const HORIZON := [Color("b5e6fa"),Color("c5e1dc"),Color("b9eaca"),Color("ffe2b1"),Color("635388")]
+const SKY := [Color("398cdb"),Color("22394d"),Color("369cce"),Color("83a4c4"),Color("162643")]
+const HORIZON := [Color("b5e6fa"),Color("66818e"),Color("b9eaca"),Color("ffe2b1"),Color("635388")]
 
 static func surface(color: Color, glow: bool=false) -> Material:
-	return ToonStyle.material(color,true,0.07,glow)
+	var mat=ToonStyle.material(color,false,0.07,glow)
+	mat.set_shader_parameter("finish_roughness",0.48 if glow else 0.75)
+	return mat
 
 static func piece(parent: Node3D, mesh: Mesh, position: Vector3, mat: Material) -> MeshInstance3D:
 	var node:=MeshInstance3D.new()
@@ -91,6 +93,7 @@ static func build(track: Node3D, id: int) -> void:
 	scenery.add_to_group("scenario_decor")
 	track.add_child(scenery)
 	atmosphere(track,scenery,id)
+	preload("res://scripts/scenario_detail.gd").build(track,scenery,id)
 	var concrete=surface(Color("a8bdbe"))
 	var steel=surface(Color("596d7c"))
 	var green=surface(Color("5bee96"),true)

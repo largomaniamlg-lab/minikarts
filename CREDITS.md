@@ -16,3 +16,11 @@ Las fotos, caras, retratos y memes facilitados por el usuario conservan su proce
 ## Motor
 
 Godot 4.5.1, licencia MIT. Documentación y APIs cotejadas con el tag oficial `4.5.1-stable`; referencias en `docs/TOON_API_4_5_1.md`.
+
+## Prueba Motorsport / Reactor
+
+`godot/assets/garage/workshop.png`: ilustración original generada con la herramienta
+image_gen para el fondo del menú. Sin marcas ni fotografías de terceros. No es
+un modelo 3D ni un paquete externo. Los modelos de chasis y decoraciones de esta
+prueba son geometría original construida en Godot; se mantienen los créditos y
+licencias existentes de personajes, música y fuentes.

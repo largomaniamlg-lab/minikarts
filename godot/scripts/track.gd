@@ -121,7 +121,10 @@ func reset_obstacles() -> void:
 	_build_obstacles()
 
 func material(color: Color) -> Material:
-	return ToonStyle.material(color)
+	var mat=ToonStyle.material(color)
+	mat.set_shader_parameter("surface_grain",0.2)
+	mat.set_shader_parameter("finish_roughness",0.9)
+	return mat
 
 func box(label: String, size: Vector3, position: Vector3, surface: Material, solid: bool = false) -> Node3D:
 	var root: Node3D = StaticBody3D.new() if solid else Node3D.new()
