@@ -30,8 +30,13 @@ async def main():
    page.on('console',lambda m:errors.append(m.text) if 'SCRIPT ERROR' in m.text or (m.type=='error' and '404' not in m.text) else None)
    await page.goto(f'http://127.0.0.1:{server.server_port}/game-ten-test.html?test=1')
    await page.locator('#status').wait_for(state='detached',timeout=120000)
-   await page.mouse.click(545,112);await page.wait_for_timeout(200);await page.mouse.click(545,112);await page.wait_for_timeout(200)
-   await page.mouse.click(172,105);await page.mouse.click(320,252)
+   await page.mouse.click(505,185) # Friends
+   await page.mouse.click(455,318);await page.wait_for_timeout(250)
+   for _ in range(2):
+    await page.mouse.click(605,145);await page.wait_for_timeout(200)
+   await page.mouse.click(278,145)
+   for _ in range(2):
+    await page.mouse.click(455,318);await page.wait_for_timeout(250)
    await tap(page,'room_'+code)
    await page.wait_for_function('window.minikartsTest?.rendered_karts===16',timeout=30000)
    await page.screenshot(path='/tmp/minikarts-ten-lobby.png')

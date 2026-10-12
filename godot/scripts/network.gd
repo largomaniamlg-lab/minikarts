@@ -621,13 +621,47 @@ func make_menu() -> void:
 		driver_button.hide()
 	var panel := Panel.new()
 	panel.name = "Panel"
-	panel.position = Vector2(280, 135)
+	panel.position = Vector2(500, 125)
 	panel.size = Vector2(720, 530)
 	var background := StyleBoxFlat.new()
-	background.bg_color = Color(0.08, 0.12, 0.16, 0.97)
-	background.set_corner_radius_all(10)
+	background.bg_color = Color("f7faff")
+	background.set_corner_radius_all(24)
 	panel.add_theme_stylebox_override("panel", background)
+	panel.theme=preload("res://scripts/race_menu.gd").menu_theme()
 	menu.add_child(panel)
+	var shade:=ColorRect.new()
+	shade.position=Vector2(-500,-125); shade.size=Vector2(1600,900)
+	shade.color=Color("bce7f3")
+	panel.add_child(shade)
+	var layout=func():
+		var viewport_size=get_viewport().get_visible_rect().size
+		panel.position=Vector2(500,125)+(viewport_size-Vector2(1280,720))*0.5
+		shade.position=-panel.position
+		shade.size=viewport_size
+	get_viewport().size_changed.connect(layout)
+	layout.call()
+	var card:=Panel.new()
+	card.size=panel.size; card.mouse_filter=Control.MOUSE_FILTER_IGNORE
+	card.add_theme_stylebox_override("panel",background)
+	panel.add_child(card)
+	var garage:=TextureRect.new()
+	garage.name="GaragePortrait"
+	garage.position=Vector2(-435,35); garage.size=Vector2(350,390)
+	garage.expand_mode=TextureRect.EXPAND_IGNORE_SIZE
+	garage.stretch_mode=TextureRect.STRETCH_KEEP_ASPECT_CENTERED
+	garage.mouse_filter=Control.MOUSE_FILTER_IGNORE
+	panel.add_child(garage)
+	var garage_name:=Label.new()
+	garage_name.name="GarageName"
+	garage_name.position=Vector2(-450,440); garage_name.size=Vector2(400,50)
+	garage_name.horizontal_alignment=HORIZONTAL_ALIGNMENT_CENTER
+	garage_name.add_theme_font_size_override("font_size",30)
+	panel.add_child(garage_name)
+	var heading:=Label.new()
+	heading.text="MINIKARTS · SALA DE AMIGOS"
+	heading.position=Vector2(-445,-85); heading.size=Vector2(1100,50)
+	heading.add_theme_font_size_override("font_size",32)
+	panel.add_child(heading)
 	info_scroll=ScrollContainer.new()
 	info_scroll.position=Vector2(20,16)
 	info_scroll.size=Vector2(680,66)
@@ -699,7 +733,14 @@ func make_menu() -> void:
 	waiting_controls = Control.new()
 	waiting_controls.position = Vector2(0, 275)
 	panel.add_child(waiting_controls)
-	ready_button = lobby_button(waiting_controls, "Listo", "ready", Vector2(20, 0), Vector2(680, 48))
+	ready_button = lobby_button(waiting_controls, "ESTOY LISTO", "ready", Vector2(365, 0), Vector2(330, 48))
+	lobby_button(waiting_controls,"COMPARTIR SALA","share",Vector2(20,0),Vector2(330,48)).pressed.connect(func():
+		var link="https://largomaniamlg-lab.github.io/minikarts/prueba-grupo.html?room="+room_code
+		if OS.has_feature("web"):
+			var value=JSON.stringify(link)
+			JavaScriptBridge.eval("(()=>{const url="+value+";const copy=()=>navigator.clipboard ? navigator.clipboard.writeText(url).catch(()=>window.prompt('Copia el enlace de la sala',url)) : window.prompt('Copia el enlace de la sala',url);if(navigator.share)navigator.share({title:'MiniKarts',url}).catch(copy);else copy()})()")
+		else: DisplayServer.clipboard_set(link)
+	)
 	ready_button.pressed.connect(func(): send(socket, {"type": "ready", "ready": true}) if socket != null else null)
 	start_button = lobby_button(waiting_controls, "Iniciar carrera", "start", Vector2(20, 65), Vector2(680, 48))
 	start_button.pressed.connect(func(): send(socket, {"type": "restart" if snapshot.get("phase") == "results" else "start"}) if socket != null else null)
@@ -708,6 +749,12 @@ func make_menu() -> void:
 	render_room_directory()
 	panel.hide()
 	panel.visibility_changed.connect(func():
+		if panel.visible:
+			garage.texture=Catalog.PORTRAITS[selected_driver]
+			garage_name.text=Catalog.NAMES[selected_driver]
+			if nickname.text=="Piloto": nickname.text=Catalog.NAMES[selected_driver]
+		if is_instance_valid(get_tree().current_scene) and get_tree().current_scene.get("hud")!=null:
+			get_tree().current_scene.hud.visible=not panel.visible
 		if panel.visible and not playing:
 			show_lobby_mode(false)
 			refresh_rooms()
@@ -720,6 +767,7 @@ func lobby_button(parent: Node, text: String, key: String, position: Vector2, si
 	button.size = size
 	button.add_theme_font_size_override("font_size", 22)
 	parent.add_child(button)
+	if key in ["create","ready","start"]: preload("res://scripts/race_menu.gd").highlight_button(button)
 	lobby_buttons[key] = button
 	return button
 
@@ -840,12 +888,12 @@ func send_lobby_request(kind: String) -> void:
 func update_menu() -> void:
 	driver_button.disabled = playing
 	var lines := ["Sala %s · %d/%d · %d vueltas" % [room_code, snapshot.players.size(), LIMIT, snapshot.get("laps", 3)]]
-	for index in range(0, snapshot.players.size(), 2):
+	for index in range(0, snapshot.players.size(), 1):
 		var row: Array[String] = []
-		for racer in snapshot.players.slice(index, index + 2):
-			row.append("%s · %s" % [racer.name, "Listo" if racer.ready else "Esperando"])
+		for racer in snapshot.players.slice(index, index + 1):
+			row.append("%s · %s" % [racer.name, "LISTO" if racer.ready else "Esperando"])
 		lines.append("    |    ".join(row))
-	info.add_theme_font_size_override("font_size", 16 if snapshot.phase == "results" else 17)
+	info.add_theme_font_size_override("font_size", 20 if snapshot.phase == "results" else 22)
 	if snapshot.phase == "countdown":
 		lines.append("Salida en %d…" % snapshot.countdown)
 	elif snapshot.phase == "racing" and displayed_phase != "racing":

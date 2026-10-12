@@ -12,14 +12,17 @@ try:
   page.goto(f'http://127.0.0.1:{server.server_port}/game.html?test=1')
   page.locator('#status').wait_for(state='detached',timeout=120000)
   page.wait_for_timeout(800)
+  page.mouse.click(455,318);page.wait_for_timeout(250)
   for i in range(4):
    page.screenshot(path=f'/tmp/minikarts17-selection-{i+1}.png')
-   if i<3:page.mouse.click(545,112);page.wait_for_timeout(250)
-  page.mouse.click(465,105)
-  for x in [220,417]:
-   page.mouse.click(x,185);page.wait_for_timeout(350);page.mouse.click(x,230);page.wait_for_timeout(350)
+   if i<3:page.mouse.click(605,145);page.wait_for_timeout(250)
+  page.mouse.click(545,145)
+  for x in [300,500]:
+   page.mouse.click(x,272);page.wait_for_timeout(200)
+   page.mouse.click(x,330);page.wait_for_timeout(250)
   page.screenshot(path="/tmp/minikarts17-options.png")
-  page.mouse.click(320,216)
+  page.mouse.click(455,318);page.wait_for_timeout(200)
+  page.mouse.click(455,318)
   page.wait_for_timeout(2000)
   page.screenshot(path="/tmp/minikarts17-start.png")
   page.wait_for_function('window.minikartsOfflineTest?.laps===9 && window.minikartsOfflineTest.racers.length===16',timeout=30000)

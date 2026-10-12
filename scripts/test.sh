@@ -33,3 +33,5 @@ PORT=0 "$engine" --headless --path "$repo_dir/godot" --script tests/tournament_t
 "$engine" --headless --fixed-fps 60 --path "$repo_dir/godot" --script tests/circuits_test.gd
 
 "$engine" --headless --path "$repo_dir/godot" --script tests/offline_tournament_test.gd
+
+"$engine" --headless --path "$repo_dir/godot" --script tests/menu_test.gd

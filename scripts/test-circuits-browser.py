@@ -13,9 +13,11 @@ try:
   page.locator('#status').wait_for(state='detached',timeout=120000)
   page.wait_for_timeout(700)
   for track in range(1,5):
-   page.mouse.click(220,15);page.wait_for_timeout(250)
-   page.mouse.click(220,33+13.5*track);page.wait_for_timeout(300)
-   page.mouse.click(320,216)
+   page.mouse.click(455,318);page.wait_for_timeout(250)
+   page.mouse.click(350,242);page.wait_for_timeout(250)
+   page.mouse.click(350,264+17.5*track);page.wait_for_timeout(300)
+   page.mouse.click(455,318);page.wait_for_timeout(200)
+   page.mouse.click(455,318)
    page.wait_for_timeout(1500)
    print("Circuit selection",track,page.evaluate("window.minikartsOfflineTest"),errors,flush=True)
    page.screenshot(path="/tmp/minikarts25-ui-before-race.png")
@@ -24,8 +26,9 @@ try:
    # Open the common menu then pilot/lap selection, without editing game state.
    page.mouse.click(523,20);page.wait_for_timeout(300);page.mouse.click(557,134)
    page.wait_for_function('!window.minikartsHudTest.rects.timing.visible')
-  page.mouse.click(440,15);page.wait_for_timeout(250);page.mouse.click(440,47);page.wait_for_timeout(300)
-  page.mouse.click(320,216)
+  page.mouse.click(505,118);page.wait_for_timeout(200)
+  for _ in range(3):
+   page.mouse.click(455,318);page.wait_for_timeout(250)
   page.wait_for_function('window.minikartsOfflineTest?.tournament.enabled && window.minikartsOfflineTest.track===0 && window.minikartsOfflineTest.laps===3 && window.minikartsOfflineTest.phase==="racing"',timeout=45000)
   page.screenshot(path='/tmp/minikarts25-qualifying.png')
   assert not errors,errors

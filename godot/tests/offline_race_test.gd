@@ -16,6 +16,7 @@ func run() -> void:
 	for driver in range(16):
 		game.race_menu.select(driver)
 		game.race_menu.open()
+		game.race_menu.set_step(1)
 		check(game.kart.get_node("Driver").face_id == driver, "Selection retains driver %d" % driver)
 		check(game.race_menu.cards[driver].visible, "Selected driver is on visible page %d" % driver)
 	game.race_menu.select(3)

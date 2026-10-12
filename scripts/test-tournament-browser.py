@@ -39,9 +39,10 @@ async def main():
    await page.goto(f'http://127.0.0.1:{server.server_port}/game-tournament-test.html?test=1')
    await page.locator('#status').wait_for(state='detached',timeout=120000)
    await page.wait_for_timeout(700)
-   await page.mouse.click(440,15);await page.wait_for_timeout(250)
-   await page.mouse.click(440,47);await page.wait_for_timeout(300)
-   await page.mouse.click(320,252)
+   await page.mouse.click(505,118) # Tournament
+   await page.mouse.click(505,185) # Friends
+   for _ in range(3):
+    await page.mouse.click(455,318);await page.wait_for_timeout(250)
    await tap(page,'create')
    await page.wait_for_function('window.minikartsTest?.state.tournament.enabled && window.minikartsTest.state.phase==="lobby"',timeout=30000)
    code=await page.evaluate('window.minikartsTest.state.code')
