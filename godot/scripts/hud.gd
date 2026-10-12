@@ -1,11 +1,12 @@
 extends CanvasLayer
 
-const INK: Color = Color("33414f")
+const INK: Color = Color("2A1458")
 const WHITE: Color = Color("f2f5f7")
 const RED: Color = Color("e4483c")
-const YELLOW: Color = Color("ffc93c")
+const YELLOW: Color = Color("FFD23F")
 const GREEN: Color = Color("5bbf6a")
 var stats: Label
+var position_badge: Label
 var message: Label
 var speed_number: Label
 var _message_panel: PanelContainer
@@ -25,6 +26,7 @@ var _test_clock := 0.0
 func _ready() -> void:
 	_touch_mode = TouchControls.is_touch_mode()
 	var root := Control.new()
+	root.set_script(load("res://scripts/toon_safe_area.gd"))
 	root.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	add_child(root)
 	root.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
@@ -32,6 +34,10 @@ func _ready() -> void:
 	var timing_row: Container = HBoxContainer.new() if _touch_mode else VBoxContainer.new()
 	timing_row.add_theme_constant_override("separation", 18 if _touch_mode else 4)
 	timing_panel.add_child(timing_row)
+	if _touch_mode:
+		position_badge=_label("1/16",28,YELLOW)
+		position_badge.add_theme_font_override("font",load("res://assets/fonts/Bungee-Regular.ttf"))
+		timing_row.add_child(position_badge)
 	if not _touch_mode:
 		timing_row.add_child(_label("MINIKARTS / CIRCUITO DE JUGUETE", 18, YELLOW))
 	stats = _label("VUELTA 1/3" if _touch_mode else "VUELTA 1 / 3\nTIEMPO 0.00 s    MEJOR --", 20 if _touch_mode else 18, WHITE)
@@ -85,6 +91,13 @@ func _ready() -> void:
 		circuit_panel.add_child(circuit_label)
 		circuit_panel.hide()
 		_build_options(root)
+		var minimap=Control.new()
+		minimap.set_script(load("res://scripts/race_minimap.gd"))
+		minimap.track=get_parent().get_node("Track"); minimap.kart=get_parent().kart
+		root.add_child(minimap)
+		minimap.anchor_top=1; minimap.anchor_bottom=1
+		minimap.offset_left=24; minimap.offset_right=204
+		minimap.offset_top=-400; minimap.offset_bottom=-280
 
 func _panel(root: Control, anchor: Vector2, bounds: Rect2) -> PanelContainer:
 	var panel := PanelContainer.new()
@@ -114,9 +127,10 @@ func _label(text: String, font_size: int, color: Color) -> Label:
 	var label := Label.new()
 	label.text = text
 	label.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	label.add_theme_font_override("font",load("res://assets/fonts/ChakraPetch-Regular.ttf"))
 	label.add_theme_font_size_override("font_size", font_size)
 	label.add_theme_color_override("font_color", color)
-	label.add_theme_color_override("font_outline_color", Color(0.05, 0.07, 0.09, 0.8))
+	label.add_theme_color_override("font_outline_color", Color("2A1458"))
 	label.add_theme_constant_override("outline_size", 2)
 	return label
 
@@ -147,7 +161,8 @@ func update_display(lap: int, elapsed: float, best: float, speed: float, finishe
 
 func set_position(rank: int, total: int) -> void:
 	if _touch_mode:
-		stats.text = "VUELTA %d/%d · PUESTO %d/%d" % [_lap, _lap_target, rank, total]
+		stats.text = "VUELTA %d/%d" % [_lap, _lap_target]
+		position_badge.text="%d/%d" % [rank,total]
 	else:
 		stats.text += "\nPOSICIÓN %d / %d" % [rank, total]
 
@@ -162,12 +177,12 @@ func _build_options(root: Control) -> void:
 	options_button.offset_top = 12
 	options_button.offset_bottom = 66
 	options_button.add_theme_font_size_override("font_size", 22)
-	options = _panel(root, Vector2(1, 0), Rect2(-300, 78, 270, 304))
+	options = _panel(root, Vector2(1, 0), Rect2(-300, 78, 270, 352))
 	options.mouse_filter = Control.MOUSE_FILTER_STOP
 	var column := VBoxContainer.new()
 	column.add_theme_constant_override("separation", 8)
 	options.add_child(column)
-	for caption in ["Recuperar", "Nueva carrera", "Salas online", "Piloto y vueltas", "Sonido"]:
+	for caption in ["Recuperar", "Nueva carrera", "Salas online", "Piloto y vueltas", "Sonido", "Calidad"]:
 		var button := Button.new()
 		button.text = caption
 		button.custom_minimum_size = Vector2(0, 44)
@@ -207,6 +222,8 @@ func _choose_option(caption: String) -> void:
 		"Piloto y vueltas":
 			if not Network.playing:
 				game.race_menu.open()
+		"Calidad":
+			ToonStyle.toggle_quality()
 		"Sonido":
 			if is_instance_valid(Sound.sound_button):
 				Sound.sound_button.pressed.emit()

@@ -1,0 +1,351 @@
+{
+	"device": "cloud software rendering; NOT Android measurements",
+	"renderer": "mobile",
+	"samples": [
+		{
+			"draws": 40,
+			"fps": 3.0,
+			"triangles": 5114
+		},
+		{
+			"draws": 40,
+			"fps": 3.0,
+			"triangles": 5114
+		},
+		{
+			"draws": 40,
+			"fps": 3.0,
+			"triangles": 5114
+		},
+		{
+			"draws": 40,
+			"fps": 3.0,
+			"triangles": 5114
+		},
+		{
+			"draws": 40,
+			"fps": 3.0,
+			"triangles": 5114
+		},
+		{
+			"draws": 41,
+			"fps": 3.0,
+			"triangles": 5282
+		},
+		{
+			"draws": 42,
+			"fps": 3.0,
+			"triangles": 5290
+		},
+		{
+			"draws": 41,
+			"fps": 3.0,
+			"triangles": 5282
+		},
+		{
+			"draws": 41,
+			"fps": 3.0,
+			"triangles": 5282
+		},
+		{
+			"draws": 42,
+			"fps": 3.0,
+			"triangles": 5450
+		},
+		{
+			"draws": 42,
+			"fps": 3.0,
+			"triangles": 5450
+		},
+		{
+			"draws": 42,
+			"fps": 3.0,
+			"triangles": 5450
+		},
+		{
+			"draws": 42,
+			"fps": 3.0,
+			"triangles": 5450
+		},
+		{
+			"draws": 42,
+			"fps": 3.0,
+			"triangles": 5450
+		},
+		{
+			"draws": 42,
+			"fps": 3.0,
+			"triangles": 5450
+		},
+		{
+			"draws": 42,
+			"fps": 3.0,
+			"triangles": 5450
+		},
+		{
+			"draws": 42,
+			"fps": 3.0,
+			"triangles": 5450
+		},
+		{
+			"draws": 43,
+			"fps": 3.0,
+			"triangles": 5618
+		},
+		{
+			"draws": 42,
+			"fps": 3.0,
+			"triangles": 5610
+		},
+		{
+			"draws": 42,
+			"fps": 3.0,
+			"triangles": 5610
+		},
+		{
+			"draws": 42,
+			"fps": 2.0,
+			"triangles": 5610
+		},
+		{
+			"draws": 42,
+			"fps": 2.0,
+			"triangles": 5610
+		},
+		{
+			"draws": 42,
+			"fps": 2.0,
+			"triangles": 5610
+		},
+		{
+			"draws": 42,
+			"fps": 3.0,
+			"triangles": 5610
+		},
+		{
+			"draws": 42,
+			"fps": 3.0,
+			"triangles": 5610
+		},
+		{
+			"draws": 51,
+			"fps": 2.0,
+			"triangles": 9608
+		},
+		{
+			"draws": 54,
+			"fps": 2.0,
+			"triangles": 13268
+		},
+		{
+			"draws": 54,
+			"fps": 2.0,
+			"triangles": 13272
+		},
+		{
+			"draws": 54,
+			"fps": 3.0,
+			"triangles": 13272
+		},
+		{
+			"draws": 53,
+			"fps": 3.0,
+			"triangles": 13264
+		},
+		{
+			"draws": 53,
+			"fps": 2.0,
+			"triangles": 13264
+		},
+		{
+			"draws": 53,
+			"fps": 2.0,
+			"triangles": 13264
+		},
+		{
+			"draws": 54,
+			"fps": 2.0,
+			"triangles": 13272
+		},
+		{
+			"draws": 54,
+			"fps": 3.0,
+			"triangles": 13272
+		},
+		{
+			"draws": 54,
+			"fps": 3.0,
+			"triangles": 13272
+		},
+		{
+			"draws": 54,
+			"fps": 3.0,
+			"triangles": 13272
+		},
+		{
+			"draws": 54,
+			"fps": 3.0,
+			"triangles": 13272
+		},
+		{
+			"draws": 54,
+			"fps": 3.0,
+			"triangles": 13272
+		},
+		{
+			"draws": 54,
+			"fps": 3.0,
+			"triangles": 13272
+		},
+		{
+			"draws": 54,
+			"fps": 3.0,
+			"triangles": 13272
+		},
+		{
+			"draws": 54,
+			"fps": 4.0,
+			"triangles": 13272
+		},
+		{
+			"draws": 53,
+			"fps": 4.0,
+			"triangles": 13264
+		},
+		{
+			"draws": 53,
+			"fps": 2.0,
+			"triangles": 13264
+		},
+		{
+			"draws": 53,
+			"fps": 2.0,
+			"triangles": 13264
+		},
+		{
+			"draws": 54,
+			"fps": 2.0,
+			"triangles": 13272
+		},
+		{
+			"draws": 54,
+			"fps": 3.0,
+			"triangles": 13272
+		},
+		{
+			"draws": 54,
+			"fps": 3.0,
+			"triangles": 13272
+		},
+		{
+			"draws": 44,
+			"fps": 3.0,
+			"triangles": 5950
+		},
+		{
+			"draws": 38,
+			"fps": 3.0,
+			"triangles": 5258
+		},
+		{
+			"draws": 39,
+			"fps": 3.0,
+			"triangles": 5426
+		},
+		{
+			"draws": 40,
+			"fps": 2.0,
+			"triangles": 5434
+		},
+		{
+			"draws": 41,
+			"fps": 2.0,
+			"triangles": 5602
+		},
+		{
+			"draws": 40,
+			"fps": 2.0,
+			"triangles": 5594
+		},
+		{
+			"draws": 40,
+			"fps": 3.0,
+			"triangles": 5594
+		},
+		{
+			"draws": 40,
+			"fps": 3.0,
+			"triangles": 5594
+		},
+		{
+			"draws": 40,
+			"fps": 3.0,
+			"triangles": 5594
+		},
+		{
+			"draws": 40,
+			"fps": 3.0,
+			"triangles": 5594
+		},
+		{
+			"draws": 41,
+			"fps": 3.0,
+			"triangles": 5762
+		},
+		{
+			"draws": 41,
+			"fps": 2.0,
+			"triangles": 5762
+		},
+		{
+			"draws": 41,
+			"fps": 2.0,
+			"triangles": 5762
+		},
+		{
+			"draws": 41,
+			"fps": 2.0,
+			"triangles": 5762
+		},
+		{
+			"draws": 42,
+			"fps": 2.0,
+			"triangles": 5770
+		},
+		{
+			"draws": 42,
+			"fps": 2.0,
+			"triangles": 5770
+		},
+		{
+			"draws": 42,
+			"fps": 3.0,
+			"triangles": 5930
+		},
+		{
+			"draws": 42,
+			"fps": 3.0,
+			"triangles": 5930
+		},
+		{
+			"draws": 42,
+			"fps": 2.0,
+			"triangles": 5930
+		},
+		{
+			"draws": 42,
+			"fps": 2.0,
+			"triangles": 5930
+		},
+		{
+			"draws": 42,
+			"fps": 2.0,
+			"triangles": 5930
+		},
+		{
+			"draws": 42,
+			"fps": 2.0,
+			"triangles": 5930
+		}
+	]
+}

@@ -19,7 +19,8 @@ func _ready() -> void:
 	surface.emission_enabled=true; surface.emission=accent*0.3
 	var pad:=MeshInstance3D.new()
 	var plane:=PlaneMesh.new(); plane.size=Vector2(14,4)
-	pad.mesh=plane; pad.position.y=0.09; pad.material_override=surface
+	var turbo:=ShaderMaterial.new(); turbo.shader=preload("res://shaders/turbo.gdshader"); turbo.set_shader_parameter("color",accent)
+	pad.mesh=plane; pad.position.y=0.09; pad.material_override=turbo
 	add_child(pad)
 	var arrows:=SurfaceTool.new()
 	arrows.begin(Mesh.PRIMITIVE_TRIANGLES)

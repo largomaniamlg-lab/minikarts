@@ -8,16 +8,12 @@ const ICONS := [null,preload("res://assets/scenarios/radiation.svg"),preload("re
 const SKY := [Color("398cdb"),Color("6f99ad"),Color("369cce"),Color("83a4c4"),Color("162643")]
 const HORIZON := [Color("b5e6fa"),Color("c5e1dc"),Color("b9eaca"),Color("ffe2b1"),Color("635388")]
 
-static func surface(color: Color, glow: bool=false) -> StandardMaterial3D:
-	var mat:=StandardMaterial3D.new()
-	mat.albedo_color=color; mat.roughness=0.8
-	if glow:
-		mat.emission_enabled=true; mat.emission=color*0.65
-	return mat
+static func surface(color: Color, glow: bool=false) -> Material:
+	return ToonStyle.material(color,true,0.07,glow)
 
 static func piece(parent: Node3D, mesh: Mesh, position: Vector3, mat: Material) -> MeshInstance3D:
 	var node:=MeshInstance3D.new()
-	node.mesh=mesh; node.position=position; node.material_override=mat
+	node.mesh=ToonStyle.smooth_mesh(mesh) if mesh is BoxMesh else mesh; node.position=position; node.material_override=mat
 	parent.add_child(node)
 	return node
 
@@ -52,7 +48,8 @@ static func sky(track: Node3D, id: int) -> void:
 	material.sky_curve=0.22
 	material.ground_curve=0.35
 	world.environment.ambient_light_color=HORIZON[id]
-	world.environment.ambient_light_energy=0.75 if id!=4 else 0.9
+	world.environment.ambient_light_energy=0.35 if id!=4 else 0.5
+	world.environment.fog_light_color=HORIZON[id]
 
 static func safe_site(track: Node3D, distance: float, lateral: float, clearance: float) -> Transform3D:
 	var candidate=track.transform_at(distance,lateral,0)
@@ -190,7 +187,8 @@ static func atmosphere(track: Node3D, parent: Node3D, id: int) -> void:
 		batch.set_instance_transform(i,pose)
 	var node := MultiMeshInstance3D.new()
 	node.multimesh=batch
-	var mat=surface(Color("c7ddff") if id==4 else Color("fff1dc") if id==3 else Color("edf6fa"),id==4)
+	var mat=StandardMaterial3D.new()
+	mat.albedo_color=Color("c7ddff") if id==4 else Color("fff1dc") if id==3 else Color("edf6fa")
 	mat.shading_mode=BaseMaterial3D.SHADING_MODE_UNSHADED
 	node.material_override=mat; parent.add_child(node)
 	if id==4:

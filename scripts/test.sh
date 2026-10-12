@@ -41,3 +41,5 @@ PORT=0 "$engine" --headless --path "$repo_dir/godot" --script tests/tournament_t
 PORT=0 "$engine" --headless --path "$repo_dir/godot" --script tests/server_boost_test.gd -- --server
 
 "$engine" --headless --fixed-fps 60 --path "$repo_dir/godot" --script tests/bot_endurance_test.gd
+
+"$engine" --headless --path "$repo_dir/godot" --script tests/toon_test.gd

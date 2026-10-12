@@ -9,6 +9,7 @@ config/features=PackedStringArray("4.5", "GL Compatibility")
 [autoload]
 Network="*res://scripts/network.gd"
 Sound="*res://scripts/sound.gd"
+ToonStyle="*res://scripts/toon_style.gd"
 
 [display]
 window/size/viewport_width=1280
@@ -21,8 +22,9 @@ window/stretch/aspect="expand"
 
 [rendering]
 renderer/rendering_method="gl_compatibility"
-renderer/rendering_method.mobile="gl_compatibility"
+renderer/rendering_method.mobile="mobile"
 textures/vram_compression/import_etc2_astc=true
+shading/overrides/force_vertex_shading=false
 
 [physics]
 common/physics_interpolation=true
