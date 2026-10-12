@@ -23,7 +23,7 @@ static func advance(track: Node3D, racer: Dictionary, elapsed: float, target: in
 			racer.lap_start = elapsed
 			if racer.lap==target:
 				racer.finished=true
-				kart.enabled=false
+				kart.park_after_finish()
 				racer.prev_z=track.finish_side(kart.position)
 				return true
 	racer.prev_z=track.finish_side(kart.position)

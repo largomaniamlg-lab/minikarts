@@ -57,8 +57,13 @@ async def main():
     await tap(page,'ready')
     await page.wait_for_function('window.minikartsTest.state.players.every(p=>p.ready)')
     await tap(page,'start')
+    await page.wait_for_function('window.minikartsTest.state.phase==="racing"')
+    await page.mouse.click(523,20);await page.wait_for_timeout(350)
+    await page.mouse.click(555,161)
+    await page.wait_for_function('window.minikartsAudioTest?.mixer_visible===true')
     await page.wait_for_function('(s)=>window.minikartsTest.state.phase==="results" && window.minikartsTest.state.tournament.stage===s',arg=stage,timeout=60000)
     await page.wait_for_timeout(700)
+    assert await page.evaluate('minikartsAudioTest.mixer_visible') is False, 'Audio mixer must close at results'
     state=await page.evaluate('window.minikartsTest.state')
     assert state['track']==stage and state['laps']==3,state
     await page.screenshot(path=f'/tmp/minikarts25-tournament-stage-{stage}.png')

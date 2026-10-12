@@ -21,7 +21,7 @@ func run() -> void:
 		print("Boost panels, track ",id,": ",track.boost_sites)
 		if id in [1,3,4]: check(not track.boost_sites.is_empty(),"Boost appears where a long safe straight is available")
 		for distance in track.boost_sites:
-			for offset in range(0,101,5): check(track.tangent(distance).angle_to(track.tangent(distance+offset))<=0.026,"Boost ends before curvature")
+			for offset in range(-8,46,5): check(track.tangent(distance).angle_to(track.tangent(distance+offset))<=0.101,"Boost activates on a straight, away from sharp turns")
 			check(not track.ramp_sites.any(func(site): return fposmod(site.distance-distance,track.track_length)<95),"Boost cannot overlap ramp/gap approach")
 		for obstacle in track.get_children().filter(func(n):return n.is_in_group("destructible")):
 			check(obstacle.theme_id==id,"Obstacle visual matches circuit")
@@ -44,7 +44,7 @@ func run() -> void:
 	await frames(12)
 	check(absf(predicted.speed-kart.speed)<0.01 and absf(predicted.boost-kart.boost_time)<0.02,"Client and server agree on boosted speed/timer")
 	check(Motion.new().vec(predicted.position).distance_to(kart.position)<0.08,"Boost prediction follows authoritative straight")
-	await frames(180)
+	await frames(300)
 	check(kart.boost_time==0 and kart.speed<=kart.MAX_SPEED+0.01,"Boost expires and speed returns smoothly to 65")
 	kart.boost_time=2; kart.protection_time=0
 	game.hud.update_display(9,3599,INF,80,false,true,false,9)

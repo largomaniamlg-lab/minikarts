@@ -179,6 +179,7 @@ func _process(delta: float) -> void:
 	if done and not previous_finished: play_effect("finish")
 	previous_finished = done
 	previous_count = count
+	if phase != previous_phase and panel != null: panel.hide()
 	previous_phase = phase
 	var driving: bool = phase == "racing" and not done and game.kart.is_visible_in_tree()
 	if driving:
@@ -193,7 +194,7 @@ func _process(delta: float) -> void:
 	else:
 		engine.stop()
 	if Network.browser_test:
-		JavaScriptBridge.eval("window.minikartsAudioTest=" + JSON.stringify({"music": music.playing, "circuit":music_circuit,"track":music_path, "muted": muted, "music_volume": music_volume, "effects_volume": effects_volume, "mixer":mixer_rects(), "engine": engine.playing, "pitch": engine.pitch_scale, "events": events}) + ";")
+		JavaScriptBridge.eval("window.minikartsAudioTest=" + JSON.stringify({"music": music.playing, "circuit":music_circuit,"track":music_path, "muted": muted, "music_volume": music_volume, "effects_volume": effects_volume, "mixer_visible":panel.visible, "mixer":mixer_rects(), "engine": engine.playing, "pitch": engine.pitch_scale, "events": events}) + ";")
 
 func mixer_rects() -> Dictionary:
 	var result: Dictionary={}

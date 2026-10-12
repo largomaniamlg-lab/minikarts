@@ -276,6 +276,7 @@ func resume() -> void:
 		game.kart.enabled = not game.finished
 
 func show_results(results: Array) -> void:
+	if Sound.panel != null: Sound.panel.hide()
 	open()
 	set_step(2)
 	summary.hide(); race_button.show(); online.hide(); back_button.show()

@@ -1,5 +1,5 @@
 extends Area3D
-const DURATION := 3.0
+const DURATION := 5.0
 const SPEED := 80.0 / 3.6
 var accent := Color("49efbd")
 var touched: Dictionary = {}

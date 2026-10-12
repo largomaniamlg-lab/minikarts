@@ -48,7 +48,9 @@ static func sky(track: Node3D, id: int) -> void:
 	if world==null: return
 	var material=world.environment.sky.sky_material
 	material.sky_top_color=SKY[id]; material.sky_horizon_color=HORIZON[id]
-	material.ground_horizon_color=HORIZON[id]; material.ground_bottom_color=GROUND[id]
+	material.ground_horizon_color=HORIZON[id]; material.ground_bottom_color=HORIZON[id].darkened(0.15)
+	material.sky_curve=0.22
+	material.ground_curve=0.35
 	world.environment.ambient_light_color=HORIZON[id]
 	world.environment.ambient_light_energy=0.75 if id!=4 else 0.9
 
@@ -91,13 +93,14 @@ static func build(track: Node3D, id: int) -> void:
 	scenery.name="ScenarioDecor"
 	scenery.add_to_group("scenario_decor")
 	track.add_child(scenery)
+	atmosphere(track,scenery,id)
 	var concrete=surface(Color("a8bdbe"))
 	var steel=surface(Color("596d7c"))
 	var green=surface(Color("5bee96"),true)
 	var amber=surface(Color("f5cd54"),true)
-	for i in range(12):
+	for i in range(24):
 		var site:=Node3D.new()
-		site.transform=safe_site(track,(i+0.3)*track.track_length/12,26 if i%2==0 else -26,22)
+		site.transform=safe_site(track,(i+0.3)*track.track_length/24,26 if i%2==0 else -26,22)
 		scenery.add_child(site)
 		match id:
 			1:
@@ -164,3 +167,36 @@ static func build(track: Node3D, id: int) -> void:
 		legs.texture=preload("res://assets/memes/legs.png"); legs.pixel_size=5.0/legs.texture.get_height()
 		legs.position=Vector3(0,3.5,0); legs.billboard=BaseMaterial3D.BILLBOARD_ENABLED; legs.shaded=false
 		joke.add_child(legs)
+
+# Static horizon silhouettes and clouds: one shared mesh per batch, no physics.
+static func atmosphere(track: Node3D, parent: Node3D, id: int) -> void:
+	var center := Vector3.ZERO
+	for point in track.route: center += point
+	center /= track.route.size()
+	var mesh := SphereMesh.new()
+	mesh.radius=0.5; mesh.height=1; mesh.radial_segments=12; mesh.rings=6
+	var batch := MultiMesh.new()
+	batch.transform_format=MultiMesh.TRANSFORM_3D; batch.mesh=mesh
+	batch.instance_count=36 if id!=4 else 64
+	for i in range(batch.instance_count):
+		var angle := float(i)*2.399963
+		var pose := Transform3D.IDENTITY
+		if id==4:
+			pose.origin=center+Vector3(cos(angle)*340,90+float(i%7)*19,sin(angle)*340)
+			pose.basis=Basis.IDENTITY.scaled(Vector3.ONE*(1.0+float(i%3)*0.5))
+		else:
+			pose.origin=center+Vector3(cos(angle)*(170+float(i%3)*60),62+float(i%4)*8,sin(angle)*(170+float(i%3)*60))
+			pose.basis=Basis.IDENTITY.scaled(Vector3(25+float(i%3)*8,6,12))
+		batch.set_instance_transform(i,pose)
+	var node := MultiMeshInstance3D.new()
+	node.multimesh=batch
+	var mat=surface(Color("c7ddff") if id==4 else Color("fff1dc") if id==3 else Color("edf6fa"),id==4)
+	mat.shading_mode=BaseMaterial3D.SHADING_MODE_UNSHADED
+	node.material_override=mat; parent.add_child(node)
+	if id==4:
+		sphere(parent,Vector3(22,22,22),center+Vector3(-240,100,-280),mat)
+	# Mountains/dunes stay well beyond the driving area.
+	for i in range(16):
+		var angle=float(i)*TAU/16
+		var point=center+Vector3(cos(angle)*440,0,sin(angle)*440)
+		sphere(parent,Vector3(100,35+float(i%4)*16,85),point,surface(GROUND[id].darkened(0.14)))

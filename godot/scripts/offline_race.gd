@@ -97,6 +97,8 @@ func reset() -> void:
 		bot.stuck_time = 0.0
 		bot.jump_cooldown = 0.0
 		bot.route_hint = -1
+		bot.last_position = Vector3.INF
+		bot.airborne_time = 0.0
 	game.kart.get_node("Driver").set_face(Network.selected_driver)
 
 func pause_race(value: bool) -> void:

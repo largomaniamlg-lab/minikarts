@@ -5,12 +5,16 @@ extends SceneTree
 func _initialize() -> void: call_deferred("run")
 func run() -> void:
 	var network=root.get_node("Network")
+	var racing_since: Dictionary={}
 	while true:
 		await create_timer(0.18).timeout
 		for room in network.rooms.values():
 			if room.get("mode","single")!="tournament": continue
 			if room.phase=="countdown": room.timer=0.1
 			elif room.phase=="racing":
+				var key=str(room.code)+":"+str(room.tournament.stage)
+				if not racing_since.has(key): racing_since[key]=Time.get_ticks_msec()
+				if Time.get_ticks_msec()-racing_since[key]<3000: continue
 				var gates: Array=room.track.gates()
 				for player in room.players.values():
 					if player.finished: continue

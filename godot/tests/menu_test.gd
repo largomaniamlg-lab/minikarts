@@ -33,7 +33,12 @@ func run() -> void:
 	check(menu.lap_choice.get_selected_id()==9 and menu.bot_choice.get_selected_id()==15,"Reopening restores race settings")
 	network.selected_mode="single"
 	game.start_offline()
+	var sound=root.get_node("Sound")
+	sound.panel=VBoxContainer.new()
+	sound.add_child(sound.panel)
+	sound.panel.show()
 	menu.show_results([])
+	check(not sound.panel.visible,"An open sound mixer cannot cover race results")
 	check(menu.back_button.visible,"Results offer return to setup")
 	menu.back_button.pressed.emit()
 	check(menu.step==0 and not menu.result_text.visible,"Return from results restores mode choices")

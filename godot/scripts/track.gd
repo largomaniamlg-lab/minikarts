@@ -266,7 +266,7 @@ func _build_new() -> void:
 		ramp.dangerous = site.dangerous
 		ramp.width = 18.0 if site.dangerous else 7.0
 		ramp.height = 1.6 if site.dangerous else 1.2
-		ramp.safe_spawn = transform_at(site.distance-12.0)
+		ramp.safe_spawn = transform_at(site.distance-30.0)
 		ramp.transform = transform_at(site.distance+3.5,site.offset,0.025)
 		add_child(ramp)
 	_build_new_finish()
@@ -280,17 +280,17 @@ func _build_new() -> void:
 	add_child(preload("res://scripts/neutral_sleeper.gd").new())
 
 func _choose_boosts() -> void:
-	var desired_count=[0,2,1,1,2][layout_id]
+	var desired_count=[0,3,2,2,3][layout_id]
 	for index in range(desired_count):
-		var desired=track_length*(0.07+index*0.45)
+		var desired=track_length*(0.07+index*0.28)
 		var best: float=-1
 		var score: float=INF
 		for distance in range(40,int(track_length)-100,3):
-			if boost_sites.any(func(site): return absf(site-distance)<150): continue
+			if boost_sites.any(func(site): return absf(site-distance)<100): continue
 			if ramp_sites.any(func(site): return fposmod(site.distance-distance,track_length)<95 or fposmod(distance-site.distance,track_length)<30): continue
 			var straight=true
-			for offset in range(-8,101,5):
-				if tangent(distance).angle_to(tangent(distance+offset))>0.025: straight=false; break
+			for offset in range(-8,46,5):
+				if tangent(distance).angle_to(tangent(distance+offset))>0.1: straight=false; break
 			if not straight: continue
 			if absf(distance-desired)<score: score=absf(distance-desired); best=distance
 		if best<0: break
@@ -387,8 +387,8 @@ func nearest(position: Vector3, hint: int=-1) -> Dictionary:
 
 func _build_new_crates() -> void:
 	var occupied: Array[Vector3] = []
-	for i in range(12):
-		var s := (i+0.5)*track_length/12
+	for i in range(18):
+		var s := (i+0.5)*track_length/18
 		while ramp_sites.any(func(site): return absf(site.distance-s)<35) or boost_sites.any(func(site): return absf(site-s)<16) or occupied.any(func(p):return p.distance_to(sample(s,-5.0 if i%2==0 else 5.0,0.7))<6.0): s+=4
 		var crate := Obstacle.new()
 		crate.theme_id=layout_id

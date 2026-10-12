@@ -55,8 +55,11 @@ func run() -> void:
 			if fell:
 				var racer={"kart":kart,"lap":1,"checkpoint":0,"prev_z":-1,"finished":false}
 				Progress.advance(track,racer,42.0,3)
-				check(racer.lap==1 and kart.position.distance_to(track.sample(site.distance-12,0,0.7))<0.1,"Falling respawns before the ramp without losing laps")
-		# Measure one unobstructed real AI lap, retaining the real ramps and gap.
+				check(racer.lap==1 and kart.position.distance_to(track.sample(site.distance-30,0,0.7))<0.1,"Falling respawns before the ramp without losing laps")
+		# Measure the base 65 km/h lap, retaining real ramps and gaps.
+		# Boosts intentionally shorten this baseline and are exercised separately.
+		for panel in track.get_children():
+			if panel.is_in_group("boost_panels"): panel.set_physics_process(false)
 		for child in track.get_children():
 			if child.is_in_group("obstacles"): track.remove_child(child); child.queue_free()
 		track.get_node("NeutralSleeper").set_physics_process(false)

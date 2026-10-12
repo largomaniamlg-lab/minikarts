@@ -9,6 +9,7 @@ var _body_visual: MeshInstance3D
 var _shadow_visual: MeshInstance3D
 const Handling = preload("res://scripts/handling.gd")
 const MAX_SPEED: float = 65.0 / 3.6
+const BOOST_DURATION := 5.0
 const BOOST_SPEED: float = 80.0 / 3.6
 var boost_time := 0.0
 var boost_cooldown := 0.0
@@ -25,18 +26,22 @@ var protection_time: float = 0.0
 var _jump_held: bool = false
 var _impact_cooldown := 0.0
 var _ramp_launch := 0.0
+var _ramp_cooldown := 0.0
+var _recovery_ghost := 0.0
 
 func speed_limit() -> float:
 	return BOOST_SPEED if boost_time>0 else MAX_SPEED
 
 func try_boost() -> bool:
 	if not enabled or not _focused or hit_time>0 or boost_cooldown>0 or speed<=0.1 or not is_on_floor(): return false
-	boost_time=3.0; boost_cooldown=6.0
+	boost_time=BOOST_DURATION; boost_cooldown=6.0
 	Sound.play_effect("go",global_position)
 	return true
 
 func launch_from_ramp(lift: float) -> void:
+	if _ramp_cooldown > 0: return
 	_ramp_launch = lift
+	_ramp_cooldown = 1.2
 
 
 func strength(action: String) -> float:
@@ -80,6 +85,12 @@ func _ready() -> void:
 	camera.current = true
 
 func _physics_process(delta: float) -> void:
+	if _recovery_ghost > 0:
+		_recovery_ghost=maxf(0.0,_recovery_ghost-delta)
+		if _recovery_ghost == 0:
+			for body in get_collision_exceptions():
+				if is_instance_valid(body): remove_collision_exception_with(body)
+	_ramp_cooldown=maxf(0.0,_ramp_cooldown-delta)
 	boost_time=maxf(0.0,boost_time-delta)
 	boost_cooldown=maxf(0.0,boost_cooldown-delta)
 	_impact_cooldown = maxf(0, _impact_cooldown - delta)
@@ -150,7 +161,19 @@ func _physics_process(delta: float) -> void:
 	if global_position.y < -10.0:
 		reset_to(spawn_transform)
 
+func park_after_finish() -> void:
+	enabled=false
+	speed=0.0
+	velocity.x=0.0; velocity.z=0.0
+	_recovery_ghost=INF
+	for other in get_tree().get_nodes_in_group("karts"):
+		if other != self: add_collision_exception_with(other)
+
 func reset_to(new_transform: Transform3D) -> void:
+	# Avoid overlapping respawns pushing one another through the road.
+	_recovery_ghost=1.5
+	for other in get_tree().get_nodes_in_group("karts"):
+		if other != self: add_collision_exception_with(other)
 	global_transform = new_transform
 	enabled = true
 	velocity = Vector3.ZERO
@@ -161,6 +184,7 @@ func reset_to(new_transform: Transform3D) -> void:
 	protection_time = 0.0
 	_jump_held = false
 	_ramp_launch = 0.0
+	_ramp_cooldown = 0.0
 	boost_time=0.0; boost_cooldown=0.0
 	reset_physics_interpolation()
 	if is_instance_valid(_camera):
