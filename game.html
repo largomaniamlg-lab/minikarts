@@ -113,7 +113,7 @@ body {
 const originalFetch = window.fetch.bind(window);
 window.fetch = async function(resource, options) {
  if (typeof resource === 'string' && /game\.pck(?:\?|$)/.test(resource)) {
-  resource += (resource.includes('?') ? '&' : '?') + 'v=d1077de0082f9b98';
+  resource += (resource.includes('?') ? '&' : '?') + 'v=aca2eaf1139991d8';
  }
  const url = typeof resource === 'string' ? resource : resource.url;
  if (url && /game\.wasm(?:\?|$)/.test(url)) {
@@ -130,7 +130,7 @@ window.fetch = async function(resource, options) {
 <script>window.MINIKARTS_SERVER_URL = "wss://minikarts-multiplayer.onrender.com";</script>
 <script src="game.js"></script>
 		<script>
-const GODOT_CONFIG = {"args":["--","--force-touch"],"canvasResizePolicy":2,"emscriptenPoolSize":8,"ensureCrossOriginIsolationHeaders":true,"executable":"game","experimentalVK":true,"fileSizes":{"game.pck":17180504,"game.wasm":38034280,"game-d1077de0082f9b98.pck":17180504},"focusCanvas":true,"gdextensionLibs":[],"godotPoolSize":4,"virtualKeyboard":true,"mainPack":"game-d1077de0082f9b98.pck"};
+const GODOT_CONFIG = {"args":["--","--force-touch"],"canvasResizePolicy":2,"emscriptenPoolSize":8,"ensureCrossOriginIsolationHeaders":true,"executable":"game","experimentalVK":true,"fileSizes":{"game.pck":17288520,"game.wasm":38034280,"game-aca2eaf1139991d8.pck":17288520},"focusCanvas":true,"gdextensionLibs":[],"godotPoolSize":4,"virtualKeyboard":true,"mainPack":"game-aca2eaf1139991d8.pck"};
 const GODOT_THREADS_ENABLED = false;
 const engine = new Engine(GODOT_CONFIG);
 
