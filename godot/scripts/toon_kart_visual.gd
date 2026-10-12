@@ -32,8 +32,14 @@ func _ready() -> void:
 	if Network.server_mode: set_process(false)
 	if not has_node("PaintedBody"): build()
 	# Mutable instance transforms must never be shared by different racers.
-	$Wheels.multimesh=$Wheels.multimesh.duplicate()
-	$Flames.multimesh=$Flames.multimesh.duplicate()
+	for name in ["Wheels","Flames"]:
+		var old=get_node(name).multimesh
+		var instances:=MultiMesh.new()
+		instances.transform_format=MultiMesh.TRANSFORM_3D
+		instances.mesh=old.mesh
+		instances.instance_count=old.instance_count
+		for index in range(old.instance_count): instances.set_instance_transform(index,old.get_instance_transform(index))
+		get_node(name).multimesh=instances
 	var mat=Style.material(body_color,true,0.05).duplicate() as ShaderMaterial
 	mat.set_shader_parameter("use_vertex_color",true)
 	Style.register_transient(mat)

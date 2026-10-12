@@ -5,6 +5,8 @@ func check(ok: bool, text: String) -> void:
 func _initialize() -> void: call_deferred("run")
 func run() -> void:
 	var style=root.get_node("ToonStyle")
+	var sound=root.get_node("Sound")
+	if sound.music!=null: sound.music.stop(); sound.music.stream=null
 	var catalog=preload("res://scripts/driver_catalog.gd")
 	check(catalog.NAMES.size()==16,"All sixteen existing pilots remain")
 	var game=load("res://scenes/main.tscn").instantiate(); root.add_child(game)
@@ -17,7 +19,10 @@ func run() -> void:
 	other.set_process(false); visual.set_process(false)
 	visual.speed=6; other.speed=0
 	visual.animate(0.1); other.animate(0.1)
-	check(visual.get_node("Wheels").multimesh.get_instance_transform(0).basis!=other.get_node("Wheels").multimesh.get_instance_transform(0).basis,"Each racer animates wheels at its own speed")
+	check(visual.get_node("Wheels").multimesh!=other.get_node("Wheels").multimesh and visual.wheel_angle!=other.wheel_angle,"Each racer animates wheels at its own speed")
+	if DisplayServer.get_name()!="headless":
+		await RenderingServer.frame_post_draw
+		check(visual.get_node("Wheels").multimesh.get_instance_transform(0).basis!=other.get_node("Wheels").multimesh.get_instance_transform(0).basis,"Real renderer retains independent wheel transforms")
 	check(visual.get_node("Flames").multimesh!=other.get_node("Flames").multimesh,"Exhaust transforms cannot leak between racers")
 	other.queue_free()
 	var material=visual.get_node("PaintedBody").material_override
@@ -34,4 +39,4 @@ func run() -> void:
 	var safe=preload("res://scripts/toon_safe_area.gd").logical_safe_rect(Rect2(50,0,2300,1080),Vector2(2400,1080),Vector2(1280,720))
 	check(safe.position.x>0 and safe.end.x<1280,"Native mobile cutouts map into logical HUD space")
 	print("Toon integration: ",failures," failures")
-	quit(0 if failures==0 else 1)
+	call_deferred("quit",0 if failures==0 else 1)
