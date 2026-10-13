@@ -1,7 +1,7 @@
 shader_type spatial;
 render_mode unshaded, cull_front, shadows_disabled;
 uniform float thickness : hint_range(0.0, 0.12) = 0.05;
-uniform vec4 outline_color : source_color = vec4(0.1647, 0.0784, 0.3451, 1.0);
+uniform vec4 outline_color : source_color = vec4(0.04, 0.055, 0.075, 1.0);
 uniform bool smooth_shell = false;
 uniform float far_distance = 60.0;
 void vertex() {

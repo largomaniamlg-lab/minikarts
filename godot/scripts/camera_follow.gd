@@ -3,7 +3,7 @@ extends Camera3D
 var target: CharacterBody3D
 var _initialized: bool = false
 const FOLLOW_DISTANCE: float = 5.8
-const FOLLOW_HEIGHT: float = 3.6
+const FOLLOW_HEIGHT: float = 2.6
 
 func _ready() -> void:
 	physics_interpolation_mode = Node.PHYSICS_INTERPOLATION_MODE_OFF

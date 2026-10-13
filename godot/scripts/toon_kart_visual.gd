@@ -40,11 +40,15 @@ func _ready() -> void:
 		instances.instance_count=old.instance_count
 		for index in range(old.instance_count): instances.set_instance_transform(index,old.get_instance_transform(index))
 		get_node(name).multimesh=instances
-	var mat=Style.material(body_color,true,0.05).duplicate() as ShaderMaterial
+	upgrade_motorsport()
+	var mat=Style.material(body_color,true,0.015).duplicate() as ShaderMaterial
 	mat.set_shader_parameter("use_vertex_color",true)
+	mat.set_shader_parameter("finish_roughness",0.24)
+	mat.set_shader_parameter("finish_metallic",0.42)
 	Style.register_transient(mat)
 	$PaintedBody.material_override=mat
-	var tire=Style.material(Color("30304B"),true,0.04)
+	var tire=Style.material(Color("161a20"),true,0.012)
+	tire.set_shader_parameter("finish_roughness",0.92)
 	tire.set_shader_parameter("use_albedo_texture",true)
 	tire.set_shader_parameter("albedo_texture",load("res://materials/toon/tire_marks.svg"))
 	$Wheels.material_override=tire
@@ -69,7 +73,7 @@ func build() -> void:
 	var torus:=TorusMesh.new(); torus.inner_radius=0.15; torus.outer_radius=0.33; torus.rings=12; torus.ring_segments=8
 	var wheels:=MultiMeshInstance3D.new(); wheels.name="Wheels"
 	var mm:=MultiMesh.new(); mm.transform_format=MultiMesh.TRANSFORM_3D; mm.mesh=torus; mm.instance_count=4
-	wheels.multimesh=mm; wheels.material_override=Style.material(Color("30304B"),true,0.04); add_child(wheels)
+	wheels.multimesh=mm; wheels.material_override=Style.material(Color("161a20"),true,0.012); add_child(wheels)
 	var flame_mesh:=SphereMesh.new(); flame_mesh.radius=0.5; flame_mesh.height=1; flame_mesh.radial_segments=8; flame_mesh.rings=4
 	var flame:=MultiMeshInstance3D.new(); flame.name="Flames"
 	var fm:=MultiMesh.new(); fm.transform_format=MultiMesh.TRANSFORM_3D; fm.mesh=flame_mesh; fm.instance_count=2; flame.multimesh=fm
@@ -106,3 +110,45 @@ func _process(delta: float) -> void:
 		if previous_vertical<-2 and kart.is_on_floor(): bounce=-0.08
 		previous_vertical=kart.velocity.y
 	animate(delta)
+
+# Original detailed chassis, shared geometry and one merged metal surface per kart.
+func upgrade_motorsport() -> void:
+	parts.clear()
+	ball(Vector3(0.85,0.18,1.3),Vector3(0,-0.13,-0.2),Color.WHITE,true)
+	ball(Vector3(0.8,0.18,0.75),Vector3(0,-0.05,-0.8),Color.WHITE,true)
+	for side in [-1.0,1.0]:
+		ball(Vector3(0.32,0.27,0.95),Vector3(side*0.58,-0.02,0.05),Color.WHITE,true)
+	ball(Vector3(0.58,0.5,0.5),Vector3(0,0.15,0.3),Color("151b24"))
+	ball(Vector3(1.4,0.08,0.24),Vector3(0,0.4,0.85),Color.WHITE,true)
+	$PaintedBody.mesh=painted_mesh()
+	parts.clear()
+	for side in [-1.0,1.0]:
+		metal_tube(Vector3(side*0.52,-0.2,-0.9),Vector3(side*0.52,-0.2,0.85),0.035)
+		metal_tube(Vector3(side*0.52,-0.2,-0.35),Vector3(side*0.72,-0.1,-0.61),0.035)
+		metal_tube(Vector3(side*0.52,-0.2,0.4),Vector3(side*0.74,-0.12,0.63),0.04)
+		metal_tube(Vector3(side*0.4,0.03,0.5),Vector3(side*0.4,0.03,1.15),0.08)
+		metal_tube(Vector3(side*0.52,-0.15,0.8),Vector3(side*0.52,0.38,0.85),0.025)
+		# Machined wheel hubs, five metallic spokes per rim.
+		for z in [-0.61,0.63]:
+			metal_tube(Vector3(side*0.82,-0.12,z),Vector3(side*0.88,-0.12,z),0.085)
+			for spoke in range(5):
+				var angle=spoke*TAU/5
+				metal_tube(Vector3(side*0.87,-0.12,z),Vector3(side*0.87,-0.12+cos(angle)*0.22,z+sin(angle)*0.22),0.018)
+		# Coil spring: visibly articulated suspension instead of floating wheels.
+		for coil in range(7):
+			var ring:=TorusMesh.new(); ring.inner_radius=0.055; ring.outer_radius=0.08; ring.rings=8; ring.ring_segments=6
+			primitive(ring,Transform3D(Basis.IDENTITY,Vector3(side*0.6,-0.1+coil*0.03,0.58)),Color("ffc83d"))
+	metal_tube(Vector3(-0.65,-0.17,-1),Vector3(0.65,-0.17,-1),0.05)
+	metal_tube(Vector3(-0.72,-0.15,0.85),Vector3(0.72,-0.15,0.85),0.045)
+	var metal:=MeshInstance3D.new(); metal.name="MotorsportChassis"; metal.mesh=painted_mesh()
+	var material=Style.material(Color("b4c2d4"),false).duplicate()
+	material.set_shader_parameter("use_vertex_color",true)
+	material.set_shader_parameter("finish_metallic",0.75)
+	material.set_shader_parameter("finish_roughness",0.3)
+	metal.material_override=material; add_child(metal)
+func metal_tube(a: Vector3,b: Vector3,radius: float) -> void:
+	var mesh:=CylinderMesh.new(); mesh.top_radius=radius; mesh.bottom_radius=radius
+	mesh.height=a.distance_to(b); mesh.radial_segments=8
+	var axis=(b-a).normalized()
+	var rotation:=Quaternion(Vector3.UP,axis)
+	primitive(mesh,Transform3D(Basis(rotation),(a+b)*0.5),Color("aebdce"))

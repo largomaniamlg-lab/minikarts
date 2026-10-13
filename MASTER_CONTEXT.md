@@ -411,3 +411,11 @@ Entrega toon subida: commits a7d659a / 6755d97 en origin/art/toon-demo. PR **no 
 Pruebas finales: suite completa termina 0, incluida toon_test; 16 bots completan los cuatro circuitos. Chromium pasa selección de cuatro circuitos/torneo y cinco contactos simultáneos. Copia limpia extraída de git importa assets y pasa toon_test (los mensajes iniciales de import sobre fotos desaparecen al finalizar el import). LightmapGIData real enlazado en escena; importer EXR 2d_array y rampa lossless están forzados en Git. Mantener esos dos .import. Capturas High y estadísticas High/Low disponibles; Android físico y 60 FPS siguen sin medir. Export final local /tmp/minikarts-web.1XC9vR; no copiar a raíz publicada, no deploy. Scripts/recursos compilan y renderer Mobile capturado sin errores. Procesos de prueba locales deben cerrarse al finalizar.
 
 Comprobación adicional de animación: ruedas y escapes tienen MultiMeshes mutables separados por corredor. Se recrean los buffers por instancia (Resource.duplicate provocaba error de tamaño en Godot 4.5.1). Headless comprueba recursos/ángulos independientes; prueba Mobile real espera frame_post_draw y verifica matrices distintas. Ambas terminan con 0 fallos. El renderer real lee los buffers tras el frame, no antes de enviar los comandos de dibujo. No cambia la física ni las fotos. Las licencias OFL están verificadas dentro del PCK exportado.
+
+## Prueba Motorsport / Reactor (2026-10-12)
+Usuario pidió replicar conceptos aprobados en todo, menús incluidos. Rama
+art/motorsport-reactor: garaje con fondo generado + kart 3D, detalle de chasis,
+materiales continuos, decoraciones en 5 circuitos y cámara más baja. No afirmar
+réplica exacta: ver docs/MOTORSPORT_PREVIEW.md para limitaciones concretas.
+Web29 habitual no se reemplaza mientras no se valide fidelidad visual.
+Música continúa aplazada. No cambiar Render plan ni mecánicas por esta tarea.

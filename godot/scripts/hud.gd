@@ -1,6 +1,6 @@
 extends CanvasLayer
 
-const INK: Color = Color("2A1458")
+const INK: Color = Color("152132")
 const WHITE: Color = Color("f2f5f7")
 const RED: Color = Color("e4483c")
 const YELLOW: Color = Color("FFD23F")
@@ -113,7 +113,7 @@ func _panel(root: Control, anchor: Vector2, bounds: Rect2) -> PanelContainer:
 	panel.offset_bottom = bounds.end.y
 	var style := StyleBoxFlat.new()
 	style.bg_color = Color(INK.r, INK.g, INK.b, 0.8)
-	style.set_corner_radius_all(24)
+	style.set_corner_radius_all(9)
 	style.border_color = Color(0.80, 0.90, 1.0, 0.45)
 	style.set_border_width_all(2)
 	style.content_margin_left = 16
@@ -130,7 +130,7 @@ func _label(text: String, font_size: int, color: Color) -> Label:
 	label.add_theme_font_override("font",load("res://assets/fonts/ChakraPetch-Regular.ttf"))
 	label.add_theme_font_size_override("font_size", font_size)
 	label.add_theme_color_override("font_color", color)
-	label.add_theme_color_override("font_outline_color", Color("2A1458"))
+	label.add_theme_color_override("font_outline_color", Color("152132"))
 	label.add_theme_constant_override("outline_size", 2)
 	return label
 

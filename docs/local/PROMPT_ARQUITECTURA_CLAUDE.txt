@@ -1,0 +1,9 @@
+Continuamos MiniKarts en paralelo con Codex. Presupuesto0€. Codex prepara APKAndroid/webiPhone, rendimiento/red/controles. Tu frente es garaje Motorsport + laboratorio Reactor; no modificar Godot/código/export ni carpetas de Codex.
+
+Confirma ruta real joona. Lee docs/local/CODEX_PARA_CLAUDE.md y tus informes de recursos. Kart provisional Kenney-oobi 2.000×1.365×0.943m incluyendo ruedas; aún nofinal. Usa márgenes y deja plataforma parametrizada, documentando que se ajustará al definitivo.
+
+Construye el kit modular de arquitectura faltante: paredes, suelo, techo, puertas, pilares/cerchas, plataforma y tuberías sencillas. Solo en local-assets/claude-architecture/. Fuentes.blend y GLB, escala en metros, normales y UV/UV2 comprobadas. Colisiones simples separadas y materiales compartidos. Garaje12×16×5.5m y laboratorio16×24×8m son punto de partida a ajustar, no obligación que impida circulación.
+
+Usa una selección coherente de los recursos CC0 verificados y optimiza copias, conservando originales. No juntar los 35objetos detallados de golpe. El dispositivo no está perfilado: documenta triángulos/materiales/texturas y propone LOD; no afirme rendimiento móvil por un render escritorio.
+
+Entrega vista real del garaje construido y registro de exportación. Una vista Blender debe etiquetarse Blender, no captura del juego. No Quaternius mientras licencia pendiente; no compras/cuentasAPI ni publicación. Guarda informe docs/local/CLAUDE_ARQUITECTURA.md y resumen COMPLETADA/BLOQUEADA/PENDIENTE para Codex.

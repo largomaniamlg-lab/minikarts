@@ -21,6 +21,7 @@ var status: Label
 var cards: Array[Button] = []
 var online: Button
 var result_text: Label
+var kart_preview: SubViewportContainer
 
 var step := 0
 var with_friends := false
@@ -38,29 +39,32 @@ var resume_button: Button
 static func menu_theme() -> Theme:
 	var theme := Theme.new()
 	theme.default_font_size = 22
+	theme.default_font=preload("res://assets/fonts/ChakraPetch-Regular.ttf")
 	for state in ["normal", "hover", "pressed", "focus", "disabled"]:
 		var box := StyleBoxFlat.new()
-		box.bg_color = Color("edf2fa") if state=="normal" else Color("cbdcf4")
+		box.bg_color = Color("202a36") if state=="normal" else Color("354353")
 		if state=="focus": box.bg_color=Color.TRANSPARENT
 		if state=="pressed": box.bg_color=Color("ffd34d")
-		if state=="disabled": box.bg_color=Color("c7ccd4")
-		box.set_corner_radius_all(18)
+		if state=="disabled": box.bg_color=Color("19212b")
+		box.set_corner_radius_all(9)
 		box.set_border_width_all(3 if state=="focus" else 1)
-		box.border_color=Color("408ee4")
+		box.border_color=Color("f0c943")
 		box.content_margin_left=16; box.content_margin_right=16
 		for kind in ["Button", "OptionButton", "LineEdit"]: theme.set_stylebox(state,kind,box)
 	for kind in ["Button", "OptionButton", "Label", "LineEdit"]:
 		for key in ["font_color","font_hover_color","font_pressed_color","font_focus_color"]:
-			theme.set_color(key,kind,Color("142c4f"))
-		theme.set_color("font_disabled_color",kind,Color("68778a"))
+			theme.set_color(key,kind,Color("f2f5fa"))
+		theme.set_color("font_disabled_color",kind,Color("8996a7"))
+		theme.set_color("font_pressed_color",kind,Color("14202b"))
 	return theme
 
 static func highlight_button(action: Button) -> void:
 	action.add_theme_font_size_override("font_size",26)
+	for key in ["font_color","font_hover_color","font_pressed_color"]: action.add_theme_color_override(key,Color("14202b"))
 	for state in ["normal","hover","pressed"]:
 		var box:=StyleBoxFlat.new()
 		box.bg_color=Color("ffd34d") if state=="normal" else Color("ffbd32")
-		box.set_corner_radius_all(18)
+		box.set_corner_radius_all(9)
 		box.set_border_width_all(2); box.border_color=Color("e5b026")
 		action.add_theme_stylebox_override(state,box)
 
@@ -70,31 +74,34 @@ func _ready() -> void:
 	root.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
 	root.theme=menu_theme()
 	add_child(root)
-	var shade:=ColorRect.new()
-	shade.color=Color("bce7f3")
-	shade.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
-	add_child(shade)
-	move_child(shade,0)
-	for rect in [Rect2(400,95,830,595),Rect2(40,125,340,430)]:
-		var panel:=Panel.new()
-		panel.position=rect.position; panel.size=rect.size
+	var backdrop:=TextureRect.new()
+	backdrop.texture=preload("res://assets/garage/workshop.png")
+	backdrop.expand_mode=TextureRect.EXPAND_IGNORE_SIZE
+	backdrop.stretch_mode=TextureRect.STRETCH_KEEP_ASPECT_COVERED
+	backdrop.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
+	backdrop.mouse_filter=Control.MOUSE_FILTER_IGNORE
+	add_child(backdrop); move_child(backdrop,0)
+	for rect in [Rect2(400,95,830,595),Rect2(28,105,354,570)]:
+		var panel:=Panel.new(); panel.position=rect.position; panel.size=rect.size
 		panel.mouse_filter=Control.MOUSE_FILTER_IGNORE
-		var box:=StyleBoxFlat.new()
-		box.bg_color=Color("f9fbff"); box.set_corner_radius_all(28)
-		box.shadow_color=Color(0.1,0.3,0.5,0.15); box.shadow_size=8
-		panel.add_theme_stylebox_override("panel",box)
+		var box:=StyleBoxFlat.new(); box.bg_color=Color(0.045,0.065,0.09,0.88)
+		box.set_corner_radius_all(12); box.border_color=Color(0.95,0.75,0.2,0.5)
+		box.set_border_width_all(1); panel.add_theme_stylebox_override("panel",box)
 		root.add_child(panel)
 	label("MINIKARTS",Vector2(40,24),Vector2(260,60),38)
 	steps=label("",Vector2(320,30),Vector2(910,48),24)
 	title=label("",Vector2(420,105),Vector2(780,55),30)
 	garage=TextureRect.new()
-	garage.position=Vector2(65,140); garage.size=Vector2(300,390)
+	garage.position=Vector2(80,120); garage.size=Vector2(260,320)
 	garage.expand_mode=TextureRect.EXPAND_IGNORE_SIZE
 	garage.stretch_mode=TextureRect.STRETCH_KEEP_ASPECT_CENTERED
 	garage.mouse_filter=Control.MOUSE_FILTER_IGNORE
 	root.add_child(garage)
-	driver_name=label("",Vector2(40,550),Vector2(350,48),30)
-	label("Tu piloto · tu estilo",Vector2(40,600),Vector2(350,35),20)
+	kart_preview=preload("res://scripts/garage_preview.gd").new()
+	kart_preview.position=Vector2(42,405); kart_preview.size=Vector2(330,155)
+	root.add_child(kart_preview)
+	driver_name=label("",Vector2(40,570),Vector2(350,48),30)
+	label("GARAJE · MOTORSPORT",Vector2(40,625),Vector2(350,35),20)
 	for i in range(2):
 		var mode_button=button("CARRERA INDIVIDUAL" if i==0 else "TORNEO · 4 CARRERAS",Vector2(420+i*400,185),Vector2(380,100))
 		mode_button.toggle_mode=true
@@ -238,6 +245,7 @@ func select(index: int) -> void:
 	Network.selected_driver = index
 	garage.texture=Catalog.PORTRAITS[index]
 	driver_name.text=NAMES[index]
+	kart_preview.choose(index)
 	if is_instance_valid(game.offline_race) and game.offline_race.tournament!=null:
 		game.offline_race.tournament.table[0].driver=index
 	game.kart.get_node("Driver").set_face(index)

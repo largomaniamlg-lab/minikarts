@@ -1,0 +1,19 @@
+Continuamos MiniKarts en Codex LOCAL en Windows. Trabaja sobre esta carpeta, no en Cloud. Primero lee docs/project/PLAN_CALIDAD_VISUAL.md, docs/MOTORSPORT_PREVIEW.md, MASTER_CONTEXT.md y CREDITS.md. Si faltan, identifica la carpeta correcta antes de cambiar nada.
+
+PRESUPUESTO: ahora 0 euros. Los posibles 30 euros futuros no están autorizados. No comprar, suscribirse ni usar API de pago. Usar mi inicio de sesión de ChatGPT según los límites de mi plan. Música aplazada.
+
+OBJETIVO: calidad semirrealista de vehículos, escenarios y menús, conservando el humor. La prueba Motorsport sigue muy lejos de las referencias: no la describas como réplica. No presentes imágenes generadas, renders de Blender ni fondos ilustrados como capturas de la carrera en Godot. Usa las capturas actuales como punto de partida y pide que adjunte las referencias originales si no están en esta carpeta.
+
+CONSERVAR: 16 personajes y motes, caras y cuerpos originales, Jordan, cinco circuitos, conducción 65 km/h y boost 80, controles simultáneos, salas, IA, vueltas 3/6/9, clasificación por mejor vuelta, torneo y podio. No modificar las reglas para mejorar gráficos.
+
+ESTADO: Godot 4.5.1; Web29 es la versión habitual. Prueba separada https://largomaniamlg-lab.github.io/minikarts/prueba-motorsport.html . Rama art/motorsport-reactor, PR2, no fusionar ni publicar cambios sin instrucción. No pegar, pedir ni exponer claves de Render; la credencial del entorno Cloud no se transfiere al portátil. Repo https://github.com/largomaniamlg-lab/minikarts . El paquete ZIP ligero es una copia de fuentes, no un checkout Git ni una aplicación compilada.
+
+PRIMERA TAREA: comprobar el entorno local. Inspecciona Windows, CPU/RAM/GPU, Blender y Godot por nombre/ruta y versión. No afirmes acceso al portátil hasta ejecutar una prueba. Encuentra blender.exe dentro de las ubicaciones instaladas; usa un proceso background --factory-startup con scripts/local/blender_access_probe.py y una carpeta de salida NUEVA. Comprueba que genera probe.blend y probe.glb y vuelve a abrir/importar el GLB. No tocar una escena abierta o sobrescribir archivos míos. Si los permisos locales de Codex bloquean la ejecución, explicar qué operación necesita aprobación y usar el flujo normal; no desactivar globalmente las protecciones. No necesitas control remoto ni un plugin MCP para esta prueba.
+
+SEGUNDA TAREA: con prueba de Blender superada, poner al agente de arte a investigar 3 combinaciones de recursos gratuitos: kart/vehículo, kit industrial y materiales PBR para Reactor. Se autoriza repartir trabajo entre agentes si esta instalación lo permite; si no, hacer las tareas secuencialmente y decirlo. Todos comparten fuentes y se reparten archivos/tareas para no pisarse.
+
+Revisar Kenney, Poly Haven, ambientCG, Quaternius y modelos gratuitos autorizados. Para cada candidato registrar autor, URL exacta, licencia de uso/distribución, formato, texturas, tamaño, geometría, coste 0 y trabajo de adaptación. No asumir que gratis implica licencia libre. No usar un plan gratuito de IA que cobre exportación ni prometer recursos sin descargarlos e importarlos. No registrar modelos protegidos de terceros como originales.
+
+TERCERA TAREA: elegir una combinación gratuita revisable, construir un solo vehículo terminado + garaje 3D real + tramo Reactor de 200–300m y el flujo de menús inicial. Conservar .blend y exportar .glb, materiales y LOD. Antes de extender a otros circuitos, comparar capturas del motor real con mis referencias y probar en teléfonos físicos. Objetivo provisional 30 FPS estables, 60 solo si lo demuestran medidas. Probar 1/8/16 corredores; separar FPS de lag de red. Un simulador/WebKit de escritorio no acredita rendimiento iPhone.
+
+TRABAJA con avances concretos, archivos y evidencia. Empieza por diagnóstico y prueba de Blender; no rehagas el juego todavía. Al finalizar esa prueba, indica las rutas de los archivos que puedo abrir y el siguiente paso real.
