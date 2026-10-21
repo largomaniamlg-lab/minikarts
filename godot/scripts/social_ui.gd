@@ -105,7 +105,7 @@ func _ready() -> void:
 
 func release_inputs() -> void:
 	for action in ["accelerate","brake","reverse","jump","shoot","steer_left","steer_right","handbrake","reset","look_back"]:
-		Input.action_release(action)
+		if InputMap.has_action(action): Input.action_release(action)
 	network.pending_reset = false; network.previous_inputs.clear()
 	var game = get_tree().current_scene
 	if is_instance_valid(game):

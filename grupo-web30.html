@@ -113,7 +113,7 @@ body {
 const originalFetch = window.fetch.bind(window);
 window.fetch = async function(resource, options) {
  if (typeof resource === 'string' && /game\.pck(?:\?|$)/.test(resource)) {
-  resource += (resource.includes('?') ? '&' : '?') + 'v=af69bf3db0a5bb48';
+  resource += (resource.includes('?') ? '&' : '?') + 'v=899dea170d93909b';
  }
  const url = typeof resource === 'string' ? resource : resource.url;
  if (url && /game\.wasm(?:\?|$)/.test(url)) {
@@ -127,10 +127,10 @@ window.fetch = async function(resource, options) {
  return originalFetch(resource,options);
 };
 </script>
-<script>window.MINIKARTS_SERVER_URL="wss://minikarts-multiplayer.onrender.com";window.MINIKARTS_RELEASE="web30-social-af69bf3db0a5bb48";</script>
+<script>window.MINIKARTS_SERVER_URL="wss://minikarts-multiplayer.onrender.com";window.MINIKARTS_RELEASE="web30-social-899dea170d93909b";</script>
 <script src="game.js"></script>
 		<script>
-const GODOT_CONFIG = {"args":["--","--force-touch"],"canvasResizePolicy":2,"emscriptenPoolSize":8,"ensureCrossOriginIsolationHeaders":true,"executable":"game","experimentalVK":true,"fileSizes":{"game.pck":18430192,"game.wasm":38034280,"game-af69bf3db0a5bb48.pck":18430192},"focusCanvas":true,"gdextensionLibs":[],"godotPoolSize":4,"virtualKeyboard":true,"mainPack":"game-af69bf3db0a5bb48.pck"};
+const GODOT_CONFIG = {"args":["--","--force-touch"],"canvasResizePolicy":2,"emscriptenPoolSize":8,"ensureCrossOriginIsolationHeaders":true,"executable":"game","experimentalVK":true,"fileSizes":{"game.pck":18430336,"game.wasm":38034280,"game-899dea170d93909b.pck":18430336},"focusCanvas":true,"gdextensionLibs":[],"godotPoolSize":4,"virtualKeyboard":true,"mainPack":"game-899dea170d93909b.pck"};
 const GODOT_THREADS_ENABLED = false;
 const engine = new Engine(GODOT_CONFIG);
 
@@ -236,4 +236,3 @@ const engine = new Engine(GODOT_CONFIG);
 		</script>
 	</body>
 </html>
-
