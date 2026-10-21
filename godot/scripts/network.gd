@@ -31,6 +31,12 @@ var selected_laps := 3
 var selected_bots := 3
 const CHECKPOINTS := [Vector3(0, 0, 30), Vector3(-30, 0, 0), Vector3(0, 0, -30), Vector3(30, 0, 0)]
 const COLORS = Settings.COLORS
+var social = preload("res://scripts/social_room.gd").new()
+var social_ui: Node
+var social_enabled := true
+var social_local := "--social-local" in OS.get_cmdline_user_args()
+var server_social_version := 0
+var client_controls_blocked := false
 var server_mode := false
 var listener: TCPServer
 var peers: Dictionary = {}
@@ -75,7 +81,7 @@ func _ready() -> void:
 	if server_mode:
 		listener = TCPServer.new()
 		var port := int(OS.get_environment("PORT")) if OS.has_environment("PORT") else 8080
-		var error := listener.listen(port, "0.0.0.0")
+		var error := listener.listen(port, "127.0.0.1" if social_local else "0.0.0.0")
 		if error != OK:
 			push_error("No se pudo abrir el servidor: %s" % error)
 			get_tree().quit(1)
@@ -120,6 +126,7 @@ func _process(delta: float) -> void:
 			if message.get("type") == "welcome":
 				room_request_pending = false
 				status_until = 0.0
+				server_social_version = int(message.get("social_version",0))
 				player_id = int(message.id)
 				room_code = message.code
 			elif message.get("type") == "rooms":
@@ -127,8 +134,11 @@ func _process(delta: float) -> void:
 				render_room_directory()
 				if clock >= status_until:
 					info.text = "Elige una sala y pulsa Entrar, o crea la tuya."
+			elif message.get("type") in ["social_event","social_history"]:
+				if is_instance_valid(social_ui): social_ui.receive(message)
 			elif message.get("type") == "state":
 				state_packet_bytes = packet.size()
+				server_social_version = int(message.get("social_version",0))
 				snapshot = message
 				motion.push(message, clock)
 				playing = true
@@ -253,7 +263,7 @@ func room_directory() -> Array:
 		if room.phase != "lobby" or room.players.size() >= LIMIT or room.players.is_empty() or (room.get("mode","single")=="tournament" and room.tournament.started):
 			continue
 		var host: Dictionary = room.players[room.host]
-		directory.append({"code": room.code, "host": str(host.name).replace("\n", " ").replace("\r", " "), "players": room.players.size(), "capacity": LIMIT, "laps": room.laps,"track":room.track.layout_id,"mode":room.get("mode","single")})
+		directory.append({"code": room.code, "room_name": social.ensure(room).name, "social_version":1,"host": str(host.name).replace("\n", " ").replace("\r", " "), "players": room.players.size(), "capacity": LIMIT, "laps": room.laps,"track":room.track.layout_id,"mode":room.get("mode","single")})
 	directory.sort_custom(func(a: Dictionary, b: Dictionary): return str(a.code) < str(b.code))
 	return directory
 
@@ -317,12 +327,17 @@ func server_message(id: int, message: Dictionary) -> void:
 		kart.get_node("Driver").set_face(driver_id)
 		room.players[id] = {"grid_slot": grid_slot, "kart": kart, "name": name_text, "driver": driver_id, "ready": false, "lap": 0, "checkpoint": 0, "prev_z": -3.0, "input_time": clock, "finished": false, "spawn": kart.transform,"best_lap":INF,"lap_start":0.0}
 		connection.room = code
-		send(connection.socket, {"type": "welcome", "id": id, "code": code})
+		connection["social_version"] = 1 if message.get("social_version",0)==1 else 0
+		send(connection.socket, {"type": "welcome", "id": id, "code": code,"social_version":1})
+		social.joined(self,room,id)
 		return
 	if not rooms.has(connection.room):
 		return
 	var room: Dictionary = rooms[connection.room]
 	var player: Dictionary = room.players[id]
+	if social.handle(self,room,id,message): return
+	if kind == "bots":
+		set_room_bots(room,id,message.get("count",0)); return
 	if kind == "ready" and room.phase == "lobby":
 		player.ready = message.get("ready", false) == true
 	elif kind == "start" or kind == "restart":
@@ -347,6 +362,7 @@ func server_message(id: int, message: Dictionary) -> void:
 				reset_room(room)
 			room.phase = "countdown"
 			room.timer = 3.0
+			social.system(self,room,"Inicio confirmado; chat escrito cerrado.")
 	elif kind == "input" and message.get("controls") is Dictionary:
 		var controls := {}
 		for action in ["accelerate", "brake", "reverse", "jump", "shoot", "steer_left", "steer_right", "handbrake"]:
@@ -378,16 +394,19 @@ func remove_peer(id: int) -> void:
 	if rooms.has(connection.room):
 		var room: Dictionary = rooms[connection.room]
 		if room.players.has(id):
+			social.system(self,room,str(room.players[id].name)+" ha salido.")
 			if room.phase == "racing" and not room.players[id].finished:
 				room.results.append({"id": id, "name": room.players[id].name, "time": -1})
 			room.players[id].kart.queue_free()
 			room.players.erase(id)
-		if room.players.is_empty():
+		var humans: Array = room.players.keys().filter(func(pid):return not room.players[pid].get("bot",false))
+		if humans.is_empty():
 			room.world.queue_free()
 			rooms.erase(connection.room)
 		else:
 			if room.host == id:
-				room.host = room.players.keys()[0]
+				room.host = humans[0]
+				social.system(self,room,"Nuevo anfitrion: "+str(room.players[room.host].name))
 			if room.phase == "countdown" and room.players.size() < 2:
 				reset_room(room)
 	peers.erase(id)
@@ -418,7 +437,12 @@ func reset_room(room: Dictionary) -> void:
 		player.kart.spawn_transform = player.spawn
 		player.kart.enabled = false
 		player.kart.controls = {}
-		player.ready = false
+		player.ready = player.get("bot",false)
+		if player.has("bot_driver"):
+			player.bot_driver.stuck_time=0.0
+			player.bot_driver.last_position=Vector3.INF
+			player.bot_driver.route_hint=-1
+			player.bot_driver.airborne_time=0.0
 		player.lap = 0
 		player.checkpoint = 0
 		player.prev_z = room.track.finish_side(player.spawn.origin)
@@ -441,7 +465,7 @@ func tick_room(room: Dictionary, delta: float) -> void:
 		if player.finished:
 			continue
 		all_finished = false
-		if clock - player.input_time > 1.5:
+		if not player.get("bot",false) and clock - player.input_time > 1.5:
 			kart.controls = {"brake": 1.0}
 		if Progress.advance(room.track,player,room.elapsed,room.laps):
 			room.results.append({"id":id,"name":player.name,"time":room.elapsed,"best_lap":player.best_lap})
@@ -466,7 +490,7 @@ func room_state(room: Dictionary) -> Dictionary:
 	for id in room.players:
 		var player: Dictionary = room.players[id]
 		var kart = player.kart
-		racers.append({"id": id, "name": player.name, "driver": player.driver, "ready": player.ready, "position": vector(kart.position), "velocity": vector(kart.velocity), "rotation": Wire.vector(kart.rotation, 0.001), "speed": Wire.number(kart.speed), "steering": Wire.number(kart._steering, 0.001), "boost": Wire.number(kart.boost_time), "hit": Wire.number(kart.hit_time), "protection": Wire.number(kart.protection_time), "lap": player.lap, "finished": player.finished, "color": kart.kart_color.to_html()})
+		racers.append({"id": id, "name": player.name, "driver": player.driver, "ready": player.ready, "bot":player.get("bot",false),"position": vector(kart.position), "velocity": vector(kart.velocity), "rotation": Wire.vector(kart.rotation, 0.001), "speed": Wire.number(kart.speed), "steering": Wire.number(kart._steering, 0.001), "boost": Wire.number(kart.boost_time), "hit": Wire.number(kart.hit_time), "protection": Wire.number(kart.protection_time), "lap": player.lap, "finished": player.finished, "color": kart.kart_color.to_html()})
 	var shots := []
 	for child in room.stage.get_children():
 		if child.is_in_group("projectiles"):
@@ -478,7 +502,7 @@ func room_state(room: Dictionary) -> Dictionary:
 	var tour_summary: Dictionary={"enabled":false}
 	if room.get("mode","single")=="tournament":
 		tour_summary=room.tournament.summary() if room.phase in ["lobby","results"] else {"enabled":true,"stage":room.tournament.stage,"finished":false}
-	return {"type": "state", "time": Wire.number(clock, 0.001), "code": room.code, "host": room.host, "phase": room.phase, "laps": room.laps, "countdown": maxi(0, ceili(room.timer)), "elapsed": Wire.number(room.elapsed, 0.001), "players": racers, "shots": shots, "boxes": boxes, "neutral": vector(room.track.get_node("NeutralSleeper").position), "results": room.results,"track":room.track.layout_id,"tournament":tour_summary}
+	return {"type": "state", "time": Wire.number(clock, 0.001), "code": room.code,"social_version":1,"room_name":social.ensure(room).name,"mode":room.mode,"race_laps":room.race_laps,"rules_revision":social.ensure(room).revision,"notice":social.ensure(room).get("notice",""), "host": room.host, "phase": room.phase, "laps": room.laps, "countdown": maxi(0, ceili(room.timer)), "elapsed": Wire.number(room.elapsed, 0.001), "players": racers, "shots": shots, "boxes": boxes, "neutral": vector(room.track.get_node("NeutralSleeper").position), "results": room.results,"track":room.track.layout_id,"tournament":tour_summary}
 
 func as_vector(value: Array) -> Vector3:
 	return Vector3(value[0], value[1], value[2])
@@ -536,7 +560,10 @@ func update_game(game: Node3D, delta: float) -> void:
 		kart.position = position if id == player_id or kart.position.distance_to(position) > 6 else kart.position.lerp(position, 1.0 - exp(-20 * delta))
 		var rotation := as_vector(visual.rotation)
 		kart.rotation.y = rotation.y if id == player_id else lerp_angle(kart.rotation.y, rotation.y, 1.0 - exp(-20 * delta))
-		kart._body_visual.material_override.albedo_color = Color(racer.color)
+		if kart._body_visual.material_override is ShaderMaterial:
+			kart._body_visual.material_override.set_shader_parameter("albedo",Color(racer.color))
+		else:
+			kart._body_visual.material_override.albedo_color = Color(racer.color)
 		kart.get_node("Driver").set_face(int(racer.get("driver", 0)))
 		kart.boost_time=float(visual.get("boost",0.0))
 		kart.speed = visual.speed
@@ -677,7 +704,7 @@ func make_menu() -> void:
 	info.text = "Salas online · hasta dieciséis pilotos"
 	info_scroll.add_child(info)
 	address = LineEdit.new()
-	address.text = OS.get_environment("MULTIPLAYER_SERVER_URL")
+	address.text = "ws://127.0.0.1:8080" if social_local else OS.get_environment("MULTIPLAYER_SERVER_URL")
 	if OS.has_feature("web"):
 		address.text = str(JavaScriptBridge.eval("window.MINIKARTS_SERVER_URL || new URLSearchParams(location.search).get('server') || ''"))
 	panel.add_child(address)
@@ -742,13 +769,18 @@ func make_menu() -> void:
 			JavaScriptBridge.eval("(()=>{const url="+value+";const copy=()=>navigator.clipboard ? navigator.clipboard.writeText(url).catch(()=>window.prompt('Copia el enlace de la sala',url)) : window.prompt('Copia el enlace de la sala',url);if(navigator.share)navigator.share({title:'MiniKarts',url}).catch(copy);else copy()})()")
 		else: DisplayServer.clipboard_set(link)
 	)
-	ready_button.pressed.connect(func(): send(socket, {"type": "ready", "ready": true}) if socket != null else null)
+	ready_button.pressed.connect(func(): send(socket, {"type": "ready", "ready":not local_ready()}) if socket != null else null)
 	start_button = lobby_button(waiting_controls, "Iniciar carrera", "start", Vector2(20, 65), Vector2(680, 48))
+	lobby_button(waiting_controls,"Quitar bot","bot_remove",Vector2(20,120),Vector2(330,44)).pressed.connect(change_bots.bind(-1))
+	lobby_button(waiting_controls,"Anadir bot","bot_add",Vector2(365,120),Vector2(330,44)).pressed.connect(change_bots.bind(1))
 	start_button.pressed.connect(func(): send(socket, {"type": "restart" if snapshot.get("phase") == "results" else "start"}) if socket != null else null)
 	lobby_button(panel, "Salir / volver al juego", "leave", Vector2(20, 465), Vector2(680, 48)).pressed.connect(leave_room)
 	show_lobby_mode(false)
 	render_room_directory()
 	panel.hide()
+	social_ui=preload("res://scripts/social_ui.gd").new()
+	social_ui.network=self
+	add_child(social_ui)
 	panel.visibility_changed.connect(func():
 		if panel.visible:
 			garage.texture=Catalog.PORTRAITS[selected_driver]
@@ -795,7 +827,7 @@ func render_room_directory() -> void:
 		room_list.add_child(label)
 	for room in available_rooms:
 		var button := Button.new()
-		button.text = "Entrar · %s · %d/%d · %s" % [room.host, room.players, room.capacity, "Torneo" if room.get("mode","single")=="tournament" else Circuits.NAMES[int(room.get("track",0))]]
+		button.text = "Entrar · %s · %d/%d · %s" % [room.get("room_name",room.host), room.players, room.capacity, "Torneo" if room.get("mode","single")=="tournament" else Circuits.NAMES[int(room.get("track",0))]]
 		button.custom_minimum_size = Vector2(650, 52)
 		button.add_theme_font_size_override("font_size", 22)
 		room_list.add_child(button)
@@ -884,15 +916,19 @@ func send_lobby_request(kind: String) -> void:
 	if kind != "list":
 		room_request_pending = true
 		room_request_deadline = clock + 10.0
-	send(socket, {"type": kind, "code": normalize_room_code(code_input.text), "name": nickname.text, "driver": selected_driver, "laps": selected_laps,"track":selected_track,"mode":selected_mode})
+	send(socket, {"type": kind, "code": normalize_room_code(code_input.text), "name": nickname.text, "driver": selected_driver, "laps": selected_laps,"track":selected_track,"mode":selected_mode,"social_version":1})
 
 func update_menu() -> void:
 	driver_button.disabled = playing
 	var lines := ["Sala %s · %d/%d · %d vueltas" % [room_code, snapshot.players.size(), LIMIT, snapshot.get("laps", 3)]]
+	lines.insert(0,str(snapshot.get("room_name","Sala")))
+	if not str(snapshot.get("notice", "")).is_empty(): lines.append(str(snapshot.notice))
+	if server_social_version==0: lines.append("Servidor anterior: chat y reacciones no disponibles.")
 	for index in range(0, snapshot.players.size(), 1):
 		var row: Array[String] = []
 		for racer in snapshot.players.slice(index, index + 1):
 			row.append("%s · %s" % [racer.name, "LISTO" if racer.ready else "Esperando"])
+			row[-1] += " [IA]" if racer.get("bot",false) else (" [ANFITRION]" if int(racer.id)==int(snapshot.host) else "")
 		lines.append("    |    ".join(row))
 	info.add_theme_font_size_override("font_size", 20 if snapshot.phase == "results" else 22)
 	if snapshot.phase == "countdown":
@@ -935,6 +971,10 @@ func update_menu() -> void:
 	if tour.enabled and snapshot.phase=="results": start_button.text="Nuevo torneo" if tour.get("finished",false) else "Continuar torneo"
 	ready_button.visible = snapshot.phase!="results"
 	ready_button.disabled = snapshot.phase != "lobby"
+	ready_button.text="No listo" if local_ready() else "Listo"
+	for key in ["bot_add","bot_remove"]:
+		lobby_buttons[key].visible=server_social_version>=1
+		lobby_buttons[key].disabled=int(snapshot.host)!=player_id or snapshot.phase!="lobby"
 	displayed_phase = snapshot.phase
 
 func leave_room() -> void:
@@ -950,6 +990,8 @@ func leave_room() -> void:
 	render_track=-1
 	if is_instance_valid(podium): podium.queue_free()
 	podium=null
+	if is_instance_valid(social_ui): social_ui.clear_room()
+	server_social_version=0
 	snapshot.clear()
 	motion.clear()
 	previous_inputs.clear()
@@ -966,3 +1008,49 @@ func leave_room() -> void:
 	remote_shots.clear()
 	get_tree().reload_current_scene()
 	info.text = "Carrera privada · hasta 16 pilotos"
+
+func local_ready() -> bool:
+	for racer in snapshot.get("players", []):
+		if int(racer.id) == player_id: return racer.ready
+	return false
+
+func change_bots(delta: int) -> void:
+	if socket == null or not social_enabled: return
+	var count := 0
+	for racer in snapshot.get("players", []):
+		if racer.get("bot", false): count += 1
+	send(socket, {"type":"bots", "count":count + delta})
+
+func set_room_bots(room: Dictionary, requester: int, requested: Variant) -> void:
+	if not social_enabled or requester != room.host or room.phase != "lobby": return
+	if not (requested is int or requested is float) or not is_finite(float(requested)): return
+	var bots: Array = room.players.keys().filter(func(pid): return room.players[pid].get("bot", false))
+	var count := clampi(int(requested), 0, LIMIT - (room.players.size() - bots.size()))
+	var previous_count := bots.size()
+	while bots.size() > count:
+		var pid: int = bots.pop_back()
+		room.players[pid].bot_driver.queue_free()
+		room.players[pid].kart.queue_free()
+		room.players.erase(pid)
+	while bots.size() < count:
+		var pid := -1
+		while room.players.has(pid): pid -= 1
+		var occupied: Array = room.players.values().map(func(p): return p.grid_slot)
+		var slot := 0
+		while slot in occupied: slot += 1
+		var kart = preload("res://scenes/kart.tscn").instantiate()
+		kart.network_controlled = true
+		kart.kart_color = COLORS[slot]
+		kart.transform = room.track.grid_transform(slot)
+		room.stage.add_child(kart)
+		kart.enabled = false
+		var bot = preload("res://scripts/bot_driver.gd").new()
+		bot.kart = kart
+		bot.track = room.track
+		bot.slot = slot
+		room.stage.add_child(bot)
+		room.players[pid] = {"grid_slot":slot,"kart":kart,"name":"Bot %d" % (-pid),"driver":0,"ready":true,"bot":true,"bot_driver":bot,"lap":0,"checkpoint":0,"prev_z":room.track.finish_side(kart.position),"input_time":clock,"finished":false,"spawn":kart.transform,"best_lap":INF,"lap_start":0.0}
+		bots.append(pid)
+
+	if bots.size() != previous_count:
+		social.changed(self,room,"Numero de bots actualizado")
