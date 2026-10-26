@@ -83,6 +83,8 @@ func _ready() -> void:
 	camera.target = self
 	add_child(camera)
 	camera.current = true
+	if not network_controlled and not Network.server_mode:
+		preload("res://scripts/vehicle_catalog.gd").apply(self,preload("res://scripts/vehicle_catalog.gd").selected)
 
 func _physics_process(delta: float) -> void:
 	if _recovery_ghost > 0:

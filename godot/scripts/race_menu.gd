@@ -34,6 +34,9 @@ var mode_buttons: Array[Button] = []
 var rival_buttons: Array[Button] = []
 var training_button: Button
 var resume_button: Button
+var vehicle_choice: OptionButton
+var vehicle_preview: SubViewportContainer
+const Vehicles = preload("res://scripts/vehicle_catalog.gd")
 
 static func menu_theme() -> Theme:
 	var theme := Theme.new()
@@ -88,13 +91,21 @@ func _ready() -> void:
 	steps=label("",Vector2(320,30),Vector2(910,48),24)
 	title=label("",Vector2(420,105),Vector2(780,55),30)
 	garage=TextureRect.new()
-	garage.position=Vector2(65,140); garage.size=Vector2(300,390)
+	garage.position=Vector2(100,135); garage.size=Vector2(220,235)
 	garage.expand_mode=TextureRect.EXPAND_IGNORE_SIZE
 	garage.stretch_mode=TextureRect.STRETCH_KEEP_ASPECT_CENTERED
 	garage.mouse_filter=Control.MOUSE_FILTER_IGNORE
 	root.add_child(garage)
 	driver_name=label("",Vector2(40,550),Vector2(350,48),30)
-	label("Tu piloto · tu estilo",Vector2(40,600),Vector2(350,35),20)
+	vehicle_preview=preload("res://scripts/vehicle_preview.gd").new()
+	vehicle_preview.position=Vector2(42,360);vehicle_preview.size=Vector2(330,180)
+	root.add_child(vehicle_preview)
+	vehicle_choice=OptionButton.new()
+	vehicle_choice.position=Vector2(40,605);vehicle_choice.size=Vector2(350,45)
+	for vehicle_name in Vehicles.NAMES: vehicle_choice.add_item(vehicle_name)
+	vehicle_choice.select(1 if Vehicles.selected==Vehicles.DRAGON else 0)
+	vehicle_choice.item_selected.connect(choose_vehicle)
+	root.add_child(vehicle_choice)
 	for i in range(2):
 		var mode_button=button("CARRERA INDIVIDUAL" if i==0 else "TORNEO · 4 CARRERAS",Vector2(420+i*400,185),Vector2(380,100))
 		mode_button.toggle_mode=true
@@ -236,13 +247,31 @@ func label(text: String, position: Vector2, size: Vector2, font: int) -> Label:
 
 func select(index: int) -> void:
 	Network.selected_driver = index
+	Vehicles.selected_character=Vehicles.CHARACTER_IDS[index]
+	Vehicles.save_selection()
 	garage.texture=Catalog.PORTRAITS[index]
 	driver_name.text=NAMES[index]
 	if is_instance_valid(game.offline_race) and game.offline_race.tournament!=null:
 		game.offline_race.tournament.table[0].driver=index
 	game.kart.get_node("Driver").set_face(index)
+	vehicle_preview.choose(index,Vehicles.selected)
 	for i in range(cards.size()):
 		cards[i].set_pressed_no_signal(i == index)
+
+func choose_vehicle(index: int) -> void:
+	Vehicles.selected=Vehicles.IDS[clampi(index,0,1)]
+	Vehicles.save_selection()
+	Vehicles.apply(game.kart,Vehicles.selected)
+	vehicle_preview.choose(Network.selected_driver,Vehicles.selected)
+
+func _process(_delta: float) -> void:
+	if not Network.browser_test or not OS.has_feature("web"): return
+	var vehicles: Dictionary={}
+	for id in Network.remote_karts:
+		vehicles[str(id)]=Network.remote_karts[id].get_meta("vehicle_id",Vehicles.DEFAULT)
+	if is_instance_valid(game.kart):vehicles[str(Network.player_id)]=game.kart.get_meta("vehicle_id",Vehicles.DEFAULT)
+	var rect:=vehicle_choice.get_global_rect()
+	JavaScriptBridge.eval("window.minikartsVehicleTest="+JSON.stringify({"selected":Vehicles.selected,"driver":Network.selected_driver,"menu_visible":visible,"choice_rect":{"x":rect.position.x,"y":rect.position.y,"width":rect.size.x,"height":rect.size.y},"rendered":vehicles,"preview":vehicle_preview.kart.get_meta("vehicle_id",Vehicles.DEFAULT)})+";")
 
 func open() -> void:
 	if Network.playing:

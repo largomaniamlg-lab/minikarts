@@ -1,0 +1,521 @@
+{
+  "source": "kart_dragon_v2.blend",
+  "source_sha256": "3d72fdb7f2e76279637312b96dde7ed7f27df566228e9bb544f815dc60b0edd2",
+  "uniform_scale": 0.5,
+  "deformation": false,
+  "objects": [
+    {
+      "name": "V2_band_low_-1",
+      "tri_before": 1116,
+      "tri_after": 132
+    },
+    {
+      "name": "V2_band_low_1",
+      "tri_before": 1116,
+      "tri_after": 133
+    },
+    {
+      "name": "V2_band_rivets_-1",
+      "tri_before": 1088,
+      "tri_after": 130
+    },
+    {
+      "name": "V2_band_rivets_1",
+      "tri_before": 1088,
+      "tri_after": 130
+    },
+    {
+      "name": "V2_band_top_-1",
+      "tri_before": 1396,
+      "tri_after": 166
+    },
+    {
+      "name": "V2_band_top_1",
+      "tri_before": 1396,
+      "tri_after": 166
+    },
+    {
+      "name": "V2_belly_gold_-1",
+      "tri_before": 808,
+      "tri_after": 96
+    },
+    {
+      "name": "V2_belly_gold_1",
+      "tri_before": 808,
+      "tri_after": 96
+    },
+    {
+      "name": "V2_belly_seams",
+      "tri_before": 2240,
+      "tri_after": 266
+    },
+    {
+      "name": "V2_brows_lids",
+      "tri_before": 616,
+      "tri_after": 72
+    },
+    {
+      "name": "V2_chassis",
+      "tri_before": 1088,
+      "tri_after": 130
+    },
+    {
+      "name": "V2_chest_neck",
+      "tri_before": 12480,
+      "tri_after": 1496
+    },
+    {
+      "name": "V2_crown_0",
+      "tri_before": 3008,
+      "tri_after": 360
+    },
+    {
+      "name": "V2_crown_1",
+      "tri_before": 3008,
+      "tri_after": 360
+    },
+    {
+      "name": "V2_crown_2",
+      "tri_before": 3056,
+      "tri_after": 366
+    },
+    {
+      "name": "V2_crown_3",
+      "tri_before": 3008,
+      "tri_after": 360
+    },
+    {
+      "name": "V2_crown_4",
+      "tri_before": 3056,
+      "tri_after": 366
+    },
+    {
+      "name": "V2_deck_spike_0",
+      "tri_before": 200,
+      "tri_after": 24
+    },
+    {
+      "name": "V2_deck_spike_1",
+      "tri_before": 200,
+      "tri_after": 24
+    },
+    {
+      "name": "V2_deck_spike_2",
+      "tri_before": 200,
+      "tri_after": 24
+    },
+    {
+      "name": "V2_deck_spike_3",
+      "tri_before": 200,
+      "tri_after": 24
+    },
+    {
+      "name": "V2_ear_-1",
+      "tri_before": 3056,
+      "tri_after": 366
+    },
+    {
+      "name": "V2_ear_1",
+      "tri_before": 3008,
+      "tri_after": 360
+    },
+    {
+      "name": "V2_ear_gold_-1",
+      "tri_before": 3056,
+      "tri_after": 366
+    },
+    {
+      "name": "V2_ear_gold_1",
+      "tri_before": 3008,
+      "tri_after": 360
+    },
+    {
+      "name": "V2_eyes",
+      "tri_before": 4200,
+      "tri_after": 504
+    },
+    {
+      "name": "V2_head",
+      "tri_before": 80248,
+      "tri_after": 5216
+    },
+    {
+      "name": "V2_horn_-1",
+      "tri_before": 1424,
+      "tri_after": 170
+    },
+    {
+      "name": "V2_horn_1",
+      "tri_before": 1424,
+      "tri_after": 170
+    },
+    {
+      "name": "V2_hull",
+      "tri_before": 35400,
+      "tri_after": 4248
+    },
+    {
+      "name": "V2_lamps",
+      "tri_before": 336,
+      "tri_after": 40
+    },
+    {
+      "name": "V2_mane_-1_0",
+      "tri_before": 3008,
+      "tri_after": 360
+    },
+    {
+      "name": "V2_mane_-1_1",
+      "tri_before": 3008,
+      "tri_after": 360
+    },
+    {
+      "name": "V2_mane_-1_2",
+      "tri_before": 3008,
+      "tri_after": 360
+    },
+    {
+      "name": "V2_mane_-1_3",
+      "tri_before": 3008,
+      "tri_after": 360
+    },
+    {
+      "name": "V2_mane_-1_4",
+      "tri_before": 3008,
+      "tri_after": 360
+    },
+    {
+      "name": "V2_mane_1_0",
+      "tri_before": 3008,
+      "tri_after": 360
+    },
+    {
+      "name": "V2_mane_1_1",
+      "tri_before": 3008,
+      "tri_after": 360
+    },
+    {
+      "name": "V2_mane_1_2",
+      "tri_before": 3008,
+      "tri_after": 360
+    },
+    {
+      "name": "V2_mane_1_3",
+      "tri_before": 3008,
+      "tri_after": 360
+    },
+    {
+      "name": "V2_mane_1_4",
+      "tri_before": 3008,
+      "tri_after": 360
+    },
+    {
+      "name": "V2_rim_gold",
+      "tri_before": 2688,
+      "tri_after": 322
+    },
+    {
+      "name": "V2_rim_rivets",
+      "tri_before": 4900,
+      "tri_after": 588
+    },
+    {
+      "name": "V2_seat",
+      "tri_before": 11648,
+      "tri_after": 1396
+    },
+    {
+      "name": "V2_seat_seams",
+      "tri_before": 820,
+      "tri_after": 98
+    },
+    {
+      "name": "V2_sidefin_-1",
+      "tri_before": 640,
+      "tri_after": 76
+    },
+    {
+      "name": "V2_sidefin_1",
+      "tri_before": 680,
+      "tri_after": 80
+    },
+    {
+      "name": "V2_sidefin_in_-1",
+      "tri_before": 640,
+      "tri_after": 76
+    },
+    {
+      "name": "V2_sidefin_in_1",
+      "tri_before": 680,
+      "tri_after": 80
+    },
+    {
+      "name": "V2_smile_-1",
+      "tri_before": 1508,
+      "tri_after": 180
+    },
+    {
+      "name": "V2_smile_1",
+      "tri_before": 1508,
+      "tri_after": 180
+    },
+    {
+      "name": "V2_springs",
+      "tri_before": 7680,
+      "tri_after": 910
+    },
+    {
+      "name": "V2_steering",
+      "tri_before": 1648,
+      "tri_after": 196
+    },
+    {
+      "name": "V2_tail",
+      "tri_before": 18576,
+      "tri_after": 2228
+    },
+    {
+      "name": "V2_tail_flame_0",
+      "tri_before": 3096,
+      "tri_after": 370
+    },
+    {
+      "name": "V2_tail_flame_1",
+      "tri_before": 3096,
+      "tri_after": 370
+    },
+    {
+      "name": "V2_tail_flame_2",
+      "tri_before": 3096,
+      "tri_after": 370
+    },
+    {
+      "name": "V2_tail_flame_3",
+      "tri_before": 3096,
+      "tri_after": 370
+    },
+    {
+      "name": "V2_tail_flame_4",
+      "tri_before": 3096,
+      "tri_after": 370
+    },
+    {
+      "name": "V2_tail_flame_5",
+      "tri_before": 3096,
+      "tri_after": 370
+    },
+    {
+      "name": "V2_tail_spike_12",
+      "tri_before": 200,
+      "tri_after": 24
+    },
+    {
+      "name": "V2_tail_spike_16",
+      "tri_before": 200,
+      "tri_after": 24
+    },
+    {
+      "name": "V2_tail_spike_20",
+      "tri_before": 200,
+      "tri_after": 24
+    },
+    {
+      "name": "V2_tail_spike_24",
+      "tri_before": 200,
+      "tri_after": 24
+    },
+    {
+      "name": "V2_tail_spike_28",
+      "tri_before": 200,
+      "tri_after": 24
+    },
+    {
+      "name": "V2_tail_spike_32",
+      "tri_before": 200,
+      "tri_after": 24
+    },
+    {
+      "name": "V2_tail_spike_36",
+      "tri_before": 200,
+      "tri_after": 24
+    },
+    {
+      "name": "V2_tail_spike_4",
+      "tri_before": 200,
+      "tri_after": 24
+    },
+    {
+      "name": "V2_tail_spike_40",
+      "tri_before": 200,
+      "tri_after": 24
+    },
+    {
+      "name": "V2_tail_spike_44",
+      "tri_before": 200,
+      "tri_after": 24
+    },
+    {
+      "name": "V2_tail_spike_48",
+      "tri_before": 200,
+      "tri_after": 24
+    },
+    {
+      "name": "V2_tail_spike_52",
+      "tri_before": 200,
+      "tri_after": 24
+    },
+    {
+      "name": "V2_tail_spike_56",
+      "tri_before": 200,
+      "tri_after": 24
+    },
+    {
+      "name": "V2_tail_spike_8",
+      "tri_before": 200,
+      "tri_after": 24
+    },
+    {
+      "name": "V2_teeth",
+      "tri_before": 256,
+      "tri_after": 30
+    },
+    {
+      "name": "V2_wave_-1",
+      "tri_before": 6604,
+      "tri_after": 792
+    },
+    {
+      "name": "V2_wave_1",
+      "tri_before": 6604,
+      "tri_after": 792
+    },
+    {
+      "name": "V2_wheel_FL",
+      "tri_before": 4148,
+      "tri_after": 746
+    },
+    {
+      "name": "V2_wheel_FR",
+      "tri_before": 4148,
+      "tri_after": 746
+    },
+    {
+      "name": "V2_wheel_RL",
+      "tri_before": 4148,
+      "tri_after": 746
+    },
+    {
+      "name": "V2_wheel_RR",
+      "tri_before": 4148,
+      "tri_after": 746
+    },
+    {
+      "name": "V2_wing_-1",
+      "tri_before": 1016,
+      "tri_after": 120
+    },
+    {
+      "name": "V2_wing_1",
+      "tri_before": 1016,
+      "tri_after": 120
+    },
+    {
+      "name": "V2_wing_in_-1",
+      "tri_before": 1016,
+      "tri_after": 120
+    },
+    {
+      "name": "V2_wing_in_1",
+      "tri_before": 1016,
+      "tri_after": 120
+    },
+    {
+      "name": "V2_wing_rib_-1_0",
+      "tri_before": 28,
+      "tri_after": 28
+    },
+    {
+      "name": "V2_wing_rib_-1_1",
+      "tri_before": 28,
+      "tri_after": 28
+    },
+    {
+      "name": "V2_wing_rib_-1_2",
+      "tri_before": 28,
+      "tri_after": 28
+    },
+    {
+      "name": "V2_wing_rib_-1_3",
+      "tri_before": 28,
+      "tri_after": 28
+    },
+    {
+      "name": "V2_wing_rib_1_0",
+      "tri_before": 28,
+      "tri_after": 28
+    },
+    {
+      "name": "V2_wing_rib_1_1",
+      "tri_before": 28,
+      "tri_after": 28
+    },
+    {
+      "name": "V2_wing_rib_1_2",
+      "tri_before": 28,
+      "tri_after": 28
+    },
+    {
+      "name": "V2_wing_rib_1_3",
+      "tri_before": 28,
+      "tri_after": 28
+    }
+  ],
+  "disabled_modifiers": [
+    {
+      "object": "V2_head",
+      "modifier": "sub"
+    }
+  ],
+  "bounds_blender": {
+    "min": [
+      -0.5507591962814331,
+      -1.6188061237335205,
+      0.0004332214593887329
+    ],
+    "max": [
+      0.5463354587554932,
+      1.0335443019866943,
+      0.9682067036628723
+    ],
+    "size": [
+      1.0970946550369263,
+      2.652350425720215,
+      0.9677734822034836
+    ]
+  },
+  "triangles": 34589,
+  "wheels": {
+    "V2_wheel_FL": [
+      -0.4300000071525574,
+      0.6200000047683716,
+      0.1850000023841858
+    ],
+    "V2_wheel_FR": [
+      0.4300000071525574,
+      0.6200000047683716,
+      0.1850000023841858
+    ],
+    "V2_wheel_RL": [
+      -0.4300000071525574,
+      -0.699999988079071,
+      0.1899999976158142
+    ],
+    "V2_wheel_RR": [
+      0.4300000071525574,
+      -0.699999988079071,
+      0.1899999976158142
+    ]
+  },
+  "mesh_objects": 5,
+  "glb_sha256": "770f32872586e9bcb68f765344ebfc078d0d8380e68362c90353759fd2ee96e3"
+}

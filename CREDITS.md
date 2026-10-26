@@ -16,3 +16,5 @@ Las fotos, caras, retratos y memes facilitados por el usuario conservan su proce
 ## Motor
 
 Godot 4.5.1, licencia MIT. Documentación y APIs cotejadas con el tag oficial `4.5.1-stable`; referencias en `docs/TOON_API_4_5_1.md`.
+
+Dragón — en pruebas: modelo preparado por Claude para MiniKarts a partir de la referencia del usuario; copia ligera y adaptación al juego por Codex. La versión de máxima fidelidad se conserva fuera de esta exportación.

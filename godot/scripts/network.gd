@@ -16,6 +16,8 @@ var ping_pending := -1.0
 var ping_serial := 0
 
 const Catalog = preload("res://scripts/driver_catalog.gd")
+const Vehicles = preload("res://scripts/vehicle_catalog.gd")
+var server_vehicle_version := 0
 const Progress = preload("res://scripts/race_progress.gd")
 const Tournament = preload("res://scripts/tournament.gd")
 const Circuits = preload("res://scripts/circuit_catalog.gd")
@@ -88,6 +90,8 @@ func _ready() -> void:
 		else:
 			print("MiniKarts WebSocket server listening on %d" % port)
 	else:
+		Vehicles.load_selection()
+		selected_driver=Vehicles.CHARACTER_IDS.find(Vehicles.selected_character)
 		call_deferred("make_menu")
 
 func send(peer: WebSocketPeer, message: Dictionary) -> void:
@@ -127,6 +131,7 @@ func _process(delta: float) -> void:
 				room_request_pending = false
 				status_until = 0.0
 				server_social_version = int(message.get("social_version",0))
+				server_vehicle_version = int(message.get("vehicle_version",0))
 				player_id = int(message.id)
 				room_code = message.code
 			elif message.get("type") == "rooms":
@@ -139,6 +144,7 @@ func _process(delta: float) -> void:
 			elif message.get("type") == "state":
 				state_packet_bytes = packet.size()
 				server_social_version = int(message.get("social_version",0))
+				server_vehicle_version = int(message.get("vehicle_version",0))
 				snapshot = message
 				motion.push(message, clock)
 				playing = true
@@ -326,9 +332,10 @@ func server_message(id: int, message: Dictionary) -> void:
 		var driver_id := clampi(int(requested_driver), 0, Catalog.NAMES.size() - 1) if (requested_driver is int or requested_driver is float) and is_finite(float(requested_driver)) else 0
 		kart.get_node("Driver").set_face(driver_id)
 		room.players[id] = {"grid_slot": grid_slot, "kart": kart, "name": name_text, "driver": driver_id, "ready": false, "lap": 0, "checkpoint": 0, "prev_z": -3.0, "input_time": clock, "finished": false, "spawn": kart.transform,"best_lap":INF,"lap_start":0.0}
+		room.players[id]["vehicle"] = Vehicles.resolve(message.get("vehicle",Vehicles.DEFAULT))
 		connection.room = code
 		connection["social_version"] = 1 if message.get("social_version",0)==1 else 0
-		send(connection.socket, {"type": "welcome", "id": id, "code": code,"social_version":1})
+		send(connection.socket, {"type": "welcome", "id": id, "code": code,"social_version":1,"vehicle_version":1})
 		social.joined(self,room,id)
 		return
 	if not rooms.has(connection.room):
@@ -490,7 +497,7 @@ func room_state(room: Dictionary) -> Dictionary:
 	for id in room.players:
 		var player: Dictionary = room.players[id]
 		var kart = player.kart
-		racers.append({"id": id, "name": player.name, "driver": player.driver, "ready": player.ready, "bot":player.get("bot",false),"position": vector(kart.position), "velocity": vector(kart.velocity), "rotation": Wire.vector(kart.rotation, 0.001), "speed": Wire.number(kart.speed), "steering": Wire.number(kart._steering, 0.001), "boost": Wire.number(kart.boost_time), "hit": Wire.number(kart.hit_time), "protection": Wire.number(kart.protection_time), "lap": player.lap, "finished": player.finished, "color": kart.kart_color.to_html()})
+		racers.append({"id": id, "name": player.name, "driver": player.driver, "vehicle": Vehicles.resolve(player.get("vehicle",Vehicles.DEFAULT)), "ready": player.ready, "bot":player.get("bot",false),"position": vector(kart.position), "velocity": vector(kart.velocity), "rotation": Wire.vector(kart.rotation, 0.001), "speed": Wire.number(kart.speed), "steering": Wire.number(kart._steering, 0.001), "boost": Wire.number(kart.boost_time), "hit": Wire.number(kart.hit_time), "protection": Wire.number(kart.protection_time), "lap": player.lap, "finished": player.finished, "color": kart.kart_color.to_html()})
 	var shots := []
 	for child in room.stage.get_children():
 		if child.is_in_group("projectiles"):
@@ -502,7 +509,7 @@ func room_state(room: Dictionary) -> Dictionary:
 	var tour_summary: Dictionary={"enabled":false}
 	if room.get("mode","single")=="tournament":
 		tour_summary=room.tournament.summary() if room.phase in ["lobby","results"] else {"enabled":true,"stage":room.tournament.stage,"finished":false}
-	return {"type": "state", "time": Wire.number(clock, 0.001), "code": room.code,"social_version":1,"room_name":social.ensure(room).name,"mode":room.mode,"race_laps":room.race_laps,"rules_revision":social.ensure(room).revision,"notice":social.ensure(room).get("notice",""), "host": room.host, "phase": room.phase, "laps": room.laps, "countdown": maxi(0, ceili(room.timer)), "elapsed": Wire.number(room.elapsed, 0.001), "players": racers, "shots": shots, "boxes": boxes, "neutral": vector(room.track.get_node("NeutralSleeper").position), "results": room.results,"track":room.track.layout_id,"tournament":tour_summary}
+	return {"type": "state", "time": Wire.number(clock, 0.001), "code": room.code,"social_version":1,"vehicle_version":1,"room_name":social.ensure(room).name,"mode":room.mode,"race_laps":room.race_laps,"rules_revision":social.ensure(room).revision,"notice":social.ensure(room).get("notice",""), "host": room.host, "phase": room.phase, "laps": room.laps, "countdown": maxi(0, ceili(room.timer)), "elapsed": Wire.number(room.elapsed, 0.001), "players": racers, "shots": shots, "boxes": boxes, "neutral": vector(room.track.get_node("NeutralSleeper").position), "results": room.results,"track":room.track.layout_id,"tournament":tour_summary}
 
 func as_vector(value: Array) -> Vector3:
 	return Vector3(value[0], value[1], value[2])
@@ -565,6 +572,7 @@ func update_game(game: Node3D, delta: float) -> void:
 		else:
 			kart._body_visual.material_override.albedo_color = Color(racer.color)
 		kart.get_node("Driver").set_face(int(racer.get("driver", 0)))
+		Vehicles.apply(kart,racer.get("vehicle",Vehicles.DEFAULT))
 		kart.boost_time=float(visual.get("boost",0.0))
 		kart.speed = visual.speed
 		kart._steering = visual.steering
@@ -916,7 +924,7 @@ func send_lobby_request(kind: String) -> void:
 	if kind != "list":
 		room_request_pending = true
 		room_request_deadline = clock + 10.0
-	send(socket, {"type": kind, "code": normalize_room_code(code_input.text), "name": nickname.text, "driver": selected_driver, "laps": selected_laps,"track":selected_track,"mode":selected_mode,"social_version":1})
+	send(socket, {"type": kind, "code": normalize_room_code(code_input.text), "name": nickname.text, "driver": selected_driver, "vehicle":Vehicles.selected,"vehicle_version":1,"laps": selected_laps,"track":selected_track,"mode":selected_mode,"social_version":1})
 
 func update_menu() -> void:
 	driver_button.disabled = playing
@@ -924,6 +932,7 @@ func update_menu() -> void:
 	lines.insert(0,str(snapshot.get("room_name","Sala")))
 	if not str(snapshot.get("notice", "")).is_empty(): lines.append(str(snapshot.notice))
 	if server_social_version==0: lines.append("Servidor anterior: chat y reacciones no disponibles.")
+	if server_vehicle_version==0: lines.append("Servidor anterior: se usa el coche habitual.")
 	for index in range(0, snapshot.players.size(), 1):
 		var row: Array[String] = []
 		for racer in snapshot.players.slice(index, index + 1):
@@ -992,6 +1001,7 @@ func leave_room() -> void:
 	podium=null
 	if is_instance_valid(social_ui): social_ui.clear_room()
 	server_social_version=0
+	server_vehicle_version=0
 	snapshot.clear()
 	motion.clear()
 	previous_inputs.clear()

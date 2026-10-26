@@ -50,7 +50,14 @@ func push(state: Dictionary, arrival: float) -> void:
 			buffer_seconds = lerpf(buffer_seconds, desired, 0.35 if desired > buffer_seconds else 0.05)
 	offset = minf(offset, arrival - timestamp)
 	received_at = arrival
-	states.append(state)
+	# Client-only index: do not add fields to the authoritative packet or wire.
+	var buffered := state.duplicate()
+	var by_id: Dictionary = {}
+	for racer in state.players:
+		var id := int(racer.id)
+		if not by_id.has(id): by_id[id] = racer
+	buffered["_by_id"] = by_id
+	states.append(buffered)
 	while states.size() > 32:
 		states.pop_front()
 
@@ -150,6 +157,8 @@ func remote(id: int, now: float) -> Dictionary:
 	return result
 
 func find_racer(state: Dictionary, id: int) -> Dictionary:
+	if state.has("_by_id"):
+		return state._by_id.get(id, {})
 	for racer in state.players:
 		if int(racer.id) == id:
 			return racer

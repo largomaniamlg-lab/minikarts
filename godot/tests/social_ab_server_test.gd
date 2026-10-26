@@ -122,5 +122,8 @@ func run() -> void:
 	check(net.rooms.is_empty(),"all rooms cleaned including bots")
 	net.listener.stop()
 	var report={"checks":checks,"failures":failures,"transport":"real local WebSocket","clock":"controlled increments for rate boundaries","physical_devices":false}
-	var f=FileAccess.open("res://../evidence/social-release/server-result.json",FileAccess.WRITE);f.store_string(JSON.stringify(report,"\t"));f.close()
+	DirAccess.make_dir_recursive_absolute(ProjectSettings.globalize_path("res://../evidence/social-release"))
+	var f=FileAccess.open("res://../evidence/social-release/server-result.json",FileAccess.WRITE)
+	if f: f.store_string(JSON.stringify(report,"\t"));f.close()
+	else: failures+=1;push_error("Could not save social test report")
 	print("SOCIAL_AB ",JSON.stringify(report));quit(0 if failures==0 else 1)
